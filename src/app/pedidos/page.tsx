@@ -1,0 +1,3 @@
+import type {Metadata} from "next"; import {TrackingForm} from "@/components/orders/TrackingForm";
+export const metadata:Metadata={title:"Mis pedidos",description:"Consulta y rastrea tu pedido 7H STORE."};
+export default function OrdersPage(){return <main id="contenido" className="mx-auto max-w-5xl px-5 py-12 lg:px-8 lg:py-16"><div className="mb-10 text-center"><p className="text-[10px] font-semibold uppercase tracking-widest text-gold">Seguimiento</p><h1 className="mt-2 font-display text-5xl">Mis pedidos</h1><p className="mt-3 text-sm text-ink-soft">Ingresa tu número de pedido y el correo usado en la compra.</p></div><TrackingForm/></main>}

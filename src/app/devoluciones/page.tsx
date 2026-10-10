@@ -1,0 +1,2 @@
+export const metadata = { title: "Devoluciones" };
+export default function Page(){return <main id="contenido" className="mx-auto max-w-3xl px-5 py-16"><h1 className="font-display text-5xl">Devoluciones</h1><p className="mt-6 text-sm leading-7 text-ink-soft">Las solicitudes de devolución deben cumplir las condiciones informadas para cada pedido. Conserva producto, empaque y comprobante mientras revisamos la solicitud.</p></main>}

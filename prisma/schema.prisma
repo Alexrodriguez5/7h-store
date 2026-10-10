@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  HOMBRE
+  MUJER
+  UNISEX
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  EXPIRED
+}
+
+enum PaymentMethod {
+  CARD
+  PSE
+  BANK_TRANSFER
+  CASH_DEPOSIT
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  FAILED
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  slug     String    @unique
+  label    String
+  products Product[]
+}
+
+model Product {
+  id               String      @id @default(cuid())
+  slug             String      @unique
+  name             String
+  brand            String
+  description      String
+  priceCOP         Int
+  compareAtPriceCOP Int?
+  categoryId       String
+  category         Category    @relation(fields: [categoryId], references: [id])
+  gender           Gender
+  isAccessory      Boolean     @default(false)
+  images           String[]
+  sizes            String[]
+  stock            Int         @default(0)
+  tags             String[]
+  featured         Boolean     @default(false)
+  active           Boolean     @default(true)
+  createdAt        DateTime    @default(now())
+  orderItems       OrderItem[]
+  variants         ProductVariant[]
+  @@index([categoryId])
+  @@index([featured])
+  @@index([active])
+}
+
+/// Inventario por talla. Un producto con variantes usa SOLO el stock de sus variantes;
+/// `Product.stock` queda como suma informativa (se actualiza desde el admin).
+model ProductVariant {
+  id         String      @id @default(cuid())
+  productId  String
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  size       String
+  stock      Int         @default(0)
+  orderItems OrderItem[]
+  @@unique([productId, size])
+  @@index([productId])
+}
+
+model Order {
+  id               String        @id @default(cuid())
+  publicCode       String        @unique
+  status           OrderStatus   @default(PENDING_PAYMENT)
+  paymentMethod    PaymentMethod
+  customerFullName String
+  customerEmail    String
+  customerPhone    String
+  documentType     String
+  documentNumber   String
+  department       String
+  city             String
+  address          String
+  notes            String?
+  subtotalCOP      Int
+  shippingCOP      Int
+  totalCOP         Int
+  trackingNumber   String?
+  carrier          String?
+  expiresAt        DateTime
+  createdAt        DateTime      @default(now())
+  items            OrderItem[]
+  payments         Payment[]
+  @@index([customerEmail, publicCode])
+  @@index([status])
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+  variantId   String?
+  variant     ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  name        String
+  size        String?
+  unitPriceCOP Int
+  quantity    Int
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  orderId     String
+  order       Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  provider    String
+  providerRef String?
+  status      PaymentStatus @default(PENDING)
+  amountCOP   Int
+  proofUrl    String?
+  rawPayload  Json?
+  createdAt   DateTime      @default(now())
+  @@index([orderId])
+  @@index([providerRef])
+}

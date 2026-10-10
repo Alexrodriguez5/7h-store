@@ -1,0 +1,2 @@
+export const metadata = { title: "Envíos" };
+export default function Page(){return <main id="contenido" className="mx-auto max-w-3xl px-5 py-16"><h1 className="font-display text-5xl">Envíos</h1><p className="mt-6 text-sm leading-7 text-ink-soft">Enviamos a toda Colombia. Las compras desde $500.000 tienen envío gratis; por debajo de ese valor se aplica la tarifa base configurada en la tienda.</p></main>}
