@@ -222,7 +222,8 @@ Las pruebas usan una base de datos en memoria. **No** se probaron contra tu Supa
 | Recuperación por correo | Cuenta de Resend con tu dominio verificado y sus variables |
 | RLS listo para aplicar | Ejecutar `enable-rls.sql` en Supabase |
 | Webhook corregido | URL de eventos en Wompi y una prueba en Sandbox |
-| Cron de expiración | Programarlo (Vercel Cron o un servicio externo) con `CRON_SECRET` |
+| Cron de expiración | `vercel.json` trae uno diario (límite del plan Hobby). Para cada 15–30 min usa cron-job.org con `CRON_SECRET` |
+| Latencia con Supabase en Canadá | `vercel.json` ejecuta las funciones en `yul1` (Montréal), la misma región que tu base de datos |
 | Páginas legales | **Completar los [corchetes] y revisión de un abogado** |
 | CSP/HSTS | Verificar en el navegador (F12 → Consola) que no haya bloqueos |
 

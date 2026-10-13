@@ -4,6 +4,7 @@ Marca cada punto antes de activar ventas reales. **Wompi en producción lo activ
 
 ## 1. Dominio y hosting
 - [ ] Compra el dominio (por ejemplo, `7hstore.co`) y apúntalo al hosting (Vercel recomendado para Next.js: *Settings → Domains*).
+- [ ] **Servidor en la misma región que la base de datos.** Tu Supabase está en `ca-central-1` (Canadá) y `vercel.json` ya fija las funciones en `yul1` (Montréal, la misma región de AWS). Así cada consulta tarda ~1–2 ms en lugar de ~100 ms. Si cambias la base de datos de región, cambia también `regions`.
 - [ ] HTTPS activo. Vercel lo emite solo; con un servidor propio, usa un certificado Let's Encrypt.
 - [ ] `NEXT_PUBLIC_SITE_URL=https://tudominio.co`, sin barra al final.
 - [ ] Redirección de `www` al dominio principal (o al revés), siempre la misma.
@@ -36,9 +37,9 @@ Marca cada punto antes de activar ventas reales. **Wompi en producción lo activ
 - [ ] Compra real de bajo valor. En los logs del hosting debe aparecer `[wompi-webhook] 7H-… APPROVED → paid`, y el pedido debe quedar "Pagado" en `/admin`.
 - [ ] Prueba un pago rechazado y verifica que el pedido siga pendiente.
 
-## 6. Cron de expiración (cada 15–60 min)
-- [ ] Vercel: crea `vercel.json` con `{"crons":[{"path":"/api/cron/expire-orders","schedule":"*/30 * * * *"}]}` (Vercel envía `Authorization: Bearer $CRON_SECRET`).
-- [ ] Otro hosting: usa un servicio externo (cron-job.org, GitHub Actions) con la cabecera `Authorization: Bearer <CRON_SECRET>`.
+## 6. Cron de expiración (ideal: cada 15–30 min)
+- [ ] `vercel.json` ya trae un cron **diario** (10:00 UTC = 5:00 a. m. en Colombia). Vercel envía `Authorization: Bearer $CRON_SECRET` si defines esa variable. En el plan **Hobby** solo se permite **una ejecución al día** y la hora puede variar hasta 59 min: un horario más frecuente hace fallar el despliegue.
+- [ ] Para liberar stock a tiempo (cada 15–30 min), en Hobby agrega un servicio externo gratuito (por ejemplo, cron-job.org): `GET https://tudominio.co/api/cron/expire-orders` con la cabecera `Authorization: Bearer <CRON_SECRET>`. En el plan Pro basta con cambiar el `schedule` a `*/15 * * * *`.
 - [ ] Verifica que un pedido vencido pase a "Expirado" y que su stock vuelva.
 
 ## 7. Pruebas de compra completas (Sandbox primero, luego producción)
