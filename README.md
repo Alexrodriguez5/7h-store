@@ -32,28 +32,31 @@ El acceso a productos y pedidos pasa por `src/services/` y Prisma. El esquema es
 ## 3. Pagos
 Tarjeta/PSE usan `PaymentGateway` con implementación de ejemplo Wompi. El navegador nunca marca un pedido como pagado: el webhook `/api/webhooks/wompi` verifica la firma antes de actualizar el pedido. Transferencia/consignación quedan pendientes y aceptan comprobante.
 
-## 4. Scripts
+## 4. Panel administrativo (/admin)
+- Primera vez: `npm run db:push` y abre `/admin/setup`. Usa el valor de `ADMIN_PASSWORD` como *llave de arranque* para crear la cuenta del dueño. Después, esa página se bloquea.
+- Cada persona tiene su propia cuenta (Panel → Usuarios). No hay registro público.
+- Categorías, productos, imágenes, inventario por talla, pedidos y auditoría se gestionan desde el panel.
+- Emergencias (sin correo configurado): `npm run admin -- restablecer correo@dominio.com`.
+- Detalle de la seguridad y de los cambios: `CAMBIOS-PRODUCCION.md`.
+
+## 5. Scripts
 - `npm run dev` desarrollo
 - `npm run build` producción
 - `npm run typecheck` TypeScript
 - `npm run lint` ESLint
-- `npm test` pruebas
+- `npm test` pruebas (base de datos en memoria; no tocan Supabase ni Wompi)
 - `npm run db:studio` Prisma Studio
+- `npm run admin -- listar` cuentas administrativas
 
-## 5. Antes de producción
-- Cambiar el almacenamiento demo del comprobante a Supabase Storage/S3.
-- Sustituir el acceso `?key=` del admin por autenticación real.
-- Configurar Wompi y validar su checksum con la configuración final de la cuenta.
-- Añadir correo transaccional.
-- Añadir rate limiting con infraestructura real.
-- Revisar textos legales, tratamiento de datos, devoluciones y datos bancarios.
+## 6. Antes de producción
+Sigue `PRODUCCION.md` (dominio, variables, Supabase, Wompi, cron, pruebas de compra, legal).
 
-## 6. Abrir en Visual Studio Code
+## 7. Abrir en Visual Studio Code
 1. Descomprime el ZIP.
 2. En VS Code elige **Archivo → Abrir carpeta** y selecciona la carpeta `7h-store`.
 3. Abre la terminal integrada con **Terminal → Nueva terminal**.
 4. Ejecuta `npm install`.
-5. Crea `.env.local` desde `.env.example` y coloca tu `DATABASE_URL` de Supabase.
+5. Crea `.env.local` y `.env` desde `.env.example` (mismos valores) y coloca tu `DATABASE_URL` de Supabase.
 6. Ejecuta `npm run db:generate`, `npm run db:push`, `npm run db:seed`.
 7. Ejecuta `npm run dev`.
 8. Abre `http://localhost:3000`.

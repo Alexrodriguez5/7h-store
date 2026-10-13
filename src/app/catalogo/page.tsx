@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { Catalog } from "@/components/catalog/Catalog";
-import { getProducts } from "@/services/products";
+import { getActiveCategories, getProducts } from "@/services/products";
 
 export const metadata: Metadata = {
   title: "Catálogo",
-  description: "Tecnología, ropa, calzado y accesorios originales de EE.UU.",
+  description: "Productos originales de EE.UU. con precios en COP e impuestos incluidos.",
 };
 
 export default async function CatalogPage() {
-  const products = await getProducts();
+  const [products, categories] = await Promise.all([getProducts(), getActiveCategories()]);
 
   return (
     <main id="contenido" className="mx-auto max-w-7xl px-5 py-10 lg:px-8 lg:py-14">
@@ -22,7 +22,7 @@ export default async function CatalogPage() {
         </p>
       </div>
 
-      <Catalog products={products} />
+      <Catalog products={products} categories={categories} />
     </main>
   );
 }

@@ -1,19 +1,22 @@
 "use client";
 
 import { useProductFilters } from "@/hooks/useProductFilters";
-import type { Product } from "@/types";
+import { useMemo } from "react";
+import type { Category, Product } from "@/types";
 import { FilterBar } from "./FilterBar";
 import { ProductCard } from "./ProductCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 
-export function Catalog({ products }: { products: Product[] }) {
-  const { filters, visible, update, reset } = useProductFilters(products);
+export function Catalog({ products, categories }: { products: Product[]; categories: Category[] }) {
+  const slugs = useMemo(() => categories.map((c) => c.slug), [categories]);
+  const { filters, visible, update, reset } = useProductFilters(products, slugs);
 
   return (
     <div className="space-y-8">
       <FilterBar
         filters={filters}
+        categories={categories}
         total={visible.length}
         onChange={update}
         onReset={reset}

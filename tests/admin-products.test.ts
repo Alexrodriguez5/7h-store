@@ -103,3 +103,42 @@ describe("activar/desactivar y eliminar", () => {
     expect(f.state.productVariant).toHaveLength(0);
   });
 });
+
+describe("inventario sin pisar compras concurrentes (expectedStock)", () => {
+  it("guardar la descripción NO restaura el stock que una compra ya reservó", async () => {
+    const p = await createProduct(form(), f.db); // 36=2, 38=3, 40=1
+    // El admin abre el formulario (ve 40 → 1)… mientras tanto un cliente compra la última talla 40.
+    f.state.productVariant.find((v) => v.size === "40")!.stock = 0;
+    const loaded = [{ size: "36", stock: 2, expectedStock: 2 }, { size: "38", stock: 3, expectedStock: 3 }, { size: "40", stock: 1, expectedStock: 1 }];
+    await updateProduct(p.id, form({ description: "Nueva descripción del producto.", variants: loaded }), f.db);
+    expect(f.state.productVariant.find((v) => v.size === "40")!.stock).toBe(0);
+    expect(f.state.product[0].description).toBe("Nueva descripción del producto.");
+  });
+  it("si el admin cambió una talla que también cambió una compra → 409 y no se guarda nada", async () => {
+    const p = await createProduct(form(), f.db);
+    f.state.productVariant.find((v) => v.size === "40")!.stock = 0;
+    await expect(updateProduct(p.id, form({ priceCOP: 1, variants: [{ size: "40", stock: 5, expectedStock: 1 }, { size: "36", stock: 2, expectedStock: 2 }, { size: "38", stock: 3, expectedStock: 3 }] }), f.db)).rejects.toMatchObject({ status: 409 });
+    expect(f.state.product[0].priceCOP).toBe(599000);
+  });
+  it("setStock con expectedStock: aplica si coincide, 409 si cambió", async () => {
+    const p = await createProduct(form({ category: "tecnologia", variants: [], stock: 10 }), f.db);
+    expect((await setStock(p.id, { stock: 8, expectedStock: 10 }, f.db)).stock).toBe(8);
+    await expect(setStock(p.id, { stock: 20, expectedStock: 10 }, f.db)).rejects.toMatchObject({ status: 409 });
+    expect(f.state.product[0].stock).toBe(8);
+  });
+});
+
+describe("rendimiento: operaciones de base de datos por acción", () => {
+  const sixSizes = [36, 37, 38, 39, 40, 41].map((s) => ({ size: String(s), stock: 2, expectedStock: 2 }));
+  it("editar solo el precio de un producto con 6 tallas: sin escrituras de tallas ni transacción", async () => {
+    const p = await createProduct(form({ variants: sixSizes.map(({ size, stock }) => ({ size, stock })) }), f.db);
+    f.resetOps();
+    await updateProduct(p.id, form({ priceCOP: 550000, variants: sixSizes }), f.db);
+    expect(f.ops).toEqual(["product.findUnique", "category.findUnique", "product.findMany", "product.update"]);
+  });
+  it("crear un producto: 2 lecturas en paralelo + 1 escritura", async () => {
+    f.resetOps();
+    await createProduct(form(), f.db);
+    expect(f.ops).toEqual(["category.findUnique", "product.findMany", "product.create"]);
+  });
+});

@@ -5,15 +5,17 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { selectCount, useCartStore } from "@/store/cart-store";
 
-const NAV = [
-  { label: "Todo", href: "/catalogo" },
-  { label: "Tecnología", href: "/catalogo?categoria=tecnologia" },
-  { label: "Ropa", href: "/catalogo?categoria=ropa" },
-  { label: "Calzado", href: "/catalogo?categoria=calzado" },
-  { label: "Accesorios", href: "/catalogo?categoria=accesorios" },
-] as const;
+import type { Category } from "@/types";
 
-export function Header() {
+/** Las categorías vienen de la base de datos: una categoría nueva aparece aquí sin tocar código. */
+export function Header({ categories }: { categories: Category[] }) {
+  const NAV = [
+    { label: "Todo", href: "/catalogo" },
+    ...categories.map((c) => ({
+      label: c.label,
+      href: `/catalogo?categoria=${encodeURIComponent(c.slug)}`,
+    })),
+  ];
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -33,7 +35,7 @@ export function Header() {
   const isActive = (href: string) => {
     if (pathname !== "/catalogo") return false;
     if (href === "/catalogo") return !category;
-    return href.includes(`categoria=${category}`);
+    return !!category && href.endsWith(`categoria=${encodeURIComponent(category)}`);
   };
 
   return (
@@ -61,15 +63,16 @@ export function Header() {
             7H STORE
           </Link>
 
-          <nav className="hidden items-center gap-5 lg:flex" aria-label="Principal">
+          <nav
+            className="hidden min-w-0 flex-wrap items-center gap-x-5 gap-y-1 lg:flex"
+            aria-label="Principal"
+          >
             {NAV.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={`border-b pb-1 text-xs transition-colors hover:text-gold-light ${
-                  isActive(item.href)
-                    ? "border-gold text-gold-light"
-                    : "border-transparent"
+                  isActive(item.href) ? "border-gold text-gold-light" : "border-transparent"
                 }`}
                 aria-current={isActive(item.href) ? "page" : undefined}
               >
@@ -78,11 +81,7 @@ export function Header() {
             ))}
           </nav>
 
-          <form
-            onSubmit={search}
-            className="ml-auto hidden max-w-sm flex-1 md:block"
-            role="search"
-          >
+          <form onSubmit={search} className="ml-auto hidden max-w-sm flex-1 md:block" role="search">
             <label htmlFor="header-search" className="sr-only">
               Buscar productos
             </label>
@@ -94,10 +93,7 @@ export function Header() {
                 placeholder="Buscar productos"
                 className="w-full bg-transparent py-2 text-xs outline-none placeholder:text-ivory/50"
               />
-              <button
-                type="submit"
-                className="px-1 text-xs text-gold-light hover:text-gold"
-              >
+              <button type="submit" className="px-1 text-xs text-gold-light hover:text-gold">
                 Buscar
               </button>
             </div>
@@ -141,7 +137,9 @@ export function Header() {
                 placeholder="Buscar productos"
                 className="w-full bg-transparent py-3 text-sm outline-none"
               />
-              <button type="submit" className="text-gold-light">Buscar</button>
+              <button type="submit" className="text-gold-light">
+                Buscar
+              </button>
             </form>
 
             <nav className="mt-8 flex flex-col gap-5" aria-label="Menú móvil">

@@ -30,3 +30,13 @@ export function detectImageType(bytes: Uint8Array): { mime: string; ext: string 
 }
 
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+export const MAX_PROOF_BYTES = 5 * 1024 * 1024;
+
+/** Comprobantes de pago: JPG, PNG o PDF validados por su contenido (nunca SVG/HTML). */
+export function detectProofType(bytes: Uint8Array): { mime: string; ext: string } | null {
+  const img = detectImageType(bytes);
+  if (img && img.mime !== "image/webp") return img;
+  const isPdf = bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46 && bytes[4] === 0x2d; // %PDF-
+  return isPdf ? { mime: "application/pdf", ext: "pdf" } : null;
+}

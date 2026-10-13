@@ -1,6 +1,7 @@
-export type CategorySlug = "tecnologia" | "ropa" | "calzado" | "accesorios";
+/** Slug de una categoría de la base de datos (ya no es una lista fija en el código). */
+export type CategorySlug = string;
 export type Gender = "hombre" | "mujer" | "unisex";
-export interface Category { slug: CategorySlug; label: string; }
+export interface Category { slug: CategorySlug; label: string; imageUrl?: string | null; }
 export interface ProductVariantInfo { id?: string; size: string; stock: number; }
 export interface Product { id: string; slug: string; name: string; brand: string; description: string; priceCOP: number; compareAtPriceCOP?: number; category: CategorySlug; gender: Gender; isAccessory: boolean; images: string[]; sizes?: string[]; variants?: ProductVariantInfo[]; stock: number; tags: string[]; featured?: boolean; }
 export interface CartItem { key: string; productId: string; name: string; image: string; priceCOP: number; size?: string; quantity: number; stock: number; }

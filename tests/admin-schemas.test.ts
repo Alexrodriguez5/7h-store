@@ -16,7 +16,13 @@ describe("validación de producto", () => {
   it("exige precio > 0", () => { expect(issues({ ...base, priceCOP: 0 })).toContain("El precio debe ser mayor a 0"); expect(issues({ ...base, priceCOP: -5 }).length).toBeGreaterThan(0); });
   it("rechaza stock negativo", () => { expect(issues({ ...base, variants: [], stock: -1 })).toContain("El stock no puede ser negativo"); expect(issues({ ...base, variants: [{ size: "40", stock: -1 }] }).length).toBeGreaterThan(0); });
   it("rechaza stock decimal", () => expect(issues({ ...base, variants: [{ size: "40", stock: 1.5 }] }).length).toBeGreaterThan(0));
-  it("“todo” NO es una categoría válida", () => { expect(issues({ ...base, category: "todo" }).length).toBeGreaterThan(0); expect(issues({ ...base, category: "otra" }).length).toBeGreaterThan(0); });
+  it("“todo” NO es una categoría válida y el slug debe tener formato correcto", () => {
+    expect(issues({ ...base, category: "todo" }).length).toBeGreaterThan(0);
+    expect(issues({ ...base, category: "Relojes Finos" }).length).toBeGreaterThan(0);
+    expect(issues({ ...base, category: "" }).length).toBeGreaterThan(0);
+    // Una categoría nueva (creada desde el panel) es válida para el esquema; el servicio verifica que exista.
+    expect(issues({ ...base, category: "relojes", variants: [] })).toEqual([]);
+  });
   it("exige al menos una imagen", () => expect(issues({ ...base, images: [] })).toContain("Agrega al menos una imagen"));
   it("rechaza imágenes de hosts no permitidos o http", () => { expect(issues({ ...base, images: ["https://evil.com/a.jpg"] }).length).toBeGreaterThan(0); expect(issues({ ...base, images: ["http://images.unsplash.com/a.jpg"] }).length).toBeGreaterThan(0); });
   it("rechaza tallas repetidas", () => expect(issues({ ...base, variants: [{ size: "40", stock: 1 }, { size: "40", stock: 2 }] }).some((m) => m.includes("repetida"))).toBe(true));

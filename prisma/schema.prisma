@@ -37,11 +37,24 @@ enum PaymentStatus {
   FAILED
 }
 
+enum AdminRole {
+  OWNER
+  ADMIN
+}
+
+/// Fuente de verdad de las categorías del catálogo. "Todo" NO es una categoría: es el filtro del catálogo.
 model Category {
-  id       String    @id @default(cuid())
-  slug     String    @unique
-  label    String
-  products Product[]
+  id        String    @id @default(cuid())
+  slug      String    @unique
+  label     String
+  /// Inactiva = oculta en la tienda. Solo se puede desactivar si no tiene productos activos.
+  active    Boolean   @default(true)
+  sortOrder Int       @default(0)
+  /// Imagen para la portada (opcional).
+  imageUrl  String?
+  createdAt DateTime  @default(now())
+  products  Product[]
+  @@index([active, sortOrder])
 }
 
 model Product {
@@ -137,4 +150,73 @@ model Payment {
   createdAt   DateTime      @default(now())
   @@index([orderId])
   @@index([providerRef])
+}
+
+/// Cuenta administrativa individual. Nunca se crea desde un registro público:
+/// la primera se crea en /admin/setup (con la llave de arranque) y las demás las crea un OWNER.
+model AdminUser {
+  id                String               @id @default(cuid())
+  email             String               @unique
+  name              String
+  /// scrypt (node:crypto). Nunca texto plano.
+  passwordHash      String
+  role              AdminRole            @default(ADMIN)
+  active            Boolean              @default(true)
+  passwordChangedAt DateTime             @default(now())
+  lastLoginAt       DateTime?
+  createdAt         DateTime             @default(now())
+  sessions          AdminSession[]
+  resetTokens       AdminPasswordReset[]
+  auditLogs         AdminAuditLog[]
+}
+
+/// Sesión revocable. La cookie lleva un token firmado; aquí solo se guarda su hash.
+model AdminSession {
+  id         String    @id @default(cuid())
+  adminId    String
+  admin      AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+  @@index([adminId])
+}
+
+/// Token de recuperación de contraseña: un solo uso, caduca, se guarda solo su hash.
+model AdminPasswordReset {
+  id        String    @id @default(cuid())
+  adminId   String
+  admin     AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  @@index([adminId])
+}
+
+/// Registro de acciones administrativas importantes (quién, qué, cuándo).
+model AdminAuditLog {
+  id         String     @id @default(cuid())
+  adminId    String?
+  admin      AdminUser? @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  actorEmail String?
+  action     String
+  entityType String?
+  entityId   String?
+  details    Json?
+  ip         String?
+  createdAt  DateTime   @default(now())
+  @@index([createdAt])
+  @@index([adminId])
+  @@index([entityType, entityId])
+}
+
+/// Contadores de límite de intentos compartidos entre instancias (serverless).
+model RateLimit {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+  @@index([resetAt])
 }

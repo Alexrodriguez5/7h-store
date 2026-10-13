@@ -37,7 +37,10 @@ export async function listOrders(f: OrderFilters) {
       orderBy: { createdAt: "desc" },
       skip: (f.page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
-      include: { payments: { select: { status: true, createdAt: true } } },
+      select: {
+        id: true, publicCode: true, createdAt: true, customerFullName: true, customerEmail: true, city: true, totalCOP: true, paymentMethod: true, status: true,
+        payments: { select: { status: true, createdAt: true } },
+      },
     }),
   ]);
   return { total, pages: Math.max(1, Math.ceil(total / PAGE_SIZE)), orders };
@@ -46,19 +49,38 @@ export async function listOrders(f: OrderFilters) {
 export const getOrderDetail = (id: string) =>
   prisma.order.findUnique({ where: { id }, include: { items: { include: { product: { select: { slug: true } } } }, payments: { orderBy: { createdAt: "desc" } } } });
 
+/** Solo los campos que muestran las tablas del panel (sin descripciones ni etiquetas). */
 export async function listProductsAdmin() {
-  const rows = await prisma.product.findMany({ include: { category: true, variants: true }, orderBy: { createdAt: "desc" } });
+  const rows = await prisma.product.findMany({
+    select: {
+      id: true, slug: true, name: true, brand: true, priceCOP: true, images: true, stock: true, featured: true, active: true,
+      category: { select: { label: true, active: true } },
+      variants: { select: { id: true, size: true, stock: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
   return rows.map((p) => ({ ...p, variants: [...p.variants], totalStock: totalStock(p.variants, p.stock) }));
 }
 
 export async function getDashboard() {
-  const [byStatus, sales, products, recent, lateApprovals] = await Promise.all([
+  const [byStatus, sales, products, recent, lateApprovals, proofsToReview] = await Promise.all([
     prisma.order.groupBy({ by: ["status"], _count: { _all: true } }),
     prisma.order.aggregate({ where: { status: { in: REVENUE_STATUSES } }, _sum: { totalCOP: true } }),
     prisma.product.findMany({ select: { id: true, name: true, slug: true, active: true, stock: true, variants: { select: { size: true, stock: true } } } }),
-    prisma.order.findMany({ orderBy: { createdAt: "desc" }, take: 6, include: { payments: { select: { status: true, createdAt: true } } } }),
+    prisma.order.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 6,
+      select: { id: true, publicCode: true, createdAt: true, customerFullName: true, totalCOP: true, status: true, payments: { select: { status: true, createdAt: true } } },
+    }),
     // Pagos aprobados en pedidos ya expirados/cancelados: requieren atención manual (reembolso o reactivación).
     prisma.order.findMany({ where: { status: { in: ["EXPIRED", "CANCELLED"] }, payments: { some: { status: "APPROVED" } } }, select: { id: true, publicCode: true } }),
+    // Transferencias/consignaciones con comprobante subido y aún sin confirmar.
+    prisma.order.findMany({
+      where: { status: "PENDING_PAYMENT", paymentMethod: { in: ["BANK_TRANSFER", "CASH_DEPOSIT"] }, payments: { some: { proofUrl: { not: null }, status: "PENDING" } } },
+      select: { id: true, publicCode: true, customerFullName: true, expiresAt: true },
+      orderBy: { expiresAt: "asc" },
+      take: 20,
+    }),
   ]);
   const count = (s: string) => byStatus.find((g) => g.status === s)?._count._all ?? 0;
   const active = products.filter((p) => p.active);
@@ -76,5 +98,6 @@ export async function getDashboard() {
     lowStock: withTotals.filter((p) => p.total > 0 && (p.total <= LOW_STOCK_THRESHOLD || p.variants.some((v) => v.stock > 0 && v.stock <= 1))),
     recent,
     lateApprovals,
+    proofsToReview,
   };
 }

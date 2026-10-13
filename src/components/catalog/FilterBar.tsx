@@ -1,6 +1,6 @@
 "use client";
 
-import type { FilterState, SortOption } from "@/types";
+import type { Category, FilterState, SortOption } from "@/types";
 
 const G = [
   { value: "todos", label: "Todos" },
@@ -18,15 +18,18 @@ const PRICES: [number | null, string][] = [
 
 export function FilterBar({
   filters,
+  categories,
   total,
   onChange,
   onReset,
 }: {
   filters: FilterState;
+  categories: Category[];
   total: number;
   onChange: <K extends keyof FilterState>(key: K, value: FilterState[K]) => void;
   onReset: () => void;
 }) {
+  const categoryLabel = categories.find((c) => c.slug === filters.category)?.label;
   const hasFilters =
     filters.search.trim() !== "" ||
     filters.category !== "todo" ||
@@ -44,6 +47,24 @@ export function FilterBar({
 
   return (
     <section aria-label="Filtros del catálogo" className="border-y border-ink/10 bg-ivory">
+      {categories.length > 0 && (
+        <nav
+          aria-label="Categorías"
+          className="-mx-1 flex gap-2 overflow-x-auto border-b border-ink/10 px-1 py-4"
+        >
+          {[{ slug: "todo", label: "Todo" }, ...categories].map((c) => (
+            <button
+              type="button"
+              key={c.slug}
+              onClick={() => onChange("category", c.slug)}
+              className={`shrink-0 ${chip(filters.category === c.slug)}`}
+              aria-pressed={filters.category === c.slug}
+            >
+              {c.label}
+            </button>
+          ))}
+        </nav>
+      )}
       <div className="flex flex-col gap-4 py-5 lg:flex-row lg:items-start lg:gap-8">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -82,7 +103,9 @@ export function FilterBar({
           <select
             id="catalog-price"
             value={filters.maxPriceCOP ?? ""}
-            onChange={(e) => onChange("maxPriceCOP", e.target.value ? Number(e.target.value) : null)}
+            onChange={(e) =>
+              onChange("maxPriceCOP", e.target.value ? Number(e.target.value) : null)
+            }
             aria-label="Precio máximo"
             className="min-w-48 border border-ink/20 bg-ivory px-3 py-2.5 text-xs outline-none transition-colors focus:border-gold"
           >
@@ -121,6 +144,9 @@ export function FilterBar({
             <span className="border border-gold/70 px-2.5 py-1 text-[11px]">
               Búsqueda: “{filters.search.trim()}”
             </span>
+          )}
+          {categoryLabel && (
+            <span className="border border-gold/70 px-2.5 py-1 text-[11px]">{categoryLabel}</span>
           )}
           {filters.gender !== "todos" && (
             <span className="border border-gold/70 px-2.5 py-1 text-[11px]">

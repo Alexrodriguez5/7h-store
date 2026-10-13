@@ -1,3 +1,5 @@
+> **Histórico (v2).** La versión actual del acceso (cuentas individuales, sesiones revocables, auditoría, límite persistente) está en `CAMBIOS-PRODUCCION.md`.
+
 # 7H STORE — Panel /admin (cambios)
 
 ## Pasos para activarlo (en tu máquina, PowerShell)

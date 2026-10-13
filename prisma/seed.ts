@@ -244,15 +244,15 @@ async function main() {
 
   console.log("📂 Creando categorías...");
 
-  for (const [slug, label] of categories) {
+  // Solo crea lo que falta: NUNCA sobrescribe nombres, precios ni inventario editados desde el panel.
+  for (const [i, [slug, label]] of categories.entries()) {
     await prisma.category.upsert({
       where: { slug },
-      update: {
-        label,
-      },
+      update: {},
       create: {
         slug,
         label,
+        sortOrder: (i + 1) * 10,
       },
     });
   }
@@ -287,19 +287,8 @@ async function main() {
       where: {
         slug,
       },
-      update: {
-        name,
-        brand,
-        priceCOP: price,
-        compareAtPriceCOP: compare,
-        categoryId: c.id,
-        gender: gender as Gender,
-        isAccessory,
-        stock,
-        tags: [...tags],
-        featured,
-        images: [img(imageId)],
-      },
+      // Si el producto ya existe, no se toca (el stock real lo maneja el panel).
+      update: {},
       create: {
         slug,
         name,

@@ -1,6 +1,7 @@
 /**
- * Sesión administrativa: cookie firmada con HMAC-SHA256 (Web Crypto, funciona en
- * Node y en el runtime Edge del middleware). Nunca contiene ADMIN_PASSWORD.
+ * Token de sesión administrativa: firmado con HMAC-SHA256 (Web Crypto, funciona en Node y en el
+ * runtime Edge del middleware). La firma es la primera barrera; la sesión además debe existir y no
+ * estar revocada en la tabla AdminSession (ver lib/admin/auth.ts). Nunca contiene contraseñas.
  */
 const SESSION_TTL_SECONDS = 8 * 60 * 60;
 
@@ -13,8 +14,8 @@ const enc = new TextEncoder();
 function signingSecret(): string | null {
   const dedicated = process.env.ADMIN_SESSION_SECRET;
   if (dedicated && dedicated.length >= 16) return dedicated;
+  // Respaldo para no romper instalaciones existentes. En producción define ADMIN_SESSION_SECRET (32+ caracteres aleatorios).
   const pw = process.env.ADMIN_PASSWORD;
-  // Respaldo: deriva del password (cambiarlo invalida las sesiones). Recomendado definir ADMIN_SESSION_SECRET.
   return pw ? `7h-admin-session:${pw}` : null;
 }
 
@@ -27,7 +28,7 @@ async function hmacKey(usage: "sign" | "verify", secret: string) {
 
 export async function createSessionToken(nowMs = Date.now()): Promise<string> {
   const secret = signingSecret();
-  if (!secret) throw new Error("ADMIN_PASSWORD no configurada");
+  if (!secret) throw new Error("ADMIN_SESSION_SECRET no configurada");
   const nonce = crypto.getRandomValues(new Uint8Array(12));
   const payload = b64u(enc.encode(JSON.stringify({ exp: Math.floor(nowMs / 1000) + SESSION_TTL_SECONDS, n: b64u(nonce) })));
   const sig = new Uint8Array(await crypto.subtle.sign("HMAC", await hmacKey("sign", secret), enc.encode(payload)));
@@ -56,4 +57,15 @@ export function readCookie(header: string | null, name: string): string | undefi
     if (i > 0 && part.slice(0, i).trim() === name) return decodeURIComponent(part.slice(i + 1).trim());
   }
   return undefined;
+}
+
+type CookieJar = { set: (name: string, value: string, opts: Record<string, unknown>) => unknown };
+
+/** Cookie de sesión: HttpOnly, SameSite=Strict, Secure y prefijo __Host- en producción. */
+export function setSessionCookie(res: { cookies: CookieJar }, token: string) {
+  res.cookies.set(COOKIE_NAME, token, { httpOnly: true, secure: IS_PROD, sameSite: "strict", path: "/", maxAge: SESSION_MAX_AGE });
+}
+
+export function clearSessionCookie(res: { cookies: CookieJar }) {
+  res.cookies.set(COOKIE_NAME, "", { httpOnly: true, secure: IS_PROD, sameSite: "strict", path: "/", maxAge: 0 });
 }

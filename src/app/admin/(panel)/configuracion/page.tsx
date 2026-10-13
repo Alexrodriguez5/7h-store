@@ -5,10 +5,22 @@ import { Badge, Card, PageHeader } from "@/components/admin/ui";
 
 export const metadata = { title: "Configuración" };
 
+const IS_PROD = process.env.NODE_ENV === "production";
+
+/** [nombre, descripción, obligatoria] — nunca se muestra el valor, solo si existe. */
 const VARS: [string, string, boolean][] = [
-  ["DATABASE_URL", "Base de datos", true], ["ADMIN_PASSWORD", "Acceso administrativo", true], ["ADMIN_SESSION_SECRET", "Firma de sesión (recomendado)", false],
-  ["WOMPI_PUBLIC_KEY", "Wompi · llave pública", true], ["WOMPI_INTEGRITY_SECRET", "Wompi · integridad", true], ["WOMPI_EVENTS_SECRET", "Wompi · eventos (webhook)", true],
-  ["SUPABASE_URL", "Supabase Storage · URL", false], ["SUPABASE_SERVICE_ROLE_KEY", "Supabase Storage · llave de servicio", false], ["CRON_SECRET", "Cron de expiración", true],
+  ["DATABASE_URL", "Base de datos", true],
+  ["NEXT_PUBLIC_SITE_URL", "Dominio público (enlaces de correos, sitemap, SEO)", true],
+  ["ADMIN_SESSION_SECRET", "Firma de las sesiones del panel (32+ caracteres aleatorios)", IS_PROD],
+  ["ADMIN_PASSWORD", "Llave de arranque: solo para crear el primer dueño en /admin/setup", false],
+  ["WOMPI_PUBLIC_KEY", "Wompi · llave pública", true],
+  ["WOMPI_INTEGRITY_SECRET", "Wompi · integridad (checkout)", true],
+  ["WOMPI_EVENTS_SECRET", "Wompi · eventos (webhook)", true],
+  ["SUPABASE_URL", "Supabase Storage · URL", false],
+  ["SUPABASE_SERVICE_ROLE_KEY", "Supabase Storage · llave de servicio (solo servidor)", false],
+  ["CRON_SECRET", "Cron de expiración de pedidos", true],
+  ["RESEND_API_KEY", "Correo transaccional (recuperar contraseña)", false],
+  ["EMAIL_FROM", "Remitente de los correos", false],
 ];
 
 export default async function SettingsPage() {
@@ -16,6 +28,9 @@ export default async function SettingsPage() {
   return (
     <>
       <PageHeader title="Configuración" subtitle="Solo lectura. Los valores nunca se muestran: únicamente si están configurados." />
+      {IS_PROD && !process.env.ADMIN_SESSION_SECRET && (
+        <p role="alert" className="mb-6 border border-error/40 bg-white p-4 text-sm text-error">Falta ADMIN_SESSION_SECRET: en producción las sesiones deben firmarse con un secreto propio, no derivado de ADMIN_PASSWORD.</p>
+      )}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card title="Variables de entorno">
           <ul className="divide-y divide-ink/10">

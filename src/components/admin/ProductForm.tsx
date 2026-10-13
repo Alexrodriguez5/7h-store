@@ -3,6 +3,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState, type FormEvent } from "react";
 import { adminFetch } from "./api";
+import { uploadImage } from "./ImagePicker";
 import { btnGhost, btnPrimary, inputCls, labelCls } from "./ui";
 import { slugify } from "@/lib/schemas/admin";
 import { sortSizes } from "@/lib/sizes";
@@ -10,19 +11,24 @@ import { sortSizes } from "@/lib/sizes";
 export interface ProductFormValues {
   name: string; slug: string; brand: string; description: string; priceCOP: string; compareAtPriceCOP: string;
   category: string; gender: string; isAccessory: boolean; featured: boolean; active: boolean;
-  images: string[]; tags: string; stock: string; hasSizes: boolean; variants: { size: string; stock: string }[];
+  images: string[]; tags: string; stock: string; hasSizes: boolean;
+  /** `expectedStock` = stock que había al abrir el formulario (solo tallas ya existentes). */
+  variants: { size: string; stock: string; expectedStock?: number }[];
+  /** Stock al abrir el formulario (producto sin tallas). */
+  expectedStock?: number;
 }
 export const EMPTY_PRODUCT: ProductFormValues = {
-  name: "", slug: "", brand: "", description: "", priceCOP: "", compareAtPriceCOP: "", category: "calzado", gender: "UNISEX",
+  name: "", slug: "", brand: "", description: "", priceCOP: "", compareAtPriceCOP: "", category: "", gender: "UNISEX",
   isAccessory: false, featured: false, active: true, images: [], tags: "", stock: "0", hasSizes: false, variants: [],
 };
 
-const CATEGORIES = [["tecnologia", "Tecnología"], ["ropa", "Ropa"], ["calzado", "Calzado"], ["accesorios", "Accesorios"]];
 const PRESETS: Record<string, string[]> = { calzado: ["36", "37", "38", "39", "40", "41", "42", "43"], ropa: ["XS", "S", "M", "L", "XL"] };
 
-export function ProductForm({ initial = EMPTY_PRODUCT, productId }: { initial?: ProductFormValues; productId?: string }) {
+export interface CategoryOption { slug: string; label: string; active: boolean }
+
+export function ProductForm({ initial = EMPTY_PRODUCT, productId, categories }: { initial?: ProductFormValues; productId?: string; categories: CategoryOption[] }) {
   const router = useRouter();
-  const [v, setV] = useState<ProductFormValues>(initial);
+  const [v, setV] = useState<ProductFormValues>(() => ({ ...initial, category: initial.category || categories.find((c) => c.active)?.slug || "" }));
   const [slugTouched, setSlugTouched] = useState(!!productId);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -37,13 +43,10 @@ export function ProductForm({ initial = EMPTY_PRODUCT, productId }: { initial?: 
     if (!files?.length) return;
     setUploading(true);
     setError(undefined);
-    for (const file of Array.from(files)) {
-      const form = new FormData();
-      form.append("file", file);
-      const res = await fetch("/api/admin/uploads", { method: "POST", body: form }).catch(() => null);
-      const data = (await res?.json().catch(() => ({}))) as { url?: string; error?: string } | undefined;
-      if (res?.ok && data?.url) setV((p) => ({ ...p, images: [...p.images, data.url!] }));
-      else { setError(data?.error ?? "No se pudo subir la imagen."); break; }
+    for (const file of Array.from(files).slice(0, Math.max(0, 8 - v.images.length))) {
+      const r = await uploadImage(file);
+      if (r.url) setV((p) => ({ ...p, images: [...p.images, r.url!] }));
+      else { setError(r.error); break; }
     }
     setUploading(false);
     if (fileRef.current) fileRef.current.value = "";
@@ -57,6 +60,7 @@ export function ProductForm({ initial = EMPTY_PRODUCT, productId }: { initial?: 
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    if (saving) return; // evita envíos duplicados
     setSaving(true);
     setError(undefined);
     const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
@@ -66,13 +70,21 @@ export function ProductForm({ initial = EMPTY_PRODUCT, productId }: { initial?: 
       category: v.category, gender: v.gender, isAccessory: v.isAccessory, featured: v.featured, active: v.active,
       images: v.images, tags: v.tags.split(",").map((t) => t.trim()).filter(Boolean),
       stock: v.hasSizes ? 0 : num(v.stock),
-      variants: v.hasSizes ? sortSizes(v.variants.map((x) => x.size.trim().toUpperCase())).map((size) => ({ size, stock: num(v.variants.find((x) => x.size.trim().toUpperCase() === size)!.stock) })) : [],
+      expectedStock: v.hasSizes ? undefined : v.expectedStock,
+      variants: v.hasSizes
+        ? sortSizes(v.variants.map((x) => x.size.trim().toUpperCase())).map((size) => {
+            const row = v.variants.find((x) => x.size.trim().toUpperCase() === size)!;
+            return { size, stock: num(row.stock), expectedStock: row.expectedStock };
+          })
+        : [],
     };
     const r = await adminFetch(productId ? `/api/admin/products/${productId}` : "/api/admin/products", productId ? "PUT" : "POST", payload);
-    setSaving(false);
-    if (!r.ok) return setError(r.error);
-    router.push("/admin/productos");
-    router.refresh();
+    if (!r.ok) {
+      setSaving(false);
+      return setError(r.error);
+    }
+    // La lista de productos es dinámica: al navegar se cargan datos frescos (sin un refresh extra).
+    router.push(`/admin/productos?guardado=${encodeURIComponent(v.name.trim())}`);
   };
 
   return (
@@ -107,14 +119,14 @@ export function ProductForm({ initial = EMPTY_PRODUCT, productId }: { initial?: 
               {v.variants.length === 0 && <p className="text-sm text-ink-soft">Agrega las tallas y su stock. Una talla en 0 se muestra agotada y no se puede comprar.</p>}
               {v.variants.map((row, i) => (
                 <div key={i} className="grid grid-cols-[1fr_1fr_auto] items-end gap-3">
-                  <div><label className="sr-only" htmlFor={`size-${i}`}>Talla</label><input id={`size-${i}`} placeholder="Talla" value={row.size} onChange={(e) => set("variants", v.variants.map((x, j) => (j === i ? { ...x, size: e.target.value } : x)))} className={inputCls} /></div>
-                  <div><label className="sr-only" htmlFor={`vstock-${i}`}>Stock</label><input id={`vstock-${i}`} type="number" min={0} step={1} placeholder="Stock" value={row.stock} onChange={(e) => set("variants", v.variants.map((x, j) => (j === i ? { ...x, stock: e.target.value } : x)))} className={inputCls} /></div>
+                  <div><label className="sr-only" htmlFor={`size-${i}`}>Talla</label><input id={`size-${i}`} placeholder="Talla" value={row.size} readOnly={row.expectedStock !== undefined} title={row.expectedStock !== undefined ? "Talla existente: para cambiarla quítala y agrega otra" : undefined} onChange={(e) => set("variants", v.variants.map((x, j) => (j === i ? { ...x, size: e.target.value } : x)))} className={`${inputCls} read-only:bg-ivory-200/40`} /></div>
+                  <div><label className="sr-only" htmlFor={`vstock-${i}`}>Stock talla {row.size}</label><input id={`vstock-${i}`} type="number" min={0} step={1} placeholder="Stock" value={row.stock} onChange={(e) => set("variants", v.variants.map((x, j) => (j === i ? { ...x, stock: e.target.value } : x)))} className={`${inputCls} ${row.stock.trim() === "0" ? "border-error/50" : ""}`} /></div>
                   <button type="button" className={btnGhost} aria-label={`Quitar talla ${row.size}`} onClick={() => set("variants", v.variants.filter((_, j) => j !== i))}>✕</button>
                 </div>
               ))}
               <div className="flex flex-wrap items-center gap-2">
                 <button type="button" className={btnGhost} onClick={() => set("variants", [...v.variants, { size: "", stock: "0" }])}>+ Agregar talla</button>
-                {PRESETS[v.category] && <button type="button" className={btnGhost} onClick={addPreset}>Agregar tallas típicas de {v.category}</button>}
+                {PRESETS[v.category] && <button type="button" className={btnGhost} onClick={addPreset}>Agregar tallas típicas de {categories.find((c) => c.slug === v.category)?.label ?? v.category}</button>}
                 <span className="ml-auto text-xs text-ink-soft">Total: {total} unidades</span>
               </div>
             </div>
@@ -125,7 +137,14 @@ export function ProductForm({ initial = EMPTY_PRODUCT, productId }: { initial?: 
       <div className="space-y-6">
         <section className="space-y-4 border border-ink/10 bg-white p-5">
           <h2 className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft">Clasificación y estado</h2>
-          <div><label htmlFor="category" className={labelCls}>Categoría *</label><select id="category" value={v.category} onChange={(e) => set("category", e.target.value)} className={inputCls}>{CATEGORIES.map(([s, l]) => <option key={s} value={s}>{l}</option>)}</select></div>
+          <div>
+            <label htmlFor="category" className={labelCls}>Categoría *</label>
+            <select id="category" required value={v.category} onChange={(e) => set("category", e.target.value)} className={inputCls}>
+              {!v.category && <option value="">Elige una categoría</option>}
+              {categories.map((c) => <option key={c.slug} value={c.slug}>{c.label}{c.active ? "" : " (oculta)"}</option>)}
+            </select>
+            {categories.length === 0 && <p className="mt-1 text-[11px] text-error">Primero crea una categoría en «Categorías».</p>}
+          </div>
           <div><label htmlFor="gender" className={labelCls}>Género</label><select id="gender" value={v.gender} onChange={(e) => set("gender", e.target.value)} className={inputCls}><option value="UNISEX">Unisex</option><option value="HOMBRE">Hombre</option><option value="MUJER">Mujer</option></select></div>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={v.isAccessory} onChange={(e) => set("isAccessory", e.target.checked)} /> Es un accesorio</label>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={v.featured} onChange={(e) => set("featured", e.target.checked)} /> Producto destacado (inicio)</label>
@@ -139,7 +158,7 @@ export function ProductForm({ initial = EMPTY_PRODUCT, productId }: { initial?: 
               {v.images.map((src, i) => (
                 <li key={src} className="space-y-2">
                   <div className="relative aspect-[4/5] overflow-hidden border border-ink/10 bg-ivory-200">
-                    <Image src={src} alt={`Imagen ${i + 1}`} fill unoptimized sizes="160px" className="object-cover" />
+                    <Image src={src} alt={`Imagen ${i + 1}`} fill sizes="160px" className="object-cover" />
                     {i === 0 && <span className="absolute left-1 top-1 bg-gold px-1.5 py-0.5 text-[9px] font-semibold uppercase text-ink">Principal</span>}
                   </div>
                   <div className="flex gap-1">
@@ -162,7 +181,7 @@ export function ProductForm({ initial = EMPTY_PRODUCT, productId }: { initial?: 
 
         {error && <p role="alert" className="border border-error/40 bg-white p-3 text-sm text-error">{error}</p>}
         <div className="flex gap-3">
-          <button type="submit" disabled={saving || uploading} className={`${btnPrimary} flex-1`}>{saving ? "Guardando…" : productId ? "Guardar cambios" : "Crear producto"}</button>
+          <button type="submit" disabled={saving || uploading || !v.category} aria-busy={saving} className={`${btnPrimary} flex-1`}>{saving ? "Guardando…" : productId ? "Guardar cambios" : "Crear producto"}</button>
           <button type="button" className={btnGhost} onClick={() => router.push("/admin/productos")}>Cancelar</button>
         </div>
       </div>

@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { canTransition } from "@/lib/order-status";
 import { claimTransition, releaseOrderStock } from "@/lib/stock";
 
+const TX = { maxWait: 10_000, timeout: 15_000 };
+
 export class LifecycleError extends Error {
   constructor(public code: "NOT_FOUND" | "INVALID_TRANSITION" | "MISSING_TRACKING" | "MANUAL_ONLY" | "NOT_MANUAL", message: string) {
     super(message);
@@ -17,7 +19,7 @@ export async function expireOrder(orderId: string, db: PrismaClient = prisma): P
     if (!ok) return false;
     await releaseOrderStock(tx, orderId);
     return true;
-  });
+  }, TX);
 }
 
 export interface PaymentEvent {
@@ -29,10 +31,8 @@ export interface PaymentEvent {
 
 export type PaymentEventResult = "ignored" | "duplicate" | "paid" | "recorded" | "late_approval" | "amount_mismatch";
 
-function amountInCentsOf(raw: unknown): number | undefined {
-  const data = (raw as { data?: { transaction?: { amount_in_cents?: unknown } } } | null)?.data;
-  const v = data?.transaction?.amount_in_cents;
-  return typeof v === "number" ? v : undefined;
+function transactionOf(raw: unknown): { amount_in_cents?: unknown; currency?: unknown } | undefined {
+  return (raw as { data?: { transaction?: { amount_in_cents?: unknown; currency?: unknown } } } | null)?.data?.transaction;
 }
 
 /**
@@ -51,8 +51,11 @@ export async function applyPaymentEvent(event: PaymentEvent, db: PrismaClient = 
     const existing = await tx.payment.findUnique({ where: { id: paymentId } });
     if (existing?.status === "APPROVED") return "duplicate";
 
-    const cents = amountInCentsOf(event.rawPayload);
-    const mismatch = event.status === "APPROVED" && cents !== undefined && cents !== order.totalCOP * 100;
+    // Un aprobado SIN monto, con otra moneda o con otro valor NO paga el pedido: queda registrado para revisión.
+    const trx = transactionOf(event.rawPayload);
+    const cents = typeof trx?.amount_in_cents === "number" ? trx.amount_in_cents : undefined;
+    const currencyOk = trx?.currency === undefined || trx.currency === "COP";
+    const mismatch = event.status === "APPROVED" && (cents === undefined || cents !== order.totalCOP * 100 || !currencyOk);
     const paymentStatus = mismatch ? "FAILED" : event.status === "APPROVED" ? "APPROVED" : event.status === "DECLINED" ? "FAILED" : "PENDING";
     const rawPayload = JSON.parse(JSON.stringify(event.rawPayload));
 
@@ -66,7 +69,7 @@ export async function applyPaymentEvent(event: PaymentEvent, db: PrismaClient = 
     if (event.status !== "APPROVED") return "recorded";
     const paid = await claimTransition(tx, order.id, "PENDING_PAYMENT", { status: "PAID" });
     return paid ? "paid" : "late_approval";
-  });
+  }, TX);
 }
 
 export interface StatusChangeInput {
@@ -98,11 +101,10 @@ export async function changeOrderStatus(input: StatusChangeInput, db: PrismaClie
     // El candado evita que dos clicks/pestañas apliquen la misma transición dos veces.
     const ok = await claimTransition(tx, order.id, previous, data);
     if (!ok) throw new LifecycleError("INVALID_TRANSITION", "El pedido cambió de estado. Recarga e inténtalo de nuevo.");
-    if (input.to === "CANCELLED" && (previous === "PENDING_PAYMENT" || input.restock)) {
-      await releaseOrderStock(tx, order.id);
-    }
-    return tx.order.findUniqueOrThrow({ where: { id: order.id } });
-  });
+    const restocked = input.to === "CANCELLED" && (previous === "PENDING_PAYMENT" || !!input.restock);
+    if (restocked) await releaseOrderStock(tx, order.id);
+    return { order: await tx.order.findUniqueOrThrow({ where: { id: order.id } }), previous, restocked };
+  }, TX);
 }
 
 /**
@@ -122,5 +124,5 @@ export async function confirmManualPayment(orderId: string, db: PrismaClient = p
     if (manual) await tx.payment.update({ where: { id: manual.id }, data: { status: "APPROVED" } });
     else await tx.payment.create({ data: { orderId: order.id, provider: "manual", status: "APPROVED", amountCOP: order.totalCOP } });
     return tx.order.findUniqueOrThrow({ where: { id: order.id } });
-  });
+  }, TX);
 }

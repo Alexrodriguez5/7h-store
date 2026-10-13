@@ -20,9 +20,5 @@ export function applyFilters(products: Product[], f: FilterState): Product[] {
   if (f.sort === "precio-asc") result.sort((a, b) => a.priceCOP - b.priceCOP);
   if (f.sort === "precio-desc") result.sort((a, b) => b.priceCOP - a.priceCOP);
   if (f.sort === "novedades") result.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
-  if (f.sort === "novedades") result.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
-  if (f.sort === "novedades") result.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
-  if (f.sort === "novedades") result.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
-  if (f.sort === "novedades") result.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
   return result;
 }

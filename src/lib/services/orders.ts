@@ -79,7 +79,7 @@ export async function createOrder(input: CheckoutInput, db: PrismaClient = prism
         },
       },
     });
-  });
+  }, { maxWait: 10_000, timeout: 15_000 }); // margen para bases de datos lejanas (Supabase en otra región)
 }
 
 export async function getOrderForTracking(publicCode: string, email: string) {

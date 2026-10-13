@@ -4,22 +4,29 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { adminFetch } from "./api";
 
-const NAV = [
+const NAV: { href: string; label: string; exact?: boolean; owner?: boolean }[] = [
   { href: "/admin", label: "Dashboard", exact: true },
   { href: "/admin/pedidos", label: "Pedidos" },
   { href: "/admin/productos", label: "Productos" },
   { href: "/admin/categorias", label: "Categorías" },
   { href: "/admin/inventario", label: "Inventario" },
+  { href: "/admin/usuarios", label: "Usuarios", owner: true },
+  { href: "/admin/auditoria", label: "Auditoría" },
   { href: "/admin/configuracion", label: "Configuración" },
 ];
 
-export function AdminShell({ children }: { children: ReactNode }) {
+export interface ShellAdmin { name: string; email: string; role: "OWNER" | "ADMIN" }
+
+export function AdminShell({ children, admin }: { children: ReactNode; admin: ShellAdmin }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const active = (href: string, exact?: boolean) => (exact ? pathname === href : pathname.startsWith(href));
 
+  const [leaving, setLeaving] = useState(false);
   const logout = async () => {
+    if (leaving) return;
+    setLeaving(true);
     await adminFetch("/api/admin/logout", "POST");
     router.replace("/admin/login");
     router.refresh();
@@ -27,7 +34,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
   const nav = (
     <nav aria-label="Administración" className="flex flex-1 flex-col gap-1 p-4">
-      {NAV.map((item) => (
+      {NAV.filter((item) => !item.owner || admin.role === "OWNER").map((item) => (
         <Link
           key={item.href}
           href={item.href}
@@ -39,8 +46,12 @@ export function AdminShell({ children }: { children: ReactNode }) {
         </Link>
       ))}
       <div className="mt-auto space-y-2 border-t border-white/10 pt-4">
+        <Link href="/admin/cuenta" onClick={() => setOpen(false)} aria-current={active("/admin/cuenta") ? "page" : undefined} className="block px-3 py-2 text-xs text-ivory/70 hover:text-ivory">
+          <span className="block truncate font-semibold text-ivory">{admin.name}</span>
+          <span className="block truncate text-[11px] text-ivory/60">{admin.role === "OWNER" ? "Dueño" : "Administrador"} · Mi cuenta</span>
+        </Link>
         <Link href="/" target="_blank" className="block px-3 py-2 text-xs text-ivory/60 hover:text-ivory">Ver tienda ↗</Link>
-        <button type="button" onClick={logout} className="w-full px-3 py-2 text-left text-xs text-ivory/60 hover:text-ivory">Cerrar sesión</button>
+        <button type="button" onClick={logout} disabled={leaving} className="w-full px-3 py-2 text-left text-xs text-ivory/60 hover:text-ivory disabled:opacity-50">{leaving ? "Cerrando…" : "Cerrar sesión"}</button>
       </div>
     </nav>
   );

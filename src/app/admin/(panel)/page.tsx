@@ -23,6 +23,16 @@ export default async function AdminDashboard() {
         </div>
       )}
 
+      {d.proofsToReview.length > 0 && (
+        <div role="status" className="mb-6 border border-gold/60 bg-white p-4 text-sm">
+          <strong>Comprobantes por revisar ({d.proofsToReview.length}):</strong>{" "}
+          {d.proofsToReview.map((o, i) => (
+            <span key={o.id}>{i > 0 && ", "}<Link href={`/admin/pedidos/${o.id}`} className="underline">{o.publicCode}</Link></span>
+          ))}
+          . Verifica el dinero en la cuenta y confirma el pago antes de que el pedido expire.
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat label="Total de pedidos" value={d.totalOrders} href="/admin/pedidos" />
         <Stat label="Pendientes de pago" value={d.pending} href="/admin/pedidos?status=PENDING_PAYMENT" />

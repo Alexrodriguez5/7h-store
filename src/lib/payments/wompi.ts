@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 import type { PaymentGateway, GatewayOrder } from "./gateway";
 
 export class WompiGateway implements PaymentGateway {
@@ -60,11 +60,13 @@ export class WompiGateway implements PaymentGateway {
 
     const secret = process.env.WOMPI_EVENTS_SECRET;
     const signature = payload.signature;
+    // Wompi envía el checksum en el cuerpo y también en la cabecera X-Event-Checksum.
+    const received = signature?.checksum ?? req.headers.get("x-event-checksum") ?? undefined;
 
     if (
       !secret ||
-      !signature?.checksum ||
-      !signature.properties ||
+      !received ||
+      !Array.isArray(signature?.properties) ||
       payload.timestamp === undefined
     ) {
       throw new Error(
@@ -73,7 +75,7 @@ export class WompiGateway implements PaymentGateway {
     }
 
     const propertyValues = signature.properties
-      .map((path) => {
+      .map((path: string) => {
         const value = getPath(
           payload.data,
           path
@@ -92,7 +94,10 @@ export class WompiGateway implements PaymentGateway {
       .update(values)
       .digest("hex");
 
-    if (expected !== signature.checksum) {
+    // Wompi publica el checksum en hexadecimal MAYÚSCULA y digest("hex") produce minúsculas:
+    // se normaliza antes de comparar (en tiempo constante). Antes, esta diferencia hacía que
+    // TODOS los eventos reales se rechazaran como "Firma inválida".
+    if (!checksumMatches(expected, received)) {
       throw new Error(
         "Firma inválida"
       );
@@ -118,13 +123,18 @@ export class WompiGateway implements PaymentGateway {
         ? transaction.status
         : "PENDING";
 
+    if (!providerRef || !publicCode) {
+      throw new Error("Evento sin transacción o referencia");
+    }
+
+    // Estados finales de Wompi: APPROVED, DECLINED, VOIDED, ERROR.
     const status:
       | "APPROVED"
       | "DECLINED"
       | "PENDING" =
       rawStatus === "APPROVED"
         ? "APPROVED"
-        : rawStatus === "DECLINED"
+        : rawStatus === "DECLINED" || rawStatus === "ERROR" || rawStatus === "VOIDED"
           ? "DECLINED"
           : "PENDING";
 
@@ -150,4 +160,12 @@ function getPath(
         : undefined,
     root
   );
+}
+
+/** Compara dos checksums SHA-256 en hexadecimal sin distinguir mayúsculas y en tiempo constante. */
+export function checksumMatches(expectedHex: string, receivedHex: string): boolean {
+  const a = expectedHex.trim().toLowerCase();
+  const b = receivedHex.trim().toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(a) || !/^[0-9a-f]{64}$/.test(b)) return false;
+  return timingSafeEqual(Buffer.from(a, "hex"), Buffer.from(b, "hex"));
 }
