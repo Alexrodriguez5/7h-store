@@ -74,7 +74,7 @@ function ProductCardBase({ product, priority = false }: { product: Product; prio
         <div className="mt-3 min-h-9">
           {needsSize && (
             <div
-              className="no-scrollbar flex flex-nowrap items-center gap-1.5 overflow-x-auto"
+              className="flex flex-wrap items-center gap-1.5"
               role="radiogroup"
               aria-label={`Seleccionar talla para ${product.name}`}
             >
