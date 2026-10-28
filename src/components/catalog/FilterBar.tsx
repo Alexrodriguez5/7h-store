@@ -39,18 +39,18 @@ export function FilterBar({
     filters.sort !== "relevancia";
 
   const chip = (active: boolean) =>
-    `border px-3 py-2 text-xs transition-colors ${
+    `rounded-full border px-4 py-2 text-xs font-medium transition-all duration-200 ${
       active
-        ? "border-ink bg-ink text-ivory"
-        : "border-ink/20 bg-transparent hover:border-gold hover:text-ink"
+        ? "border-ink bg-ink text-ivory shadow-soft"
+        : "border-ink/15 bg-white/40 hover:border-gold hover:bg-white/70 hover:text-ink"
     }`;
 
   return (
-    <section aria-label="Filtros del catálogo" className="border-y border-ink/10 bg-ivory">
+    <section aria-label="Filtros del catálogo" className="rounded-2xl border border-ink/10 bg-white/50 px-4 shadow-soft backdrop-blur-sm sm:px-5">
       {categories.length > 0 && (
         <nav
           aria-label="Categorías"
-          className="-mx-1 flex gap-2 overflow-x-auto border-b border-ink/10 px-1 py-4"
+          className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto border-b border-ink/10 px-1 py-4"
         >
           {[{ slug: "todo", label: "Todo" }, ...categories].map((c) => (
             <button
@@ -84,7 +84,7 @@ export function FilterBar({
               </button>
             ))}
 
-            <label className="flex cursor-pointer items-center gap-2 border border-ink/20 px-3 py-2 text-xs transition-colors hover:border-gold">
+            <label className="flex cursor-pointer items-center gap-2 rounded-full border border-ink/15 bg-white/40 px-4 py-2 text-xs font-medium transition-colors hover:border-gold">
               <input
                 type="checkbox"
                 checked={filters.onlyAccessories}
@@ -107,7 +107,7 @@ export function FilterBar({
               onChange("maxPriceCOP", e.target.value ? Number(e.target.value) : null)
             }
             aria-label="Precio máximo"
-            className="min-w-48 border border-ink/20 bg-ivory px-3 py-2.5 text-xs outline-none transition-colors focus:border-gold"
+            className="min-w-48 cursor-pointer border border-ink/15 bg-white/60 px-3.5 py-2.5 text-xs outline-none transition-colors hover:border-ink/30 focus:border-gold"
           >
             {PRICES.map(([value, label]) => (
               <option key={String(value)} value={value ?? ""}>
@@ -124,7 +124,7 @@ export function FilterBar({
             value={filters.sort}
             onChange={(e) => onChange("sort", e.target.value as SortOption)}
             aria-label="Ordenar productos"
-            className="min-w-48 border border-ink/20 bg-ivory px-3 py-2.5 text-xs outline-none transition-colors focus:border-gold"
+            className="min-w-48 cursor-pointer border border-ink/15 bg-white/60 px-3.5 py-2.5 text-xs outline-none transition-colors hover:border-ink/30 focus:border-gold"
           >
             <option value="relevancia">Ordenar: Relevancia</option>
             <option value="novedades">Ordenar: Novedades</option>
@@ -141,23 +141,23 @@ export function FilterBar({
           </span>
 
           {filters.search.trim() && (
-            <span className="border border-gold/70 px-2.5 py-1 text-[11px]">
+            <span className="rounded-full bg-gold/15 px-3 py-1 text-[11px] font-medium text-ink">
               Búsqueda: “{filters.search.trim()}”
             </span>
           )}
           {categoryLabel && (
-            <span className="border border-gold/70 px-2.5 py-1 text-[11px]">{categoryLabel}</span>
+            <span className="rounded-full bg-gold/15 px-3 py-1 text-[11px] font-medium text-ink">{categoryLabel}</span>
           )}
           {filters.gender !== "todos" && (
-            <span className="border border-gold/70 px-2.5 py-1 text-[11px]">
+            <span className="rounded-full bg-gold/15 px-3 py-1 text-[11px] font-medium text-ink">
               {filters.gender === "hombre" ? "Hombre" : "Mujer"}
             </span>
           )}
           {filters.onlyAccessories && (
-            <span className="border border-gold/70 px-2.5 py-1 text-[11px]">Accesorios</span>
+            <span className="rounded-full bg-gold/15 px-3 py-1 text-[11px] font-medium text-ink">Accesorios</span>
           )}
           {filters.maxPriceCOP !== null && (
-            <span className="border border-gold/70 px-2.5 py-1 text-[11px]">
+            <span className="rounded-full bg-gold/15 px-3 py-1 text-[11px] font-medium text-ink">
               Máx. ${filters.maxPriceCOP.toLocaleString("es-CO")}
             </span>
           )}

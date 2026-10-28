@@ -25,6 +25,10 @@ const csp = [
 
 const nextConfig: NextConfig = {
   images: {
+    // AVIF/WebP pesan bastante menos que JPG/PNG: las fotos cargan más rápido, sobre todo en celular.
+    formats: ["image/avif", "image/webp"],
+    // Las fotos subidas tienen nombres únicos (nunca se sobrescriben), así que se pueden guardar en caché 30 días.
+    minimumCacheTTL: 60 * 60 * 24 * 30,
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "plus.unsplash.com" },

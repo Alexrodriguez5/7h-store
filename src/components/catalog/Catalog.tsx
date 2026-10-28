@@ -30,11 +30,11 @@ export function Catalog({ products, categories }: { products: Product[]; categor
         />
       ) : (
         <div
-          className="grid grid-cols-2 gap-x-5 gap-y-12 sm:grid-cols-3 lg:grid-cols-4 lg:gap-x-6 lg:gap-y-14"
+          className="grid grid-cols-2 gap-x-4 gap-y-12 sm:gap-x-5 sm:grid-cols-3 lg:grid-cols-4 lg:gap-x-6 lg:gap-y-14"
           aria-label="Productos del catálogo"
         >
-          {visible.map((product) => (
-            <ProductCard key={product.id} product={product} />
+          {visible.map((product, i) => (
+            <ProductCard key={product.id} product={product} priority={i < 4} />
           ))}
         </div>
       )}

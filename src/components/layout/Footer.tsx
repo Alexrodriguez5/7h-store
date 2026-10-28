@@ -3,10 +3,10 @@ import type { Category } from "@/types";
 
 export function Footer({ categories }: { categories: Category[] }) {
   return (
-    <footer className="mt-20 bg-ink text-ivory">
+    <footer className="mt-20 rounded-t-[28px] bg-ink text-ivory">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
         <div className="sm:col-span-2">
-          <p className="font-display text-3xl tracking-widest text-gold-light">7H STORE</p>
+          <p className="font-display text-3xl tracking-[.18em] text-gold-light">7H STORE</p>
           <p className="mt-2 font-display text-xl">Calidad. Estilo. Confianza.</p>
           <p className="mt-3 max-w-md text-xs leading-6 text-ivory/60">
             Productos importados de EE.UU. con precios en COP, impuestos incluidos y seguimiento de
@@ -18,14 +18,14 @@ export function Footer({ categories }: { categories: Category[] }) {
             Tienda
           </h2>
           <div className="mt-4 flex flex-col gap-3 text-xs text-ivory/70">
-            <Link href="/catalogo" className="hover:text-gold-light">
+            <Link href="/catalogo" className="transition-colors hover:text-gold-light">
               Todo
             </Link>
             {categories.map((c) => (
               <Link
                 key={c.slug}
                 href={`/catalogo?categoria=${encodeURIComponent(c.slug)}`}
-                className="hover:text-gold-light"
+                className="transition-colors hover:text-gold-light"
               >
                 {c.label}
               </Link>
@@ -34,7 +34,7 @@ export function Footer({ categories }: { categories: Category[] }) {
         </div>
         <div>
           <h2 className="text-xs font-semibold uppercase tracking-widest text-gold-light">Ayuda</h2>
-          <div className="mt-4 flex flex-col gap-3 text-xs text-ivory/70">
+          <div className="mt-4 flex flex-col gap-3 text-xs text-ivory/70 [&_a]:transition-colors [&_a:hover]:text-gold-light">
             <Link href="/envios">Envíos</Link>
             <Link href="/devoluciones">Devoluciones</Link>
             <Link href="/como-comprar">Cómo comprar</Link>

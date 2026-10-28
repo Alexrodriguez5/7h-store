@@ -5,6 +5,7 @@ import { formatCOP } from "@/lib/format";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { AddToCart } from "@/components/product/AddToCart";
 import { ProductCard } from "@/components/catalog/ProductCard";
+import { ChevronDownIcon, ShieldIcon, TruckIcon } from "@/components/ui/Icons";
 export async function generateMetadata({
   params,
 }: {
@@ -54,7 +55,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <div className="grid gap-12 lg:grid-cols-2">
         <ProductGallery images={p.images} name={p.name} />
         <div className="lg:pt-6">
-          <p className="text-xs text-ink-soft">{p.brand}</p>
+          <p className="text-[11px] font-medium uppercase tracking-[.16em] text-ink-soft/70">{p.brand}</p>
           <h1 className="mt-2 font-display text-5xl leading-none sm:text-6xl">{p.name}</h1>
           <div className="mt-5 flex items-end gap-3">
             <span className="font-display text-3xl">{formatCOP(p.priceCOP)}</span>
@@ -62,12 +63,16 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <del className="text-sm text-ink-soft/60">{formatCOP(p.compareAtPriceCOP)}</del>
             )}
             {discount > 0 && (
-              <span className="border border-gold px-2 py-1 text-[10px]">-{discount}%</span>
+              <span className="rounded-full bg-gold px-2.5 py-1 text-[10px] font-semibold text-ink">-{discount}%</span>
             )}
           </div>
           <p className="mt-2 text-xs text-ink-soft">Impuestos incluidos</p>
           <p className="mt-7 max-w-xl text-sm leading-7 text-ink-soft">{p.description}</p>
-          <div className="mt-7 border-y border-ink/10 py-5">
+          <div className="mt-7 flex items-center gap-2 border-y border-ink/10 py-5">
+            <span
+              aria-hidden="true"
+              className={`size-2 rounded-full ${p.stock === 0 ? "bg-error" : p.stock <= 5 ? "bg-warning" : "bg-success"}`}
+            />
             <p className="text-xs font-semibold">
               {p.stock === 0
                 ? "Agotado"
@@ -78,6 +83,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
           <div className="mt-7">
             <AddToCart product={p} />
+          </div>
+          <div className="mt-6 grid grid-cols-2 gap-3 text-xs text-ink-soft">
+            <div className="flex items-center gap-2 rounded-xl bg-ivory-200/60 px-3 py-3">
+              <TruckIcon width={18} height={18} className="shrink-0 text-ink" /> Envío a toda Colombia
+            </div>
+            <div className="flex items-center gap-2 rounded-xl bg-ivory-200/60 px-3 py-3">
+              <ShieldIcon width={18} height={18} className="shrink-0 text-ink" /> Producto original
+            </div>
           </div>
           <div className="mt-8 divide-y divide-ink/10 border-y border-ink/10">
             {[
@@ -91,8 +104,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 "Solicita una devolución según las condiciones publicadas por 7H STORE.",
               ],
             ].map(([title, text]) => (
-              <details key={title} className="py-4">
-                <summary className="cursor-pointer text-sm font-semibold">{title}</summary>
+              <details key={title} className="clean group py-4">
+                <summary className="flex cursor-pointer items-center justify-between text-sm font-semibold transition-colors hover:text-gold">
+                  {title}
+                  <ChevronDownIcon
+                    width={18}
+                    height={18}
+                    className="transition-transform duration-200 group-open:rotate-180"
+                  />
+                </summary>
                 <p className="mt-3 max-w-xl text-sm leading-6 text-ink-soft">{text}</p>
               </details>
             ))}
@@ -102,7 +122,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       {related.length > 0 && (
         <section className="mt-24">
           <h2 className="font-display text-4xl">También te puede gustar</h2>
-          <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-4 lg:gap-x-6">
             {related.map((x) => (
               <ProductCard key={x.id} product={x} />
             ))}
