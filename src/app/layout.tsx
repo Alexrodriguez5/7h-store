@@ -50,7 +50,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const categories = await loadCategories();
   return (
     <html lang="es-CO" className={`${display.variable} ${sans.variable}`}>
-      <body>
+      {/* Extensiones del navegador (p. ej. Monica, Grammarly) agregan atributos al <body>; se ignora esa diferencia. */}
+      <body suppressHydrationWarning>
         <a
           href="#contenido"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:bg-gold focus:px-4 focus:py-3 focus:text-ink"
