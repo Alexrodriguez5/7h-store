@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getProductBySlug, getProductsByCategory } from "@/services/products";
+import { getActiveCategories, getProductBySlug, getProductsByCategory } from "@/services/products";
+import { jsonLdScript, siteUrl } from "@/lib/seo";
 import { formatCOP } from "@/lib/format";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { AddToCart } from "@/components/product/AddToCart";
@@ -14,21 +16,28 @@ export async function generateMetadata({
   const { slug } = await params;
   const p = await getProductBySlug(slug);
   if (!p) return { title: "Producto no encontrado" };
+  const description = `${p.brand} ${p.name}: ${p.description}`.slice(0, 160);
   return {
     title: p.name,
-    description: p.description,
+    description,
+    alternates: { canonical: `/producto/${p.slug}` },
     openGraph: {
-      title: p.name,
-      description: p.description,
-      images: p.images[0] ? [p.images[0]] : [],
+      type: "website",
+      url: `/producto/${p.slug}`,
+      title: `${p.name} | 7H STORE`,
+      description,
+      images: p.images[0] ? [{ url: p.images[0], alt: p.name }] : [],
     },
+    twitter: { card: "summary_large_image", title: p.name, description, images: p.images[0] ? [p.images[0]] : [] },
   };
 }
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const p = await getProductBySlug(slug);
   if (!p) notFound();
-  const related = await getProductsByCategory(p.category, p.id);
+  const [related, categories] = await Promise.all([getProductsByCategory(p.category, p.id), getActiveCategories()]);
+  const categoryLabel = categories.find((c) => c.slug === p.category)?.label ?? p.category;
+  const url = `${siteUrl()}/producto/${p.slug}`;
   const discount = p.compareAtPriceCOP
     ? Math.round((1 - p.priceCOP / p.compareAtPriceCOP) * 100)
     : 0;
@@ -36,27 +45,48 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     "@context": "https://schema.org",
     "@type": "Product",
     name: p.name,
+    sku: p.id,
+    url,
+    category: categoryLabel,
     brand: { "@type": "Brand", name: p.brand },
     description: p.description,
     image: p.images,
     offers: {
       "@type": "Offer",
+      url,
       priceCurrency: "COP",
       price: p.priceCOP,
+      seller: { "@type": "Organization", name: "7H STORE" },
       availability: p.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
     },
   };
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Inicio", item: `${siteUrl()}/` },
+      { "@type": "ListItem", position: 2, name: categoryLabel, item: `${siteUrl()}/catalogo?categoria=${encodeURIComponent(p.category)}` },
+      { "@type": "ListItem", position: 3, name: p.name, item: url },
+    ],
+  };
   return (
     <main id="contenido" className="mx-auto max-w-7xl px-5 py-12 lg:px-8 lg:py-16">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbLd) }} />
+      <nav aria-label="Ruta de navegación" className="mb-8 text-xs text-ink-soft">
+        <ol className="flex flex-wrap items-center gap-1.5">
+          <li><Link href="/" className="hover:text-gold">Inicio</Link></li>
+          <li aria-hidden="true">/</li>
+          <li><Link href={`/catalogo?categoria=${encodeURIComponent(p.category)}`} className="hover:text-gold">{categoryLabel}</Link></li>
+          <li aria-hidden="true">/</li>
+          <li aria-current="page" className="truncate text-ink">{p.name}</li>
+        </ol>
+      </nav>
       <div className="grid gap-12 lg:grid-cols-2">
         <ProductGallery images={p.images} name={p.name} />
         <div className="lg:pt-6">
           <p className="text-[11px] font-medium uppercase tracking-[.16em] text-ink-soft/70">{p.brand}</p>
-          <h1 className="mt-2 font-display text-5xl leading-none sm:text-6xl">{p.name}</h1>
+          <h1 className="mt-2 font-display text-4xl leading-none sm:text-6xl">{p.name}</h1>
           <div className="mt-5 flex items-end gap-3">
             <span className="font-display text-3xl">{formatCOP(p.priceCOP)}</span>
             {p.compareAtPriceCOP && (

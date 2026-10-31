@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { adminFetch } from "./api";
+import { CloseIcon, MenuIcon } from "@/components/ui/Icons";
 
 const NAV: { href: string; label: string; exact?: boolean; owner?: boolean }[] = [
   { href: "/admin", label: "Dashboard", exact: true },
@@ -40,7 +41,7 @@ export function AdminShell({ children, admin }: { children: ReactNode; admin: Sh
           href={item.href}
           onClick={() => setOpen(false)}
           aria-current={active(item.href, item.exact) ? "page" : undefined}
-          className={`border-l-2 px-3 py-2.5 text-sm transition-colors ${active(item.href, item.exact) ? "border-gold bg-white/5 text-gold-light" : "border-transparent text-ivory/70 hover:text-ivory"}`}
+          className={`rounded-xl px-3.5 py-2.5 text-sm transition-colors ${active(item.href, item.exact) ? "bg-gold/15 font-medium text-gold-light" : "text-ivory/70 hover:bg-white/5 hover:text-ivory"}`}
         >
           {item.label}
         </Link>
@@ -68,7 +69,7 @@ export function AdminShell({ children, admin }: { children: ReactNode; admin: Sh
 
       <header className="sticky top-0 z-30 flex items-center justify-between bg-ink px-5 py-3 text-ivory lg:hidden">
         <p className="font-display text-xl font-semibold tracking-widest text-gold-light">7H ADMIN</p>
-        <button type="button" onClick={() => setOpen(true)} aria-label="Abrir menú" className="px-2 text-xl">☰</button>
+        <button type="button" onClick={() => setOpen(true)} aria-label="Abrir menú" className="grid size-10 place-items-center rounded-full hover:bg-white/10"><MenuIcon /></button>
       </header>
       {open && (
         <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true" aria-label="Menú de administración">
@@ -76,14 +77,14 @@ export function AdminShell({ children, admin }: { children: ReactNode; admin: Sh
           <div className="relative flex h-full w-72 flex-col bg-ink text-ivory">
             <div className="flex items-center justify-between border-b border-white/10 p-5">
               <p className="font-display text-xl font-semibold tracking-widest text-gold-light">7H ADMIN</p>
-              <button type="button" onClick={() => setOpen(false)} aria-label="Cerrar">✕</button>
+              <button type="button" onClick={() => setOpen(false)} aria-label="Cerrar" className="grid size-10 place-items-center rounded-full hover:bg-white/10"><CloseIcon /></button>
             </div>
             {nav}
           </div>
         </div>
       )}
 
-      <main className="min-w-0 px-5 py-8 lg:px-10 lg:py-10">{children}</main>
+      <main className="mx-auto w-full min-w-0 max-w-[1400px] px-5 py-8 lg:px-10 lg:py-10">{children}</main>
     </div>
   );
 }

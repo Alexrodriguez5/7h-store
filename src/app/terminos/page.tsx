@@ -1,19 +1,25 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage } from "@/components/layout/LegalPage";
+import { BUSINESS, orPending } from "@/lib/business";
 
-export const metadata: Metadata = { title: "Términos y condiciones" };
+export const metadata: Metadata = {
+  title: "Términos y condiciones",
+  description: "Condiciones de compra en 7H STORE: precios, pagos, envíos, derecho de retracto, garantía y PQR.",
+  alternates: { canonical: "/terminos" },
+};
 
 /**
- * PLANTILLA. Completa los datos entre [corchetes] y haz revisar el texto por un abogado.
+ * Los datos del negocio salen de src/lib/business.ts (variables NEXT_PUBLIC_BUSINESS_*).
+ * Lo que falte se muestra como "[Pendiente: …]". Haz revisar el texto por un abogado antes de vender.
  * Normas de referencia en Colombia: Ley 1480 de 2011 (Estatuto del Consumidor) y Decreto 1074 de 2015.
  */
 export default function TermsPage() {
   return (
-    <LegalPage title="Términos y condiciones" updated="[fecha]">
+    <LegalPage title="Términos y condiciones" updated={orPending(BUSINESS.legalUpdated, "fecha")}>
       <section>
         <h2>1. Quiénes somos</h2>
-        <p><strong>7H STORE</strong> es operada por <strong>[razón social o nombre del titular]</strong>, identificado con <strong>[NIT o cédula]</strong>, con domicilio en <strong>[ciudad, Colombia]</strong>. Contacto: <strong>[correo]</strong> · <strong>[teléfono/WhatsApp]</strong>.</p>
+        <p><strong>7H STORE</strong> es operada por <strong>{orPending(BUSINESS.legalName, "razón social o nombre del titular")}</strong>, identificado con <strong>{orPending(BUSINESS.taxId, "NIT o cédula")}</strong>, con domicilio en <strong>{orPending(BUSINESS.city, "ciudad")}, Colombia</strong>. Contacto: <strong>{orPending(BUSINESS.email, "correo")}</strong> · <strong>{orPending(BUSINESS.whatsapp, "WhatsApp")}</strong> · Instagram <strong>{BUSINESS.instagram.handle}</strong>.</p>
       </section>
       <section>
         <h2>2. Productos y precios</h2>
@@ -29,15 +35,15 @@ export default function TermsPage() {
       </section>
       <section>
         <h2>4. Envíos</h2>
-        <p>Enviamos a toda Colombia. Los plazos y costos se informan en <Link href="/envios" className="underline">Envíos</Link> y en el checkout. [Completa plazos estimados por zona y transportadoras.]</p>
+        <p>Enviamos a toda Colombia. Los plazos y costos se informan en <Link href="/envios" className="underline">Envíos</Link> y en el checkout. Plazo estimado de entrega: {orPending(BUSINESS.shippingTime, "plazo de entrega")}.</p>
       </section>
       <section>
         <h2>5. Derecho de retracto, cambios y garantía</h2>
-        <p>Para compras a distancia aplica el derecho de retracto de 5 días hábiles desde la entrega (art. 47, Ley 1480 de 2011), salvo las excepciones legales. La garantía legal y las condiciones de cambios están en <Link href="/devoluciones" className="underline">Devoluciones</Link>. [Revisa y ajusta con tu asesor legal.]</p>
+        <p>Para compras a distancia aplica el derecho de retracto de 5 días hábiles desde la entrega (art. 47, Ley 1480 de 2011), salvo las excepciones legales. La garantía legal y las condiciones de cambios están en <Link href="/devoluciones" className="underline">Devoluciones</Link>.</p>
       </section>
       <section>
         <h2>6. Reversión del pago</h2>
-        <p>En los casos previstos en el artículo 51 de la Ley 1480 de 2011 puedes solicitar la reversión del pago dentro de los 5 días hábiles siguientes a la fecha en que tuviste noticia de la causal, escribiendo a <strong>[correo]</strong>.</p>
+        <p>En los casos previstos en el artículo 51 de la Ley 1480 de 2011 puedes solicitar la reversión del pago dentro de los 5 días hábiles siguientes a la fecha en que tuviste noticia de la causal, escribiendo a <strong>{orPending(BUSINESS.email, "correo")}</strong>.</p>
       </section>
       <section>
         <h2>7. Datos personales</h2>
@@ -45,7 +51,7 @@ export default function TermsPage() {
       </section>
       <section>
         <h2>8. PQR</h2>
-        <p>Peticiones, quejas y reclamos: <strong>[correo]</strong>. Respondemos en un máximo de 15 días hábiles.</p>
+        <p>Peticiones, quejas y reclamos: <strong>{orPending(BUSINESS.email, "correo")}</strong>. Respondemos en un máximo de 15 días hábiles.</p>
       </section>
     </LegalPage>
   );

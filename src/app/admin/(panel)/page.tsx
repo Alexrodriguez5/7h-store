@@ -14,7 +14,7 @@ export default async function AdminDashboard() {
       <PageHeader title="Dashboard" subtitle="Resumen de la operación de 7H STORE." />
 
       {d.lateApprovals.length > 0 && (
-        <div role="alert" className="mb-6 border border-warning/50 bg-white p-4 text-sm">
+        <div role="alert" className="mb-6 rounded-2xl border border-warning/50 bg-white p-4 text-sm shadow-soft">
           <strong className="text-warning">Requiere atención:</strong> hay {d.lateApprovals.length} pago(s) aprobado(s) en pedidos vencidos o cancelados (
           {d.lateApprovals.map((o, i) => (
             <span key={o.id}>{i > 0 && ", "}<Link href={`/admin/pedidos/${o.id}`} className="underline">{o.publicCode}</Link></span>
@@ -24,7 +24,7 @@ export default async function AdminDashboard() {
       )}
 
       {d.proofsToReview.length > 0 && (
-        <div role="status" className="mb-6 border border-gold/60 bg-white p-4 text-sm">
+        <div role="status" className="mb-6 rounded-2xl border border-gold/60 bg-white p-4 text-sm shadow-soft">
           <strong>Comprobantes por revisar ({d.proofsToReview.length}):</strong>{" "}
           {d.proofsToReview.map((o, i) => (
             <span key={o.id}>{i > 0 && ", "}<Link href={`/admin/pedidos/${o.id}`} className="underline">{o.publicCode}</Link></span>
@@ -44,7 +44,12 @@ export default async function AdminDashboard() {
         <Stat label="Productos agotados" value={d.soldOut.length} href="/admin/inventario?f=agotados" tone={d.soldOut.length ? "warn" : undefined} />
       </div>
 
-      <div className="mt-4"><Stat label="Ventas confirmadas (pagado, preparando, enviado y entregado)" value={formatCOP(d.salesCOP)} /></div>
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        <Stat label="Ventas últimos 30 días" value={formatCOP(d.sales30COP)} />
+        <Stat label="Ventas confirmadas (total)" value={formatCOP(d.salesCOP)} />
+        <Stat label="Ticket promedio" value={d.paidOrders ? formatCOP(d.avgTicketCOP) : "—"} />
+      </div>
+      <p className="mt-2 text-[11px] text-ink-soft">Ventas confirmadas = pedidos pagados, preparando, enviados y entregados ({d.paidOrders} en total, {d.paidOrders30} en los últimos 30 días).</p>
 
       <div className="mt-8 grid gap-6 xl:grid-cols-[1.6fr_1fr]">
         <Card title="Pedidos recientes">

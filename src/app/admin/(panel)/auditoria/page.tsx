@@ -23,7 +23,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
   return (
     <>
       <PageHeader title="Auditoría" subtitle="Quién hizo qué y cuándo: accesos, cambios de productos, inventario, categorías, pedidos y cuentas." />
-      <div className="overflow-x-auto border border-ink/10 bg-white">
+      <div className="overflow-x-auto rounded-2xl border border-ink/[.07] bg-white shadow-soft">
         <table className="w-full min-w-[860px]">
           <thead className="border-b border-ink/10"><tr><th className={thCls}>Fecha</th><th className={thCls}>Acción</th><th className={thCls}>Quién</th><th className={thCls}>Detalle</th><th className={thCls}>IP</th></tr></thead>
           <tbody className="divide-y divide-ink/10">

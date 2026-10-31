@@ -11,7 +11,7 @@ export function AdminUsers({ rows, meId }: { rows: AdminRow[]; meId: string }) {
   return (
     <div className="space-y-8">
       <NewAdminForm onCreated={() => router.refresh()} />
-      <div className="overflow-x-auto border border-ink/10 bg-white">
+      <div className="overflow-x-auto rounded-2xl border border-ink/[.07] bg-white shadow-soft">
         <table className="w-full min-w-[880px]">
           <caption className="sr-only">Cuentas administrativas</caption>
           <thead className="border-b border-ink/10"><tr><th className={thCls}>Nombre</th><th className={thCls}>Rol</th><th className={thCls}>Estado</th><th className={thCls}>Último acceso</th><th className={thCls}>Acciones</th></tr></thead>
@@ -41,7 +41,7 @@ function NewAdminForm({ onCreated }: { onCreated: () => void }) {
     onCreated();
   };
   return (
-    <form onSubmit={submit} className="grid gap-4 border border-ink/10 bg-white p-5 md:grid-cols-2 xl:grid-cols-[1fr_1fr_160px_1fr_auto] xl:items-end" noValidate>
+    <form onSubmit={submit} className="grid gap-4 rounded-2xl border border-ink/[.07] bg-white p-5 shadow-soft md:grid-cols-2 xl:grid-cols-[1fr_1fr_160px_1fr_auto] xl:items-end" noValidate>
       <h2 className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft md:col-span-2 xl:col-span-5">Invitar administrador</h2>
       <div><label htmlFor="au-name" className={labelCls}>Nombre</label><input id="au-name" required value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} className={inputCls} /></div>
       <div><label htmlFor="au-email" className={labelCls}>Correo</label><input id="au-email" type="email" required value={v.email} onChange={(e) => setV({ ...v, email: e.target.value })} className={inputCls} /></div>

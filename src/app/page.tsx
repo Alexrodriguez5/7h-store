@@ -1,6 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getActiveCategories, getFeaturedProducts } from "@/services/products";
+import type { Metadata } from "next";
+import { getActiveCategories, getFeaturedProducts, getProducts } from "@/services/products";
+import { formatCOP } from "@/lib/format";
+import { FLAT_SHIPPING_COP, FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
 import { ProductCard } from "@/components/catalog/ProductCard";
 import { Button } from "@/components/ui/Button";
 import { ArrowRightIcon, CardIcon, ShieldIcon, TruckIcon } from "@/components/ui/Icons";
@@ -15,8 +18,13 @@ const DEFAULT_CATEGORY_IMAGES: Record<string, string> = {
     "https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=900&q=82",
 };
 
+export const metadata: Metadata = { alternates: { canonical: "/" } };
+
 export default async function HomePage() {
-  const [featured, categories] = await Promise.all([getFeaturedProducts(), getActiveCategories()]);
+  const [featured, categories, all] = await Promise.all([getFeaturedProducts(), getActiveCategories(), getProducts()]);
+  // Novedades: los más recientes (getProducts ya viene ordenado por fecha) que no están en Destacados.
+  const featuredIds = new Set(featured.map((p) => p.id));
+  const newest = all.filter((p) => !featuredIds.has(p.id)).slice(0, 4);
   return (
     <main id="contenido">
       <section className="relative overflow-hidden bg-ink text-ivory">
@@ -140,6 +148,27 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+      {newest.length > 0 && (
+        <section className="mx-auto max-w-7xl px-5 pb-20 lg:px-8">
+          <div className="flex items-end justify-between gap-5 pb-2">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-gold">Recién llegados</p>
+              <h2 className="mt-2 font-display text-4xl sm:text-5xl">Novedades</h2>
+            </div>
+            <Link
+              href="/catalogo?orden=novedades"
+              className="inline-flex items-center gap-2 text-sm font-medium transition-colors hover:text-gold"
+            >
+              Ver más <ArrowRightIcon width={16} height={16} />
+            </Link>
+          </div>
+          <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 lg:grid-cols-4 lg:gap-x-6">
+            {newest.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        </section>
+      )}
       <section className="bg-ivory-200/60">
         <div className="mx-auto grid max-w-7xl gap-5 px-5 py-20 md:grid-cols-3 lg:px-8">
           {[
@@ -167,6 +196,37 @@ export default async function HomePage() {
               <p className="mt-2 text-xs leading-6 text-ink-soft">{text}</p>
             </div>
           ))}
+        </div>
+      </section>
+      <section className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="rounded-3xl border border-ink/10 bg-white/50 p-8 shadow-soft">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-gold">Envíos</p>
+            <h2 className="mt-2 font-display text-3xl">Llegamos a toda Colombia</h2>
+            <ul className="mt-5 space-y-2 text-sm leading-6 text-ink-soft">
+              <li>Envío <strong className="text-ink">gratis</strong> en compras desde {formatCOP(FREE_SHIPPING_THRESHOLD)}.</li>
+              <li>Tarifa única de {formatCOP(FLAT_SHIPPING_COP)} en compras menores.</li>
+              <li>Número de guía y seguimiento de cada pedido.</li>
+            </ul>
+            <Link href="/envios" className="mt-6 inline-flex items-center gap-2 text-sm font-medium hover:text-gold">
+              Conoce las condiciones <ArrowRightIcon width={16} height={16} />
+            </Link>
+          </div>
+          <div className="rounded-3xl border border-ink/10 bg-white/50 p-8 shadow-soft">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-gold">Pagos seguros</p>
+            <h2 className="mt-2 font-display text-3xl">Paga como prefieras</h2>
+            <div className="mt-5 flex flex-wrap gap-2">
+              {["Tarjeta crédito/débito", "PSE", "Transferencia", "Consignación"].map((m) => (
+                <span key={m} className="rounded-full border border-ink/15 bg-ivory px-3.5 py-1.5 text-xs font-medium">{m}</span>
+              ))}
+            </div>
+            <p className="mt-5 text-sm leading-6 text-ink-soft">
+              Tarjeta y PSE se procesan con Wompi: 7H STORE no guarda los datos de tu tarjeta. Tu pedido solo se marca como pagado cuando la pasarela lo confirma.
+            </p>
+            <Link href="/como-comprar" className="mt-6 inline-flex items-center gap-2 text-sm font-medium hover:text-gold">
+              Cómo comprar <ArrowRightIcon width={16} height={16} />
+            </Link>
+          </div>
         </div>
       </section>
       <section className="bg-ink text-ivory">

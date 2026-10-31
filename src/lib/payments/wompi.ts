@@ -31,6 +31,9 @@ export class WompiGateway implements PaymentGateway {
       reference: order.publicCode,
       "signature:integrity": integritySignature,
     });
+    // Al terminar en Wompi, el cliente vuelve a la página de su pedido (el pago lo confirma el webhook, no esta URL).
+    const redirectUrl = orderPageUrl(order.publicCode);
+    if (redirectUrl) params.set("redirect-url", redirectUrl);
 
     return {
       redirectUrl: `https://checkout.wompi.co/p/?${params.toString()}`,
@@ -144,6 +147,18 @@ export class WompiGateway implements PaymentGateway {
       publicCode,
       rawPayload: payload,
     };
+  }
+}
+
+/** URL pública del pedido, solo si NEXT_PUBLIC_SITE_URL es una URL http(s) válida. */
+export function orderPageUrl(publicCode: string): string | null {
+  const site = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, "");
+  if (!site) return null;
+  try {
+    const u = new URL(`${site}/pedido/${encodeURIComponent(publicCode)}`);
+    return u.protocol === "https:" || u.protocol === "http:" ? u.toString() : null;
+  } catch {
+    return null;
   }
 }
 

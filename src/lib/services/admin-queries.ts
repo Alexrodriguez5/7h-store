@@ -63,9 +63,12 @@ export async function listProductsAdmin() {
 }
 
 export async function getDashboard() {
-  const [byStatus, sales, products, recent, lateApprovals, proofsToReview] = await Promise.all([
+  const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const [byStatus, sales, sales30, products, recent, lateApprovals, proofsToReview] = await Promise.all([
     prisma.order.groupBy({ by: ["status"], _count: { _all: true } }),
-    prisma.order.aggregate({ where: { status: { in: REVENUE_STATUSES } }, _sum: { totalCOP: true } }),
+    prisma.order.aggregate({ where: { status: { in: REVENUE_STATUSES } }, _sum: { totalCOP: true }, _count: { _all: true } }),
+    // Ventas confirmadas de los últimos 30 días (datos reales, sin estimaciones).
+    prisma.order.aggregate({ where: { status: { in: REVENUE_STATUSES }, createdAt: { gte: since30 } }, _sum: { totalCOP: true }, _count: { _all: true } }),
     prisma.product.findMany({ select: { id: true, name: true, slug: true, active: true, stock: true, variants: { select: { size: true, stock: true } } } }),
     prisma.order.findMany({
       orderBy: { createdAt: "desc" },
@@ -93,6 +96,10 @@ export async function getDashboard() {
     shipped: count("SHIPPED"),
     delivered: count("DELIVERED"),
     salesCOP: sales._sum.totalCOP ?? 0,
+    paidOrders: sales._count._all,
+    avgTicketCOP: sales._count._all ? Math.round((sales._sum.totalCOP ?? 0) / sales._count._all) : 0,
+    sales30COP: sales30._sum.totalCOP ?? 0,
+    paidOrders30: sales30._count._all,
     activeProducts: active.length,
     soldOut: withTotals.filter((p) => p.total === 0),
     lowStock: withTotals.filter((p) => p.total > 0 && (p.total <= LOW_STOCK_THRESHOLD || p.variants.some((v) => v.stock > 0 && v.stock <= 1))),

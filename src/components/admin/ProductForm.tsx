@@ -90,7 +90,7 @@ export function ProductForm({ initial = EMPTY_PRODUCT, productId, categories }: 
   return (
     <form onSubmit={submit} className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
       <div className="space-y-6">
-        <section className="space-y-4 border border-ink/10 bg-white p-5">
+        <section className="space-y-4 rounded-2xl border border-ink/[.07] bg-white p-5 shadow-soft">
           <h2 className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft">Información</h2>
           <div><label htmlFor="name" className={labelCls}>Nombre *</label>
             <input id="name" required value={v.name} onChange={(e) => { set("name", e.target.value); if (!slugTouched) set("slug", slugify(e.target.value)); }} className={inputCls} /></div>
@@ -106,7 +106,7 @@ export function ProductForm({ initial = EMPTY_PRODUCT, productId, categories }: 
           <div><label htmlFor="tags" className={labelCls}>Etiquetas de búsqueda (separadas por coma)</label><input id="tags" value={v.tags} onChange={(e) => set("tags", e.target.value)} className={inputCls} placeholder="running, nike, deportivo" /></div>
         </section>
 
-        <section className="space-y-4 border border-ink/10 bg-white p-5">
+        <section className="space-y-4 rounded-2xl border border-ink/[.07] bg-white p-5 shadow-soft">
           <div className="flex items-center justify-between">
             <h2 className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft">Inventario</h2>
             <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={v.hasSizes} onChange={(e) => set("hasSizes", e.target.checked)} /> Este producto maneja tallas</label>
@@ -135,7 +135,7 @@ export function ProductForm({ initial = EMPTY_PRODUCT, productId, categories }: 
       </div>
 
       <div className="space-y-6">
-        <section className="space-y-4 border border-ink/10 bg-white p-5">
+        <section className="space-y-4 rounded-2xl border border-ink/[.07] bg-white p-5 shadow-soft">
           <h2 className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft">Clasificación y estado</h2>
           <div>
             <label htmlFor="category" className={labelCls}>Categoría *</label>
@@ -151,7 +151,7 @@ export function ProductForm({ initial = EMPTY_PRODUCT, productId, categories }: 
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={v.active} onChange={(e) => set("active", e.target.checked)} /> Activo (visible en la tienda)</label>
         </section>
 
-        <section className="space-y-4 border border-ink/10 bg-white p-5">
+        <section className="space-y-4 rounded-2xl border border-ink/[.07] bg-white p-5 shadow-soft">
           <h2 className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft">Imágenes *</h2>
           {v.images.length > 0 && (
             <ul className="grid grid-cols-2 gap-3">
