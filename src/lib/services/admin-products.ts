@@ -49,6 +49,10 @@ const baseData = (input: ProductInput) => ({
   tags: input.tags,
   featured: input.featured,
   active: input.active,
+  weightGrams: input.weightGrams ?? null,
+  lengthCm: input.lengthCm ?? null,
+  widthCm: input.widthCm ?? null,
+  heightCm: input.heightCm ?? null,
 });
 
 /**

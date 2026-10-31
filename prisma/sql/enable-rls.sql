@@ -18,6 +18,7 @@ ALTER TABLE "AdminSession"       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "AdminPasswordReset" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "AdminAuditLog"      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "RateLimit"          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "ShippingZone"       ENABLE ROW LEVEL SECURITY;
 
 -- Comprobación: todas deben mostrar rowsecurity = true
 SELECT tablename, rowsecurity FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename;

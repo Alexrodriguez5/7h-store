@@ -3,7 +3,8 @@ import Link from "next/link";
 import { LegalPage } from "@/components/layout/LegalPage";
 import { BUSINESS, orPending } from "@/lib/business";
 import { formatCOP } from "@/lib/format";
-import { FLAT_SHIPPING_COP, FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
+import { DEFAULT_ETA, FLAT_SHIPPING_COP, FREE_SHIPPING_THRESHOLD, etaText } from "@/lib/shipping";
+import { getShippingZones } from "@/lib/services/shipping-zones";
 
 export const metadata: Metadata = {
   title: "Envíos",
@@ -12,7 +13,8 @@ export const metadata: Metadata = {
 };
 
 /** Costos tomados de src/lib/shipping.ts (los mismos que cobra el checkout). */
-export default function ShippingPage() {
+export default async function ShippingPage() {
+  const zones = await getShippingZones();
   return (
     <LegalPage eyebrow="Ayuda" title="Envíos" updated={orPending(BUSINESS.legalUpdated, "fecha")}>
       <section>
@@ -23,13 +25,29 @@ export default function ShippingPage() {
         <h2>Costo del envío</h2>
         <ul>
           <li><strong>Gratis</strong> en compras desde <strong>{formatCOP(FREE_SHIPPING_THRESHOLD)}</strong>.</li>
-          <li>Tarifa única de <strong>{formatCOP(FLAT_SHIPPING_COP)}</strong> para compras por debajo de ese valor.</li>
-          <li>El costo exacto aparece en el carrito y en el resumen del checkout antes de pagar.</li>
+          {zones.length === 0 && <li>Tarifa única de <strong>{formatCOP(FLAT_SHIPPING_COP)}</strong> para compras por debajo de ese valor.</li>}
+          <li>El costo exacto según tu departamento y el peso del pedido aparece en el checkout antes de pagar.</li>
         </ul>
+        {zones.length > 0 && (
+          <div className="mt-4 overflow-x-auto rounded-2xl border border-ink/10 bg-white/50">
+            <table className="w-full min-w-[520px] text-left text-sm">
+              <thead><tr className="text-[10px] uppercase tracking-widest"><th className="px-4 py-3">Zona</th><th className="px-4 py-3">Tarifa</th><th className="px-4 py-3">Plazo estimado</th></tr></thead>
+              <tbody className="divide-y divide-ink/10">
+                {zones.map((z) => (
+                  <tr key={z.name}>
+                    <td className="px-4 py-3"><strong>{z.name}</strong><span className="block text-xs">{z.departments.join(", ")}</span></td>
+                    <td className="px-4 py-3">{formatCOP(z.priceCOP)}{z.extraPerKgCOP > 0 && <span className="block text-xs">hasta {z.baseWeightGrams / 1000} kg; +{formatCOP(z.extraPerKgCOP)} por kg adicional</span>}</td>
+                    <td className="px-4 py-3">{etaText(z.minDays, z.maxDays)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
       <section>
         <h2>Plazo de entrega</h2>
-        <p>Plazo estimado: <strong>{orPending(BUSINESS.shippingTime, "plazo de entrega por zona")}</strong>, contado desde la confirmación del pago.</p>
+        <p>Plazo estimado: <strong>{BUSINESS.shippingTime ?? DEFAULT_ETA}</strong> según la zona, contado desde la confirmación del pago. Los tiempos dependen de la transportadora y pueden variar en temporadas altas o zonas de difícil acceso.</p>
       </section>
       <section>
         <h2>Seguimiento</h2>

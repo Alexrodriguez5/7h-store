@@ -11,6 +11,7 @@ const NAV: { href: string; label: string; exact?: boolean; owner?: boolean }[] =
   { href: "/admin/productos", label: "Productos" },
   { href: "/admin/categorias", label: "Categorías" },
   { href: "/admin/inventario", label: "Inventario" },
+  { href: "/admin/envios", label: "Envíos" },
   { href: "/admin/usuarios", label: "Usuarios", owner: true },
   { href: "/admin/auditoria", label: "Auditoría" },
   { href: "/admin/configuracion", label: "Configuración" },

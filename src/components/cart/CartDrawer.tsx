@@ -154,11 +154,11 @@ export function CartDrawer() {
           </div>
           <div className="flex justify-between text-sm">
             <span>Envío</span>
-            <span>{shipping === 0 ? "Gratis" : formatCOP(shipping)}</span>
+            <span>{shipping === 0 ? "Gratis" : "Se calcula en el pago según tu ciudad"}</span>
           </div>
           <div className="flex justify-between border-t border-ink/10 pt-3 font-semibold">
-            <span>Total estimado</span>
-            <span>{formatCOP(subtotal + shipping)}</span>
+            <span>{shipping === 0 ? "Total" : "Total sin envío"}</span>
+            <span>{formatCOP(subtotal)}</span>
           </div>
           <Link
             href="/checkout"

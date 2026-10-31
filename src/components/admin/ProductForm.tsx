@@ -12,6 +12,8 @@ export interface ProductFormValues {
   name: string; slug: string; brand: string; description: string; priceCOP: string; compareAtPriceCOP: string;
   category: string; gender: string; isAccessory: boolean; featured: boolean; active: boolean;
   images: string[]; tags: string; stock: string; hasSizes: boolean;
+  /** Peso empacado (g) y medidas del paquete (cm), como texto del formulario. */
+  weightGrams?: string; lengthCm?: string; widthCm?: string; heightCm?: string;
   /** `expectedStock` = stock que había al abrir el formulario (solo tallas ya existentes). */
   variants: { size: string; stock: string; expectedStock?: number }[];
   /** Stock al abrir el formulario (producto sin tallas). */
@@ -70,6 +72,10 @@ export function ProductForm({ initial = EMPTY_PRODUCT, productId, categories }: 
       category: v.category, gender: v.gender, isAccessory: v.isAccessory, featured: v.featured, active: v.active,
       images: v.images, tags: v.tags.split(",").map((t) => t.trim()).filter(Boolean),
       stock: v.hasSizes ? 0 : num(v.stock),
+      weightGrams: v.weightGrams?.trim() ? num(v.weightGrams) : null,
+      lengthCm: v.lengthCm?.trim() ? num(v.lengthCm) : null,
+      widthCm: v.widthCm?.trim() ? num(v.widthCm) : null,
+      heightCm: v.heightCm?.trim() ? num(v.heightCm) : null,
       expectedStock: v.hasSizes ? undefined : v.expectedStock,
       variants: v.hasSizes
         ? sortSizes(v.variants.map((x) => x.size.trim().toUpperCase())).map((size) => {
@@ -149,6 +155,23 @@ export function ProductForm({ initial = EMPTY_PRODUCT, productId, categories }: 
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={v.isAccessory} onChange={(e) => set("isAccessory", e.target.checked)} /> Es un accesorio</label>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={v.featured} onChange={(e) => set("featured", e.target.checked)} /> Producto destacado (inicio)</label>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={v.active} onChange={(e) => set("active", e.target.checked)} /> Activo (visible en la tienda)</label>
+        </section>
+
+        <section className="space-y-4 rounded-2xl border border-ink/[.07] bg-white p-5 shadow-soft">
+          <h2 className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft">Envío</h2>
+          <div>
+            <label htmlFor="weightGrams" className={labelCls}>Peso empacado (gramos)</label>
+            <input id="weightGrams" type="number" min={1} step={50} inputMode="numeric" value={v.weightGrams ?? ""} onChange={(e) => set("weightGrams", e.target.value)} className={inputCls} placeholder="Ej.: 1200 (vacío = 1 kg)" />
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {(["lengthCm", "widthCm", "heightCm"] as const).map((k, i) => (
+              <div key={k}>
+                <label htmlFor={k} className={labelCls}>{["Largo", "Ancho", "Alto"][i]} (cm)</label>
+                <input id={k} type="number" min={1} inputMode="numeric" value={v[k] ?? ""} onChange={(e) => set(k, e.target.value)} className={inputCls} />
+              </div>
+            ))}
+          </div>
+          <p className="text-[11px] leading-5 text-ink-soft">El peso define el costo del envío por zona. Las medidas las pide la transportadora para generar la guía.</p>
         </section>
 
         <section className="space-y-4 rounded-2xl border border-ink/[.07] bg-white p-5 shadow-soft">

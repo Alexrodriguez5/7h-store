@@ -7,6 +7,7 @@ import { invalidateProducts } from "@/lib/cache";
 import { MIN, consume, tooMany } from "@/lib/rate-limit";
 import { getClientIp, readJson } from "@/lib/request";
 import { notifyCustomer } from "@/lib/order-emails";
+import { getShippingZones } from "@/lib/services/shipping-zones";
 
 export async function POST(req: Request) {
   // Cada pedido reserva stock 24 h: se limita por IP para que nadie pueda "secuestrar" el inventario con bots.
@@ -18,7 +19,7 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: "Datos del pedido no válidos.", details: parsed.error.flatten() }, { status: 400 });
     }
-    const order = await createOrder(parsed.data);
+    const order = await createOrder(parsed.data, undefined, await getShippingZones());
     invalidateProducts(); // el stock visible cambió
     notifyCustomer("created", { id: order.id });
 

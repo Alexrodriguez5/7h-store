@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { calculateShipping } from "@/lib/shipping";
+import { quoteShipping, totalWeight, type ShippingZoneRule } from "@/lib/shipping";
 import type { CheckoutInput } from "@/lib/schemas/checkout";
 import { mergeLines, reserveStock, type StockLine } from "@/lib/stock";
 import { randomBytes } from "node:crypto";
@@ -12,7 +12,8 @@ const paymentMethodMap = {
   cash_deposit: "CASH_DEPOSIT",
 } as const;
 
-export async function createOrder(input: CheckoutInput, db: PrismaClient = prisma) {
+/** `zones`: tarifas por zona vigentes. Sin zonas se cobra la tarifa histórica (comportamiento anterior). */
+export async function createOrder(input: CheckoutInput, db: PrismaClient = prisma, zones: readonly ShippingZoneRule[] = []) {
   return db.$transaction(async (tx) => {
     const lines = mergeLines(input.items);
     const ids = [...new Set(lines.map((item) => item.productId))];
@@ -42,7 +43,10 @@ export async function createOrder(input: CheckoutInput, db: PrismaClient = prism
       return { product, size, stockLine };
     });
 
-    const shipping = calculateShipping(subtotal);
+    // El servidor cotiza con los pesos REALES de la base de datos (no confía en el navegador).
+    const weightGrams = totalWeight(resolved.map(({ product, stockLine }) => ({ weightGrams: (product as { weightGrams?: number | null }).weightGrams, quantity: stockLine.quantity })));
+    const quote = quoteShipping({ subtotalCOP: subtotal, weightGrams, department: input.shipping.department, zones });
+    const shipping = quote.costCOP;
     const total = subtotal + shipping;
     const publicCode = `7H-${new Date().getFullYear()}-${randomBytes(4).toString("hex").toUpperCase()}`;
 
@@ -65,6 +69,8 @@ export async function createOrder(input: CheckoutInput, db: PrismaClient = prism
         notes: [input.shipping.neighborhood, input.shipping.notes].filter(Boolean).join(" · ") || null,
         subtotalCOP: subtotal,
         shippingCOP: shipping,
+        shippingZone: quote.zone,
+        shippingEta: quote.eta,
         totalCOP: total,
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
         items: {

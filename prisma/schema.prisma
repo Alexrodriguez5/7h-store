@@ -75,6 +75,12 @@ model Product {
   tags             String[]
   featured         Boolean     @default(false)
   active           Boolean     @default(true)
+  /// Peso del producto empacado, en gramos (para calcular el envío). Vacío = 1 kg por defecto.
+  weightGrams      Int?
+  /// Medidas del paquete en cm (las piden las transportadoras para cotizar). Opcionales.
+  lengthCm         Int?
+  widthCm          Int?
+  heightCm         Int?
   createdAt        DateTime    @default(now())
   orderItems       OrderItem[]
   variants         ProductVariant[]
@@ -115,6 +121,9 @@ model Order {
   totalCOP         Int
   trackingNumber   String?
   carrier          String?
+  /// Zona de envío aplicada y plazo estimado ("5 a 10 días hábiles") al crear el pedido.
+  shippingZone     String?
+  shippingEta      String?
   expiresAt        DateTime
   createdAt        DateTime      @default(now())
   items            OrderItem[]
@@ -219,4 +228,22 @@ model RateLimit {
   count   Int
   resetAt DateTime
   @@index([resetAt])
+}
+
+/// Tarifas de envío por zona (grupo de departamentos), editables desde /admin/envios.
+/// Costo = precio base (incluye hasta `baseWeightGrams`) + `extraPerKgCOP` por cada kg adicional o fracción.
+model ShippingZone {
+  id              String   @id @default(cuid())
+  name            String
+  departments     String[]
+  priceCOP        Int
+  baseWeightGrams Int      @default(1000)
+  extraPerKgCOP   Int      @default(0)
+  minDays         Int
+  maxDays         Int
+  active          Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@index([active, sortOrder])
 }

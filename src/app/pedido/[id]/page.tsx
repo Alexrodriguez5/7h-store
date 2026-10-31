@@ -124,7 +124,8 @@ export default async function OrderPage({
         </div>
         <div className="mt-5 space-y-2 border-t border-ink/10 pt-4 text-sm">
           <div className="flex justify-between"><span>Subtotal</span><span>{formatCOP(order.subtotalCOP)}</span></div>
-          <div className="flex justify-between"><span>Envío</span><span>{order.shippingCOP === 0 ? "Gratis" : formatCOP(order.shippingCOP)}</span></div>
+          <div className="flex justify-between"><span>Envío{order.shippingZone ? ` · ${order.shippingZone}` : ""}</span><span>{order.shippingCOP === 0 ? "Gratis" : formatCOP(order.shippingCOP)}</span></div>
+          {order.shippingEta && <p className="text-xs text-ink-soft">Entrega estimada: {order.shippingEta} después de confirmar el pago.</p>}
           <div className="flex justify-between font-semibold"><span>Total</span><span>{formatCOP(order.totalCOP)}</span></div>
         </div>
       </section>
