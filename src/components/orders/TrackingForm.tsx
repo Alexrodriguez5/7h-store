@@ -103,7 +103,7 @@ export function TrackingForm() {
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 onBlur={() => setCode((c) => normalizeOrderCode(c))}
-                placeholder="7H-2026-AB12CD34"
+                placeholder="7H-K4M9QX"
                 autoComplete="off"
                 autoCapitalize="characters"
                 spellCheck={false}
@@ -178,7 +178,7 @@ export function TrackingForm() {
             </h2>
             <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-ink-soft">{view.message}</p>
             {view.kind === "not_found" && (
-              <p className="mx-auto mt-2 max-w-md text-xs text-ink-soft">Usa el mismo correo con el que compraste y copia el número tal como aparece (7H-AAAA-XXXXXXXX).</p>
+              <p className="mx-auto mt-2 max-w-md text-xs text-ink-soft">Usa el mismo correo con el que compraste y copia el número tal como aparece (7H-XXXXXX).</p>
             )}
             <Link href="/contacto" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold underline-offset-4 hover:text-gold hover:underline">
               ¿Necesitas ayuda? Escríbenos <ArrowRightIcon width={14} height={14} />

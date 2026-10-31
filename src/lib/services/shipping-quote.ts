@@ -6,6 +6,12 @@ import { enviaUsesCheckoutRates, parcelFor, quoteRates } from "@/lib/envia";
 const NAMES: Record<string, string> = { servientrega: "Servientrega", coordinadora: "Coordinadora", tcc: "TCC", interrapidisimo: "Interrapidísimo", deprisa: "Deprisa", envia: "Envía" };
 export const carrierName = (c: string) => NAMES[c.toLowerCase()] ?? c.charAt(0).toUpperCase() + c.slice(1);
 
+/** Envío mínimo cobrado con tarifa real (ENVIA_MIN_SHIPPING_COP, por defecto 15000). */
+export const minShippingCOP = () => {
+  const n = Number(process.env.ENVIA_MIN_SHIPPING_COP ?? 15000);
+  return Number.isFinite(n) && n >= 0 ? Math.round(n) : 15000;
+};
+
 export interface CartLine { productId: string; quantity: number }
 export type QuoteSource = "envia" | "zone";
 
@@ -37,7 +43,8 @@ export async function quoteCart(input: { department: string; city: string; lines
     const [cheapest] = await quoteRates({ name: "Cliente", phone: "3000000000", email: "", street: "Dirección", city: input.city, department: input.department }, parcel);
     if (!cheapest) return { ...zoneQuote, source: "zone" };
     return {
-      costCOP: Math.ceil(cheapest.totalCOP / 100) * 100,
+      // Mínimo configurable (por defecto $15.000): cubre llevar el paquete a la transportadora.
+      costCOP: Math.max(minShippingCOP(), Math.ceil(cheapest.totalCOP / 100) * 100),
       zone: carrierName(cheapest.carrier),
       // El plazo de la transportadora es solo el transporte: se suma la preparación del pedido.
       eta: cheapest.deliveryEstimate ? `${cheapest.deliveryEstimate} de transporte + 1 día hábil de preparación` : zoneQuote.eta,

@@ -1,14 +1,18 @@
 /**
  * Reglas compartidas del rastreo de pedidos (cliente y servidor).
- * Formato del número: 7H-AAAA-XXXXXXXX (ver createOrder en lib/services/orders.ts).
+ * Formato del número: 7H-XXXXXX (nuevo) o 7H-AAAA-XXXXXXXX (pedidos anteriores). Ver newOrderCode en lib/services/orders.ts.
  */
-export const ORDER_CODE_RE = /^7H-\d{4}-[0-9A-F]{8}$/;
+/** Formato nuevo 7H-XXXXXX y formato anterior 7H-AAAA-XXXXXXXX (pedidos ya creados). */
+export const ORDER_CODE_RE = /^7H-(?:[2-9A-HJKMNP-TW-Z]{6}|\d{4}-[0-9A-F]{8})$/;
 
 /** Mayúsculas, sin espacios y con guiones normalizados ("7h 2026 ab12cd34" → "7H-2026-AB12CD34"). */
 export function normalizeOrderCode(raw: string): string {
   const compact = raw.toUpperCase().replace(/[\s_–—]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
-  const m = compact.replace(/-/g, "").match(/^7H(\d{4})([0-9A-F]{8})$/);
-  return m ? `7H-${m[1]}-${m[2]}` : compact;
+  const flat = compact.replace(/-/g, "");
+  const old = flat.match(/^7H(\d{4})([0-9A-F]{8})$/);
+  if (old) return `7H-${old[1]}-${old[2]}`;
+  const short = flat.match(/^7H([0-9A-Z]{6})$/);
+  return short ? `7H-${short[1]}` : compact;
 }
 
 export const normalizeEmail = (raw: string) => raw.trim().toLowerCase();
@@ -22,7 +26,7 @@ export function validateTracking(code: string, email: string): Partial<Record<Tr
   const errors: Partial<Record<TrackingField, string>> = {};
   const c = normalizeOrderCode(code);
   if (!c) errors.code = "Escribe tu número de pedido.";
-  else if (!ORDER_CODE_RE.test(c)) errors.code = "El número tiene este formato: 7H-2026-AB12CD34.";
+  else if (!ORDER_CODE_RE.test(c)) errors.code = "El número tiene este formato: 7H-K4M9QX.";
   const e = normalizeEmail(email);
   if (!e) errors.email = "Escribe el correo que usaste en la compra.";
   else if (!EMAIL_RE.test(e) || e.length > 254) errors.email = "Revisa el correo: parece incompleto.";

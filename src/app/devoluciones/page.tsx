@@ -34,7 +34,7 @@ export default function ReturnsPage() {
         <h2>Cómo solicitarlo</h2>
         <ul>
           <li>Escríbenos a <strong>{contact}</strong> o por Instagram <a href={BUSINESS.instagram.url} target="_blank" rel="noreferrer" className="underline">{BUSINESS.instagram.handle}</a>.</li>
-          <li>Incluye tu número de pedido (por ejemplo, 7H-2026-XXXXXXXX) y el correo de la compra.</li>
+          <li>Incluye tu número de pedido (por ejemplo, 7H-K4M9QX) y el correo de la compra.</li>
           <li>Conserva el producto, el empaque y el comprobante mientras revisamos la solicitud.</li>
         </ul>
         <p>Consulta también los <Link href="/terminos" className="underline">Términos y condiciones</Link>.</p>

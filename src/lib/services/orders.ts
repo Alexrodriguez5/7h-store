@@ -2,7 +2,12 @@ import { prisma } from "@/lib/prisma";
 import { quoteShipping, totalWeight, type ShippingQuote, type ShippingZoneRule } from "@/lib/shipping";
 import type { CheckoutInput } from "@/lib/schemas/checkout";
 import { mergeLines, reserveStock, type StockLine } from "@/lib/stock";
-import { randomBytes } from "node:crypto";
+import { randomInt } from "node:crypto";
+
+/** Alfabeto sin caracteres confusos (sin 0/O, 1/I/L, U/V). */
+export const ORDER_CODE_ALPHABET = "23456789ABCDEFGHJKMNPQRSTWXYZ";
+/** Número de pedido corto y fácil de dictar: 7H-XXXXXX (29^6 ≈ 594 millones de combinaciones). */
+export const newOrderCode = () => `7H-${Array.from({ length: 6 }, () => ORDER_CODE_ALPHABET[randomInt(ORDER_CODE_ALPHABET.length)]).join("")}`;
 import type { PrismaClient } from "@prisma/client";
 
 const paymentMethodMap = {
@@ -49,7 +54,7 @@ export async function createOrder(input: CheckoutInput, db: PrismaClient = prism
     const quote = shippingOverride ?? quoteShipping({ subtotalCOP: subtotal, weightGrams, department: input.shipping.department, zones });
     const shipping = quote.costCOP;
     const total = subtotal + shipping;
-    const publicCode = `7H-${new Date().getFullYear()}-${randomBytes(4).toString("hex").toUpperCase()}`;
+    const publicCode = newOrderCode();
 
     // Reserva atómica ANTES de crear el pedido: si falta stock se revierte todo.
     for (const { stockLine } of resolved) await reserveStock(tx, stockLine);

@@ -32,3 +32,23 @@ describe("Envío gratis en el carrito", () => {
     expect(amountToFreeShipping(FREE_SHIPPING_THRESHOLD + 1)).toBe(0);
   });
 });
+
+describe("Número de pedido corto", () => {
+  it("genera 7H-XXXXXX sin caracteres confusos y el rastreo lo acepta", async () => {
+    const { newOrderCode } = await import("@/lib/services/orders");
+    for (let i = 0; i < 200; i++) {
+      const c = newOrderCode();
+      expect(c).toMatch(/^7H-[23456789ABCDEFGHJKMNPQRSTWXYZ]{6}$/);
+      expect(ORDER_CODE_RE.test(c)).toBe(true);
+    }
+    expect(normalizeOrderCode(" 7h k4m9qx ")).toBe("7H-K4M9QX");
+    expect(validateTracking("7h-k4m9qx", "ana@correo.co")).toEqual({});
+  });
+});
+
+describe("Envío mínimo con tarifa real", () => {
+  it("por defecto $15.000", async () => {
+    const { minShippingCOP } = await import("@/lib/services/shipping-quote");
+    expect(minShippingCOP()).toBe(15000);
+  });
+});
