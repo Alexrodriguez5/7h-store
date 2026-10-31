@@ -21,3 +21,12 @@ body { margin:0; background:var(--color-ivory); color:var(--color-ink); font-fam
 .no-scrollbar::-webkit-scrollbar { display:none; }
 
 @media (prefers-reduced-motion: reduce) { *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; transition-duration:.01ms!important; } }
+
+/* Ilustraciones isométricas: flotación y ruta animadas (se desactivan con prefers-reduced-motion arriba). */
+@keyframes iso-float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
+@keyframes iso-dash { to { stroke-dashoffset:-26; } }
+.iso-float { animation:iso-float 5s ease-in-out infinite; }
+.iso-float-slow { animation:iso-float 7s ease-in-out infinite; animation-delay:-2s; }
+.iso-dash { animation:iso-dash 1.6s linear infinite; }
+/* Fondo de rejilla isométrica sutil */
+.iso-grid { background-image:linear-gradient(30deg, rgb(201 164 76 / .07) 1px, transparent 1px), linear-gradient(150deg, rgb(201 164 76 / .07) 1px, transparent 1px); background-size:44px 25.4px; }

@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect } from "react";
 import { formatCOP } from "@/lib/format";
-import { calculateShipping, amountToFreeShipping, FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
+import { amountToFreeShipping, FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
 import { selectSubtotal, useCartStore } from "@/store/cart-store";
 import { BagIcon, CloseIcon, MinusIcon, PlusIcon } from "@/components/ui/Icons";
 
@@ -16,7 +16,6 @@ export function CartDrawer() {
   const setQuantity = useCartStore((s) => s.setQuantity);
   const removeItem = useCartStore((s) => s.removeItem);
   const subtotal = useCartStore(selectSubtotal);
-  const shipping = calculateShipping(subtotal);
   const missing = amountToFreeShipping(subtotal);
   const progress = Math.min(100, Math.round((subtotal / FREE_SHIPPING_THRESHOLD) * 100));
 
@@ -134,40 +133,38 @@ export function CartDrawer() {
           )}
         </ul>
 
-        <footer className="space-y-3 border-t border-ink/10 bg-white/40 p-5">
-          <div>
-            <div className="text-xs text-ink-soft">
-              {subtotal < FREE_SHIPPING_THRESHOLD
-                ? `Te faltan ${formatCOP(missing)} para envío gratis.`
-                : "Envío gratis aplicado."}
+        {/* Con el carrito vacío no se muestra envío ni total: no hay nada que cobrar. */}
+        {items.length > 0 && (
+          <footer className="space-y-3 border-t border-ink/10 bg-white/40 p-5">
+            <div>
+              <div className="text-xs text-ink-soft">
+                {missing > 0 ? `Te faltan ${formatCOP(missing)} para envío gratis.` : "¡Tienes envío gratis!"}
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink/[.07]" aria-hidden="true">
+                <div className="h-full rounded-full bg-gold transition-[width] duration-500" style={{ width: `${progress}%` }} />
+              </div>
             </div>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink/[.07]" aria-hidden="true">
-              <div
-                className="h-full rounded-full bg-gold transition-[width] duration-500"
-                style={{ width: `${progress}%` }}
-              />
+            <div className="flex justify-between text-sm">
+              <span>Subtotal</span>
+              <strong>{formatCOP(subtotal)}</strong>
             </div>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span>Subtotal</span>
-            <strong>{formatCOP(subtotal)}</strong>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span>Envío</span>
-            <span>{shipping === 0 ? "Gratis" : "Se calcula en el pago según tu ciudad"}</span>
-          </div>
-          <div className="flex justify-between border-t border-ink/10 pt-3 font-semibold">
-            <span>{shipping === 0 ? "Total" : "Total sin envío"}</span>
-            <span>{formatCOP(subtotal)}</span>
-          </div>
-          <Link
-            href="/checkout"
-            onClick={() => setOpen(false)}
-            className={`block rounded-full bg-ink py-3.5 text-center text-sm font-semibold text-ivory shadow-soft transition-colors hover:bg-gold hover:text-ink ${items.length === 0 ? "pointer-events-none opacity-40" : ""}`}
-          >
-            Ir a pagar
-          </Link>
-        </footer>
+            <div className="flex justify-between gap-4 text-sm">
+              <span>Envío</span>
+              <span className="text-right">{missing === 0 ? "Gratis" : "Se calcula en el pago según tu ciudad"}</span>
+            </div>
+            <div className="flex justify-between border-t border-ink/10 pt-3 font-semibold">
+              <span>{missing === 0 ? "Total" : "Total sin envío"}</span>
+              <span>{formatCOP(subtotal)}</span>
+            </div>
+            <Link
+              href="/checkout"
+              onClick={() => setOpen(false)}
+              className="block rounded-full bg-ink py-3.5 text-center text-sm font-semibold text-ivory shadow-soft transition-colors hover:bg-gold hover:text-ink"
+            >
+              Ir a pagar
+            </Link>
+          </footer>
+        )}
       </aside>
     </>
   );
