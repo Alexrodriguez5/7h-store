@@ -29,7 +29,7 @@ const sans = Montserrat({
   variable: "--font-montserrat",
 });
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(siteUrl()),
   title: { default: "7H STORE — Calidad. Estilo. Confianza.", template: "%s | 7H STORE" },
   description:
     "Productos originales de EE.UU. con precios en COP, pagos locales y envíos a toda Colombia.",

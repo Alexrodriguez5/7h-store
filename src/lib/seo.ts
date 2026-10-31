@@ -1,5 +1,13 @@
-/** URL pública del sitio sin barra final (NEXT_PUBLIC_SITE_URL). */
-export const siteUrl = () => (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").trim().replace(/\/+$/, "");
+/**
+ * URL pública del sitio sin barra final. Orden: NEXT_PUBLIC_SITE_URL; en Vercel, el dominio de
+ * producción del proyecto (VERCEL_PROJECT_PRODUCTION_URL, lo define Vercel); si no, localhost.
+ */
+export const siteUrl = () => {
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  const base = explicit && !(vercel && explicit.includes("localhost")) ? explicit : vercel ? `https://${vercel}` : "http://localhost:3000";
+  return base.replace(/\/+$/, "");
+};
 
 const BACKSLASH = String.fromCharCode(92);
 
