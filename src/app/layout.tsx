@@ -3,6 +3,7 @@ import { BUSINESS } from "@/lib/business";
 import { jsonLdScript, siteUrl } from "@/lib/seo";
 import { Cormorant_Garamond, Montserrat } from "next/font/google";
 import { CartDrawer } from "@/components/cart/CartDrawer";
+import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { CartProvider } from "@/components/ui/CartProvider";
@@ -99,6 +100,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <PublicOnly>
             <Footer categories={categories} />
             <CartDrawer />
+            <WhatsAppButton />
           </PublicOnly>
         </CartProvider>
       </body>

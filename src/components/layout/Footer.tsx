@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Category } from "@/types";
+import { BUSINESS } from "@/lib/business";
 
 export function Footer({ categories }: { categories: Category[] }) {
   return (
@@ -46,7 +47,18 @@ export function Footer({ categories }: { categories: Category[] }) {
         </div>
       </div>
       <div className="border-t border-white/10 px-5 py-5 text-center text-[10px] tracking-wider text-ivory/60">
-        Pagos: tarjeta · PSE · transferencia · consignación · © {new Date().getFullYear()} 7H STORE
+        <p>Pagos: tarjeta · PSE · transferencia · consignación · © {new Date().getFullYear()} 7H STORE</p>
+        <p className="mt-2">
+          {BUSINESS.legalName ?? "7H STORE"}
+          {BUSINESS.taxId && ` · ${BUSINESS.taxId}`}
+          {BUSINESS.address && ` · ${BUSINESS.address}`}
+          {BUSINESS.city && `, ${BUSINESS.city}`}
+          {BUSINESS.email && ` · ${BUSINESS.email}`}
+          {" · "}
+          <a href="https://www.sic.gov.co" target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-gold-light">
+            Superintendencia de Industria y Comercio
+          </a>
+        </p>
       </div>
     </footer>
   );
