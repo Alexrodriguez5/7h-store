@@ -109,6 +109,9 @@ export async function quoteRates(destination: EnviaAddress, parcel: Parcel, fetc
       call<RateResponse>("/ship/rate/", { origin, destination: dest, packages: [pkg(parcel)], settings: { currency: "COP" }, shipment: { type: 1, carrier, reverse_pickup: 0, import: 0 } }, fetchImpl),
     ),
   );
+  // Si TODAS las transportadoras fallan (p. ej. token inválido), se informa el error en vez de "sin tarifas".
+  const firstError = results.find((r): r is PromiseRejectedResult => r.status === "rejected");
+  if (firstError && results.every((r) => r.status === "rejected")) throw firstError.reason;
   return results
     .flatMap((r) => (r.status === "fulfilled" ? r.value.data ?? [] : []))
     .filter((r) => typeof r.totalPrice === "number" && r.totalPrice > 0 && (!r.currency || r.currency === "COP"))
