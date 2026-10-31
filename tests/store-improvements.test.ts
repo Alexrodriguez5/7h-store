@@ -29,10 +29,13 @@ describe("Wompi: regreso del cliente", () => {
     const expected = createHash("sha256").update("7H-2026-ABCD12344490000COPtest_integrity_abc").digest("hex");
     expect(u.searchParams.get("signature:integrity")).toBe(expected);
   });
-  it("sin NEXT_PUBLIC_SITE_URL válido no envía redirect-url", () => {
+  it("sin NEXT_PUBLIC_SITE_URL https no envía redirect-url", () => {
     env.NEXT_PUBLIC_SITE_URL = "";
     expect(orderPageUrl("7H-1")).toBeNull();
     env.NEXT_PUBLIC_SITE_URL = "javascript:alert(1)";
+    expect(orderPageUrl("7H-1")).toBeNull();
+    // Wompi bloquea (403) redirect-url hacia http://localhost: en desarrollo no se envía.
+    env.NEXT_PUBLIC_SITE_URL = "http://localhost:3000";
     expect(orderPageUrl("7H-1")).toBeNull();
   });
 });

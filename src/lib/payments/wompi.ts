@@ -150,13 +150,14 @@ export class WompiGateway implements PaymentGateway {
   }
 }
 
-/** URL pública del pedido, solo si NEXT_PUBLIC_SITE_URL es una URL http(s) válida. */
+/** URL pública del pedido, solo si NEXT_PUBLIC_SITE_URL es una URL https válida (producción o Preview). */
 export function orderPageUrl(publicCode: string): string | null {
   const site = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, "");
   if (!site) return null;
   try {
     const u = new URL(`${site}/pedido/${encodeURIComponent(publicCode)}`);
-    return u.protocol === "https:" || u.protocol === "http:" ? u.toString() : null;
+    // Solo HTTPS: el firewall de Wompi rechaza (403) el checkout si redirect-url apunta a http://localhost.
+    return u.protocol === "https:" ? u.toString() : null;
   } catch {
     return null;
   }

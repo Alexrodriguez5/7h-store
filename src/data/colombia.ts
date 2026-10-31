@@ -1,1 +1,39 @@
-export const COLOMBIA: Record<string,string[]> = { "Meta":["Villavicencio","Acacías","Granada","Puerto López","Restrepo"], "Cundinamarca":["Bogotá","Soacha","Chía","Facatativá"], "Antioquia":["Medellín","Bello","Envigado","Itagüí"], "Atlántico":["Barranquilla","Soledad","Malambo"], "Valle del Cauca":["Cali","Palmira","Buenaventura"], "Santander":["Bucaramanga","Floridablanca","Girón"], "Bolívar":["Cartagena","Magangué"], "Boyacá":["Tunja","Duitama","Sogamoso"], "Tolima":["Ibagué","Espinal"], "Norte de Santander":["Cúcuta","Ocaña"] };
+/**
+ * Los 32 departamentos de Colombia y Bogotá D.C., con sus principales municipios como sugerencias.
+ * En el checkout la ciudad se puede escribir libremente: si el municipio no está en la lista, el cliente igual puede comprar.
+ */
+export const COLOMBIA: Record<string, string[]> = {
+  "Amazonas": ["Leticia", "Puerto Nariño"],
+  "Antioquia": ["Medellín", "Bello", "Envigado", "Itagüí", "Sabaneta", "La Estrella", "Caldas", "Copacabana", "Girardota", "Rionegro", "Marinilla", "La Ceja", "El Retiro", "Apartadó", "Turbo", "Caucasia", "Santa Fe de Antioquia"],
+  "Arauca": ["Arauca", "Saravena", "Tame", "Arauquita"],
+  "Atlántico": ["Barranquilla", "Soledad", "Malambo", "Puerto Colombia", "Galapa", "Sabanalarga", "Baranoa"],
+  "Bogotá D.C.": ["Bogotá"],
+  "Bolívar": ["Cartagena", "Magangué", "Turbaco", "Arjona", "El Carmen de Bolívar", "Mompox"],
+  "Boyacá": ["Tunja", "Duitama", "Sogamoso", "Chiquinquirá", "Paipa", "Villa de Leyva", "Puerto Boyacá"],
+  "Caldas": ["Manizales", "Villamaría", "Chinchiná", "La Dorada", "Riosucio", "Anserma"],
+  "Caquetá": ["Florencia", "San Vicente del Caguán", "Puerto Rico"],
+  "Casanare": ["Yopal", "Aguazul", "Villanueva", "Tauramena", "Paz de Ariporo"],
+  "Cauca": ["Popayán", "Santander de Quilichao", "Puerto Tejada", "Patía", "Piendamó"],
+  "Cesar": ["Valledupar", "Aguachica", "Agustín Codazzi", "Bosconia", "La Jagua de Ibirico"],
+  "Chocó": ["Quibdó", "Istmina", "Bahía Solano", "Tadó"],
+  "Córdoba": ["Montería", "Cereté", "Sahagún", "Lorica", "Montelíbano", "Planeta Rica"],
+  "Cundinamarca": ["Bogotá", "Soacha", "Chía", "Zipaquirá", "Facatativá", "Fusagasugá", "Girardot", "Mosquera", "Madrid", "Funza", "Cajicá", "Cota", "La Calera", "Sopó", "Tocancipá", "Villeta"],
+  "Guainía": ["Inírida"],
+  "Guaviare": ["San José del Guaviare"],
+  "Huila": ["Neiva", "Pitalito", "Garzón", "La Plata", "Campoalegre"],
+  "La Guajira": ["Riohacha", "Maicao", "Uribia", "San Juan del Cesar", "Fonseca"],
+  "Magdalena": ["Santa Marta", "Ciénaga", "Fundación", "El Banco", "Zona Bananera"],
+  "Meta": ["Villavicencio", "Acacías", "Granada", "Puerto López", "Restrepo", "Cumaral", "Puerto Gaitán"],
+  "Nariño": ["Pasto", "Tumaco", "Ipiales", "Túquerres", "La Unión"],
+  "Norte de Santander": ["Cúcuta", "Ocaña", "Villa del Rosario", "Los Patios", "Pamplona", "Tibú"],
+  "Putumayo": ["Mocoa", "Puerto Asís", "Orito", "Valle del Guamuez"],
+  "Quindío": ["Armenia", "Calarcá", "La Tebaida", "Montenegro", "Quimbaya", "Circasia"],
+  "Risaralda": ["Pereira", "Dosquebradas", "Santa Rosa de Cabal", "La Virginia"],
+  "San Andrés y Providencia": ["San Andrés", "Providencia"],
+  "Santander": ["Bucaramanga", "Floridablanca", "Girón", "Piedecuesta", "Barrancabermeja", "San Gil", "Socorro"],
+  "Sucre": ["Sincelejo", "Corozal", "Sampués", "San Marcos", "Tolú"],
+  "Tolima": ["Ibagué", "Espinal", "Melgar", "Honda", "Chaparral", "Mariquita"],
+  "Valle del Cauca": ["Cali", "Palmira", "Buenaventura", "Tuluá", "Buga", "Cartago", "Jamundí", "Yumbo", "Candelaria"],
+  "Vaupés": ["Mitú"],
+  "Vichada": ["Puerto Carreño"],
+};
