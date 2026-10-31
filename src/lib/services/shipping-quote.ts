@@ -3,6 +3,9 @@ import { FREE_SHIPPING_THRESHOLD, quoteShipping, totalWeight, type ShippingQuote
 import { getShippingZones } from "@/lib/services/shipping-zones";
 import { enviaUsesCheckoutRates, parcelFor, quoteRates } from "@/lib/envia";
 
+const NAMES: Record<string, string> = { servientrega: "Servientrega", coordinadora: "Coordinadora", tcc: "TCC", interrapidisimo: "Interrapidísimo", deprisa: "Deprisa", envia: "Envía" };
+export const carrierName = (c: string) => NAMES[c.toLowerCase()] ?? c.charAt(0).toUpperCase() + c.slice(1);
+
 export interface CartLine { productId: string; quantity: number }
 export type QuoteSource = "envia" | "zone";
 
@@ -35,8 +38,9 @@ export async function quoteCart(input: { department: string; city: string; lines
     if (!cheapest) return { ...zoneQuote, source: "zone" };
     return {
       costCOP: Math.ceil(cheapest.totalCOP / 100) * 100,
-      zone: `Envío ${cheapest.carrier}`,
-      eta: cheapest.deliveryEstimate ?? zoneQuote.eta,
+      zone: carrierName(cheapest.carrier),
+      // El plazo de la transportadora es solo el transporte: se suma la preparación del pedido.
+      eta: cheapest.deliveryEstimate ? `${cheapest.deliveryEstimate} de transporte + 1 día hábil de preparación` : zoneQuote.eta,
       free: false,
       source: "envia",
     };
