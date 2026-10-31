@@ -19,7 +19,7 @@ const VARS: [string, string, boolean][] = [
   ["SUPABASE_URL", "Supabase Storage · URL", false],
   ["SUPABASE_SERVICE_ROLE_KEY", "Supabase Storage · llave de servicio (solo servidor)", false],
   ["CRON_SECRET", "Cron de expiración de pedidos", true],
-  ["RESEND_API_KEY", "Correo transaccional (recuperar contraseña)", false],
+  ["RESEND_API_KEY", "Correos a clientes (pedido, pago, envío) y recuperación de contraseña", false],
   ["EMAIL_FROM", "Remitente de los correos", false],
 ];
 

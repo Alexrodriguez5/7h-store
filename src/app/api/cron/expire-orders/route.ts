@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { expireOrder } from "@/lib/services/order-lifecycle";
 import { invalidateProducts } from "@/lib/cache";
 import { safeEqual } from "@/lib/admin/password";
+import { notifyCustomer } from "@/lib/order-emails";
 
 /** Expira pedidos vencidos (libera su stock) y limpia contadores viejos de límites de intentos. */
 export async function GET(req: Request) {
@@ -15,7 +16,12 @@ export async function GET(req: Request) {
     select: { id: true },
   });
   let expired = 0;
-  for (const { id } of candidates) if (await expireOrder(id)) expired++;
+  for (const { id } of candidates) {
+    if (await expireOrder(id)) {
+      expired++;
+      notifyCustomer("expired", { id });
+    }
+  }
   if (expired > 0) invalidateProducts();
 
   const purged = await prisma.rateLimit

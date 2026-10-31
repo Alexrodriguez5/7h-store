@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { invalidateProducts } from "@/lib/cache";
 import { MIN, consume, tooMany } from "@/lib/rate-limit";
 import { getClientIp, readJson } from "@/lib/request";
+import { notifyCustomer } from "@/lib/order-emails";
 
 export async function POST(req: Request) {
   // Cada pedido reserva stock 24 h: se limita por IP para que nadie pueda "secuestrar" el inventario con bots.
@@ -19,6 +20,7 @@ export async function POST(req: Request) {
     }
     const order = await createOrder(parsed.data);
     invalidateProducts(); // el stock visible cambió
+    notifyCustomer("created", { id: order.id });
 
     if (parsed.data.paymentMethod === "card" || parsed.data.paymentMethod === "pse") {
       const gateway = new WompiGateway();

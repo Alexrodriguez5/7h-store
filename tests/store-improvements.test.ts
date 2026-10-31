@@ -79,3 +79,25 @@ describe("Carrito: agregar varias unidades", () => {
     expect(useCartStore.getState().items[0].quantity).toBe(1);
   });
 });
+
+describe("Correos al cliente", () => {
+  it("arma el correo de envío con transportadora y guía, escapando HTML", async () => {
+    const { buildOrderEmail } = await import("@/lib/order-emails");
+    const mail = buildOrderEmail("shipped", {
+      publicCode: "7H-2026-ABCD1234", customerFullName: "Ana <b>Pérez</b>", customerEmail: "ana@correo.co", paymentMethod: "CARD",
+      subtotalCOP: 100000, shippingCOP: 18000, totalCOP: 118000, carrier: "Servientrega", trackingNumber: "123456789",
+      city: "Pereira", department: "Risaralda", address: "Calle 1", expiresAt: new Date("2026-11-01T12:00:00Z"),
+      items: [{ name: "Tenis", size: "40", quantity: 1, unitPriceCOP: 100000 }],
+    });
+    expect(mail.subject).toContain("va en camino");
+    expect(mail.text).toContain("Servientrega");
+    expect(mail.text).toContain("123456789");
+    expect(mail.html).not.toContain("<b>Pérez");
+    expect(mail.html).toContain("/pedido/7H-2026-ABCD1234");
+  });
+  it("sin Resend configurado no intenta enviar", async () => {
+    const { notifyCustomer } = await import("@/lib/order-emails");
+    delete env.RESEND_API_KEY;
+    expect(() => notifyCustomer("paid", { id: "x" })).not.toThrow();
+  });
+});
