@@ -72,7 +72,25 @@ Para revisar los cambios: https://github.com/Alexrodriguez5/7h-store/pull/new/me
 | `npm audit --omit=dev` | ⚠️ Quedan 4 avisos "altos", todos de herramientas de **compilación**: el `postcss` interno de Next y `deepmerge-ts` de la CLI de Prisma. No se ejecutan con datos de los visitantes. Solo se corrigen subiendo a Next 16 o Prisma 7, que son cambios grandes; recomendado más adelante. |
 | Navegador (con datos de ejemplo temporales) | ✅ Las 16 rutas públicas responden 200. Probados: búsqueda sin tildes, talla, cantidad, agregar al carrito, carrito, menú móvil, páginas legales, sin desbordamiento horizontal en 375 px. |
 
-**No probado (lo impide la base de datos pausada):** creación real de pedidos, pago en Wompi Sandbox, webhook, panel administrativo con sesión, inventario contra la base y fotos de Supabase Storage. **No se declaran aprobados.**
+### Pruebas con tu base de datos real (después de reactivar Supabase)
+| Prueba | Resultado |
+|---|---|
+| Conexión a Supabase y Storage | ✅ 17 productos activos, 4 categorías, 48 variantes, 1 admin. Las fotos subidas cargan (200). |
+| Rutas públicas con datos reales | ✅ Inicio, catálogo, categoría, búsqueda, checkout, rastreo, sitemap (30 URL) y login del panel. |
+| Validación del checkout | ✅ Al enviar vacío, cada campo muestra su error. **Antes no se mostraban (bug corregido).** |
+| Cobertura del checkout | ✅ 32 departamentos + Bogotá D.C. **Antes había solo 10 departamentos con pocas ciudades (bug corregido).** |
+| Crear pedido con tarjeta | ✅ Pedido de prueba **7H-2026-AD612683** (Mochila Classic, $337.000). Reservó 1 unidad (stock 13 → 12). Pago PENDING. |
+| Wompi Sandbox: abrir checkout | ✅ "Modo de pruebas", comercio "7h Store", $337.000: Wompi aceptó la firma de integridad y la referencia. Se detectó y corrigió que Wompi bloquea (403) la URL de regreso a `localhost`: ahora solo se envía con HTTPS. |
+| Webhook falso (firma inválida) | ✅ Rechazado con 400. El pedido sigue pendiente. |
+| Rastreo de pedido | ✅ Con correo correcto muestra el pedido; con otro correo, 404 genérico. |
+| API del panel sin sesión | ✅ 401. |
+
+**No probado todavía:**
+- **Completar el pago Sandbox con tarjeta de prueba.** Requiere aceptar los términos de Wompi en su página: lo haces tú, o me autorizas.
+- **Webhook real de Wompi.** Necesita una URL pública (Vercel).
+- **Panel con sesión.** No uso tu contraseña.
+
+**El pedido de prueba 7H-2026-AD612683 debe cancelarse** desde /admin → Pedidos. Al cancelarlo, la unidad vuelve al inventario. Si no se cancela, expira solo en 24 h con el cron.
 
 ---
 
