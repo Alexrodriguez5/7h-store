@@ -54,36 +54,38 @@ model Category {
   imageUrl  String?
   createdAt DateTime  @default(now())
   products  Product[]
+
   @@index([active, sortOrder])
 }
 
 model Product {
-  id               String      @id @default(cuid())
-  slug             String      @unique
-  name             String
-  brand            String
-  description      String
-  priceCOP         Int
+  id                String           @id @default(cuid())
+  slug              String           @unique
+  name              String
+  brand             String
+  description       String
+  priceCOP          Int
   compareAtPriceCOP Int?
-  categoryId       String
-  category         Category    @relation(fields: [categoryId], references: [id])
-  gender           Gender
-  isAccessory      Boolean     @default(false)
-  images           String[]
-  sizes            String[]
-  stock            Int         @default(0)
-  tags             String[]
-  featured         Boolean     @default(false)
-  active           Boolean     @default(true)
+  categoryId        String
+  category          Category         @relation(fields: [categoryId], references: [id])
+  gender            Gender
+  isAccessory       Boolean          @default(false)
+  images            String[]
+  sizes             String[]
+  stock             Int              @default(0)
+  tags              String[]
+  featured          Boolean          @default(false)
+  active            Boolean          @default(true)
   /// Peso del producto empacado, en gramos (para calcular el envío). Vacío = 1 kg por defecto.
-  weightGrams      Int?
+  weightGrams       Int?
   /// Medidas del paquete en cm (las piden las transportadoras para cotizar). Opcionales.
-  lengthCm         Int?
-  widthCm          Int?
-  heightCm         Int?
-  createdAt        DateTime    @default(now())
-  orderItems       OrderItem[]
-  variants         ProductVariant[]
+  lengthCm          Int?
+  widthCm           Int?
+  heightCm          Int?
+  createdAt         DateTime         @default(now())
+  orderItems        OrderItem[]
+  variants          ProductVariant[]
+
   @@index([categoryId])
   @@index([featured])
   @@index([active])
@@ -98,14 +100,15 @@ model ProductVariant {
   size       String
   stock      Int         @default(0)
   orderItems OrderItem[]
+
   @@unique([productId, size])
   @@index([productId])
 }
 
 model Order {
-  id               String        @id @default(cuid())
-  publicCode       String        @unique
-  status           OrderStatus   @default(PENDING_PAYMENT)
+  id               String           @id @default(cuid())
+  publicCode       String           @unique
+  status           OrderStatus      @default(PENDING_PAYMENT)
   paymentMethod    PaymentMethod
   customerFullName String
   customerEmail    String
@@ -125,25 +128,28 @@ model Order {
   shippingZone     String?
   shippingEta      String?
   expiresAt        DateTime
-  createdAt        DateTime      @default(now())
+  createdAt        DateTime         @default(now())
   items            OrderItem[]
   payments         Payment[]
+  supportRequests  SupportRequest[]
+
   @@index([customerEmail, publicCode])
   @@index([status])
 }
 
 model OrderItem {
-  id          String  @id @default(cuid())
-  orderId     String
-  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId   String
-  product     Product @relation(fields: [productId], references: [id])
-  variantId   String?
-  variant     ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
-  name        String
-  size        String?
+  id           String               @id @default(cuid())
+  orderId      String
+  order        Order                @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product              @relation(fields: [productId], references: [id])
+  variantId    String?
+  variant      ProductVariant?      @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  name         String
+  size         String?
   unitPriceCOP Int
-  quantity    Int
+  quantity     Int
+  supportItems SupportRequestItem[]
 }
 
 model Payment {
@@ -157,6 +163,7 @@ model Payment {
   proofUrl    String?
   rawPayload  Json?
   createdAt   DateTime      @default(now())
+
   @@index([orderId])
   @@index([providerRef])
 }
@@ -177,19 +184,21 @@ model AdminUser {
   sessions          AdminSession[]
   resetTokens       AdminPasswordReset[]
   auditLogs         AdminAuditLog[]
+  assignedSupport   SupportRequest[]
 }
 
 /// Sesión revocable. La cookie lleva un token firmado; aquí solo se guarda su hash.
 model AdminSession {
-  id         String    @id @default(cuid())
-  adminId    String
-  admin      AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
-  tokenHash  String    @unique
-  expiresAt  DateTime
-  revokedAt  DateTime?
-  ip         String?
-  userAgent  String?
-  createdAt  DateTime  @default(now())
+  id        String    @id @default(cuid())
+  adminId   String
+  admin     AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  ip        String?
+  userAgent String?
+  createdAt DateTime  @default(now())
+
   @@index([adminId])
 }
 
@@ -202,6 +211,7 @@ model AdminPasswordReset {
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime  @default(now())
+
   @@index([adminId])
 }
 
@@ -217,6 +227,7 @@ model AdminAuditLog {
   details    Json?
   ip         String?
   createdAt  DateTime   @default(now())
+
   @@index([createdAt])
   @@index([adminId])
   @@index([entityType, entityId])
@@ -227,6 +238,7 @@ model RateLimit {
   key     String   @id
   count   Int
   resetAt DateTime
+
   @@index([resetAt])
 }
 
@@ -245,5 +257,219 @@ model ShippingZone {
   sortOrder       Int      @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
   @@index([active, sortOrder])
+}
+
+// ───────────────────────────── Clientes ─────────────────────────────
+// Un solo perfil por correo verificado; cada método de acceso es una "identidad" vinculada.
+// La compra como invitado sigue igual: los pedidos se asocian al cliente por su correo VERIFICADO.
+
+model Customer {
+  id                  String             @id @default(cuid())
+  /// Correo normalizado (minúsculas, sin espacios). Único.
+  email               String             @unique
+  emailVerifiedAt     DateTime?
+  name                String
+  phone               String?
+  avatarUrl           String?
+  /// Solo si el cliente creó contraseña (scrypt, como el panel).
+  passwordHash        String?
+  blockedAt           DateTime?
+  /// Solicitud de supresión de datos (Ley 1581): la revisa el equipo; no borra pedidos (obligación contable).
+  deletionRequestedAt DateTime?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  identities          CustomerIdentity[]
+  sessions            CustomerSession[]
+  addresses           CustomerAddress[]
+  supportRequests     SupportRequest[]
+}
+
+model CustomerIdentity {
+  id             String   @id @default(cuid())
+  customerId     String
+  customer       Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  /// "password" | "google" | "email_otp"
+  provider       String
+  /// Para Google: el "sub" del token. Para correo: el correo normalizado.
+  providerUserId String
+  createdAt      DateTime @default(now())
+
+  @@unique([provider, providerUserId])
+  @@index([customerId])
+}
+
+model CustomerSession {
+  id         String    @id @default(cuid())
+  customerId String
+  customer   Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+
+  @@index([customerId])
+}
+
+/// Códigos y enlaces de un solo uso (verificación, recuperación, OTP). Solo se guarda el hash.
+model CustomerToken {
+  id        String    @id @default(cuid())
+  email     String
+  /// "verify" | "reset" | "otp"
+  purpose   String
+  tokenHash String
+  attempts  Int       @default(0)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([email, purpose])
+}
+
+model CustomerAddress {
+  id           String   @id @default(cuid())
+  customerId   String
+  customer     Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  label        String
+  fullName     String
+  phone        String
+  department   String
+  city         String
+  address      String
+  neighborhood String?
+  notes        String?
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@index([customerId])
+}
+
+// ───────────────────────── Solicitudes y garantías ─────────────────────────
+
+enum SupportType {
+  RETRACTO
+  GARANTIA
+  DEFECTUOSO
+  DANADO_TRANSPORTE
+  DIFERENTE
+  INCOMPLETO
+  NO_RECIBIDO
+  CANCELACION
+  REVERSION_PAGO
+  CAMBIO_COMERCIAL
+  OTRO
+}
+
+enum SupportStatus {
+  RECIBIDA
+  EN_REVISION
+  INFO_SOLICITADA
+  APROBADA
+  NO_APROBADA
+  ESPERANDO_DEVOLUCION
+  PRODUCTO_RECIBIDO
+  SOLUCION_EN_PROCESO
+  REEMBOLSO_EN_PROCESO
+  FINALIZADA
+}
+
+model SupportRequest {
+  id              String               @id @default(cuid())
+  /// Radicado: SOL-AAAA-000001
+  code            String               @unique
+  customerId      String
+  customer        Customer             @relation(fields: [customerId], references: [id])
+  orderId         String
+  order           Order                @relation(fields: [orderId], references: [id])
+  type            SupportType
+  status          SupportStatus        @default(RECIBIDA)
+  reason          String
+  description     String
+  contactEmail    String
+  contactPhone    String?
+  assignedAdminId String?
+  assignedAdmin   AdminUser?           @relation(fields: [assignedAdminId], references: [id], onDelete: SetNull)
+  /// Fecha límite de respuesta (orientativa, p. ej. 15 días hábiles para PQR).
+  dueAt           DateTime?
+  resolution      String?
+  refundAmountCOP Int?
+  refundReference String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  items           SupportRequestItem[]
+  attachments     SupportAttachment[]
+  events          SupportEvent[]
+
+  @@index([customerId])
+  @@index([orderId])
+  @@index([status])
+}
+
+model SupportRequestItem {
+  id          String         @id @default(cuid())
+  requestId   String
+  request     SupportRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  orderItemId String
+  orderItem   OrderItem      @relation(fields: [orderItemId], references: [id])
+  quantity    Int
+
+  @@index([requestId])
+}
+
+/// Evidencias (fotos/video corto). Se guardan en la base de datos, nunca en enlaces públicos.
+model SupportAttachment {
+  id         String         @id @default(cuid())
+  requestId  String
+  request    SupportRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  fileName   String
+  mime       String
+  size       Int
+  data       Bytes
+  uploadedBy String
+  createdAt  DateTime       @default(now())
+
+  @@index([requestId])
+}
+
+/// Trazabilidad del caso: cambios de estado, mensajes y notas internas (visibleToCustomer=false).
+model SupportEvent {
+  id                String         @id @default(cuid())
+  requestId         String
+  request           SupportRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  /// "created" | "status" | "message" | "note" | "assigned" | "refund" | "email_in"
+  kind              String
+  fromStatus        SupportStatus?
+  toStatus          SupportStatus?
+  body              String?
+  /// "customer" | "admin" | "system"
+  authorType        String
+  adminId           String?
+  visibleToCustomer Boolean        @default(true)
+  createdAt         DateTime       @default(now())
+
+  @@index([requestId, createdAt])
+}
+
+/// Registro de correos transaccionales (para reintentos y auditoría). No guarda el cuerpo completo.
+model EmailLog {
+  id        String   @id @default(cuid())
+  to        String
+  subject   String
+  kind      String
+  ref       String?
+  status    String
+  error     String?
+  attempts  Int      @default(1)
+  createdAt DateTime @default(now())
+
+  @@index([status, createdAt])
+}
+
+/// Contadores secuenciales (p. ej. radicados por año).
+model Counter {
+  key   String @id
+  value Int    @default(0)
 }

@@ -32,3 +32,14 @@ export function isSameOrigin(req: Request): boolean {
   try { if (process.env.NEXT_PUBLIC_SITE_URL) allowed.add(new URL(process.env.NEXT_PUBLIC_SITE_URL).host); } catch { /* URL mal configurada: se ignora */ }
   return allowed.has(originHost);
 }
+
+/** Lee una cookie del encabezado de la petición. */
+export function readCookieValue(req: Request, name: string): string | undefined {
+  const header = req.headers.get("cookie");
+  if (!header) return undefined;
+  for (const part of header.split(";")) {
+    const i = part.indexOf("=");
+    if (i > 0 && part.slice(0, i).trim() === name) return decodeURIComponent(part.slice(i + 1).trim());
+  }
+  return undefined;
+}
