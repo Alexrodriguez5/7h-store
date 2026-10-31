@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { quoteShipping, totalWeight, type ShippingZoneRule } from "@/lib/shipping";
+import { quoteShipping, totalWeight, type ShippingQuote, type ShippingZoneRule } from "@/lib/shipping";
 import type { CheckoutInput } from "@/lib/schemas/checkout";
 import { mergeLines, reserveStock, type StockLine } from "@/lib/stock";
 import { randomBytes } from "node:crypto";
@@ -13,7 +13,7 @@ const paymentMethodMap = {
 } as const;
 
 /** `zones`: tarifas por zona vigentes. Sin zonas se cobra la tarifa histórica (comportamiento anterior). */
-export async function createOrder(input: CheckoutInput, db: PrismaClient = prisma, zones: readonly ShippingZoneRule[] = []) {
+export async function createOrder(input: CheckoutInput, db: PrismaClient = prisma, zones: readonly ShippingZoneRule[] = [], shippingOverride?: ShippingQuote) {
   return db.$transaction(async (tx) => {
     const lines = mergeLines(input.items);
     const ids = [...new Set(lines.map((item) => item.productId))];
@@ -45,7 +45,8 @@ export async function createOrder(input: CheckoutInput, db: PrismaClient = prism
 
     // El servidor cotiza con los pesos REALES de la base de datos (no confía en el navegador).
     const weightGrams = totalWeight(resolved.map(({ product, stockLine }) => ({ weightGrams: (product as { weightGrams?: number | null }).weightGrams, quantity: stockLine.quantity })));
-    const quote = quoteShipping({ subtotalCOP: subtotal, weightGrams, department: input.shipping.department, zones });
+    // `shippingOverride`: cotización ya hecha en el servidor con la tarifa real de la transportadora (Envia).
+    const quote = shippingOverride ?? quoteShipping({ subtotalCOP: subtotal, weightGrams, department: input.shipping.department, zones });
     const shipping = quote.costCOP;
     const total = subtotal + shipping;
     const publicCode = `7H-${new Date().getFullYear()}-${randomBytes(4).toString("hex").toUpperCase()}`;

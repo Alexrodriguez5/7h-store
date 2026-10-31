@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CheckoutForm } from "@/components/checkout/CheckoutForm";
 import { getShippingZones } from "@/lib/services/shipping-zones";
+import { enviaUsesCheckoutRates } from "@/lib/envia";
 
 export const metadata: Metadata = { title: "Checkout", description: "Completa tu pedido 7H STORE.", robots: { index: false, follow: false } };
 
@@ -14,7 +15,7 @@ export default async function CheckoutPage() {
         <h1 className="mt-2 font-display text-5xl">Finalizar compra</h1>
         <p className="mt-3 text-sm text-ink-soft">Tus datos se usan para procesar el pedido y la entrega.</p>
       </div>
-      <CheckoutForm zones={zones} />
+      <CheckoutForm zones={zones} liveRates={enviaUsesCheckoutRates()} />
     </main>
   );
 }

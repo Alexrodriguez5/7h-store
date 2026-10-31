@@ -21,6 +21,10 @@ const VARS: [string, string, boolean][] = [
   ["CRON_SECRET", "Cron de expiración de pedidos", true],
   ["RESEND_API_KEY", "Correos a clientes (pedido, pago, envío) y recuperación de contraseña", false],
   ["EMAIL_FROM", "Remitente de los correos", false],
+  ["ENVIA_API_TOKEN", "Envia · token de API (guías automáticas y tarifas reales)", false],
+  ["ENVIA_ENV", "Envia · ambiente: sandbox (pruebas) o production", false],
+  ["ENVIA_CARRIERS", "Envia · transportadoras a cotizar (p. ej. servientrega,coordinadora)", false],
+  ["ENVIA_CHECKOUT_RATES", "Envia · \"1\" para cobrar en el checkout la tarifa real", false],
 ];
 
 export default async function SettingsPage() {
