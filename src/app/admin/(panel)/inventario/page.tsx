@@ -21,7 +21,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
       <div className="mb-5 flex flex-wrap gap-2">
         {FILTERS.map(([key, label]) => <Link key={key} href={key ? `/admin/inventario?f=${key}` : "/admin/inventario"} className={(f ?? "") === key ? btnPrimary : btnGhost}>{label}</Link>)}
       </div>
-      <div className="overflow-x-auto border border-ink/10 bg-white">
+      <div className="overflow-x-auto rounded-2xl border border-ink/[.07] bg-white shadow-soft">
         <table className="w-full min-w-[760px]">
           <thead className="border-b border-ink/10"><tr><th className={thCls}>Producto</th><th className={thCls}>Total</th><th className={thCls}>Stock por talla</th></tr></thead>
           <tbody className="divide-y divide-ink/10">

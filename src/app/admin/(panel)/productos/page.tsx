@@ -16,7 +16,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
     <>
       <PageHeader title="Productos" subtitle={`${products.length} producto(s) en total.`} action={<Link href="/admin/productos/nuevo" className={btnPrimary}>+ Nuevo producto</Link>} />
       {guardado && <p role="status" className="mb-5 border border-success/40 bg-white p-3 text-sm text-success">«{guardado.slice(0, 120)}» se guardó. Los cambios ya se ven en la tienda.</p>}
-      <div className="overflow-x-auto border border-ink/10 bg-white">
+      <div className="overflow-x-auto rounded-2xl border border-ink/[.07] bg-white shadow-soft">
         <table className="w-full min-w-[960px]">
           <thead className="border-b border-ink/10"><tr><th className={thCls}>Producto</th><th className={thCls}>Categoría</th><th className={thCls}>Precio</th><th className={thCls}>Stock</th><th className={thCls}>Estado</th><th className={thCls}>Acciones</th></tr></thead>
           <tbody className="divide-y divide-ink/10">

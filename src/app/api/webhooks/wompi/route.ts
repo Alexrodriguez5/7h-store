@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { WompiGateway } from "@/lib/payments/wompi";
 import { applyPaymentEvent } from "@/lib/services/order-lifecycle";
+import { notifyCustomer } from "@/lib/order-emails";
 
 /**
  * Webhook de Wompi ("URL de Eventos"). Se responde:
@@ -20,6 +21,7 @@ export async function POST(req: Request) {
   try {
     const result = await applyPaymentEvent(event);
     console.info(`[wompi-webhook] ${event.publicCode} ${event.status} → ${result}`);
+    if (result === "paid") notifyCustomer("paid", { publicCode: event.publicCode });
     if (result === "amount_mismatch") console.warn(`[wompi-webhook] ${event.publicCode}: el monto o la moneda no coinciden con el pedido; NO se marcó como pagado.`);
     return NextResponse.json({ ok: true, result });
   } catch (e) {

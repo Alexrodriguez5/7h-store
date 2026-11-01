@@ -28,7 +28,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
     <>
       <PageHeader title="Pedidos" subtitle={`${total} pedido(s)${filtered ? " con los filtros aplicados" : ""}.`} />
 
-      <form method="get" className="mb-6 grid gap-3 border border-ink/10 bg-white p-4 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto]">
+      <form method="get" className="mb-6 grid gap-3 rounded-2xl border border-ink/[.07] bg-white p-4 shadow-soft sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto]">
         <div><label htmlFor="q" className={labelCls}>Buscar</label><input id="q" name="q" defaultValue={clean.q} placeholder="Nº de pedido, nombre o correo" className={inputCls} /></div>
         <div><label htmlFor="status" className={labelCls}>Estado</label>
           <select id="status" name="status" defaultValue={clean.status ?? ""} className={inputCls}><option value="">Todos</option>{Object.entries(ORDER_STATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
@@ -39,7 +39,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
         <div className="flex items-end gap-2"><button className={btnPrimary}>Filtrar</button>{filtered && <Link href="/admin/pedidos" className={btnGhost}>Limpiar</Link>}</div>
       </form>
 
-      <div className="overflow-x-auto border border-ink/10 bg-white">
+      <div className="overflow-x-auto rounded-2xl border border-ink/[.07] bg-white shadow-soft">
         <table className="w-full min-w-[980px]">
           <thead className="border-b border-ink/10"><tr>
             <th className={thCls}>Pedido</th><th className={thCls}>Cliente</th><th className={thCls}>Ciudad</th><th className={thCls}>Total</th><th className={thCls}>Método</th><th className={thCls}>Estado</th><th className={thCls}>Pago</th>

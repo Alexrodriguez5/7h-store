@@ -4,15 +4,16 @@ import { useState } from "react";
 import type { OrderStatus } from "@prisma/client";
 import { adminFetch } from "./api";
 import { btnDanger, btnGhost, btnPrimary, inputCls, labelCls } from "./ui";
+import { EnviaLabelPanel } from "./EnviaLabelPanel";
 
-interface Props { orderId: string; status: OrderStatus; isManualPayment: boolean }
+interface Props { orderId: string; status: OrderStatus; isManualPayment: boolean; enviaEnabled?: boolean; carrier?: string | null; trackingNumber?: string | null }
 
-export function OrderActions({ orderId, status, isManualPayment }: Props) {
+export function OrderActions({ orderId, status, isManualPayment, enviaEnabled = false, carrier: savedCarrier, trackingNumber: savedTracking }: Props) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string }>();
-  const [carrier, setCarrier] = useState("");
-  const [tracking, setTracking] = useState("");
+  const [carrier, setCarrier] = useState(savedCarrier ?? "");
+  const [tracking, setTracking] = useState(savedTracking ?? "");
   const [restock, setRestock] = useState(true);
 
   const run = async (body: Record<string, unknown>, confirmText?: string) => {
@@ -60,6 +61,10 @@ export function OrderActions({ orderId, status, isManualPayment }: Props) {
           <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={restock} onChange={(e) => setRestock(e.target.checked)} /> Al cancelar, devolver al inventario</label>
           {cancelBtn}
         </>
+      )}
+
+      {enviaEnabled && (status === "PAID" || status === "PROCESSING") && !savedTracking && (
+        <EnviaLabelPanel orderId={orderId} onLabel={(c, t) => { setCarrier(c); setTracking(t); }} />
       )}
 
       {status === "PROCESSING" && (

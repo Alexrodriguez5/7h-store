@@ -19,6 +19,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   const initial: ProductFormValues = {
     name: p.name, slug: p.slug, brand: p.brand, description: p.description, priceCOP: String(p.priceCOP), compareAtPriceCOP: p.compareAtPriceCOP ? String(p.compareAtPriceCOP) : "",
     category: p.category.slug, gender: p.gender, isAccessory: p.isAccessory, featured: p.featured, active: p.active, images: p.images, tags: p.tags.join(", "),
+    weightGrams: p.weightGrams ? String(p.weightGrams) : "", lengthCm: p.lengthCm ? String(p.lengthCm) : "", widthCm: p.widthCm ? String(p.widthCm) : "", heightCm: p.heightCm ? String(p.heightCm) : "",
     stock: String(p.stock), expectedStock: p.variants.length > 0 ? undefined : p.stock, hasSizes: p.variants.length > 0,
     variants: sizes.map((s) => {
       const v = p.variants.find((x) => x.size === s)!;

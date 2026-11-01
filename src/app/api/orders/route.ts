@@ -6,6 +6,10 @@ import { prisma } from "@/lib/prisma";
 import { invalidateProducts } from "@/lib/cache";
 import { MIN, consume, tooMany } from "@/lib/rate-limit";
 import { getClientIp, readJson } from "@/lib/request";
+import { notifyCustomer } from "@/lib/order-emails";
+import { getShippingZones } from "@/lib/services/shipping-zones";
+import { enviaUsesCheckoutRates } from "@/lib/envia";
+import { quoteCart } from "@/lib/services/shipping-quote";
 
 export async function POST(req: Request) {
   // Cada pedido reserva stock 24 h: se limita por IP para que nadie pueda "secuestrar" el inventario con bots.
@@ -17,8 +21,13 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: "Datos del pedido no válidos.", details: parsed.error.flatten() }, { status: 400 });
     }
-    const order = await createOrder(parsed.data);
+    // Con tarifas reales de Envia se cotiza ANTES de la transacción (llamada externa); si falla, quoteCart usa las zonas.
+    const override = enviaUsesCheckoutRates()
+      ? await quoteCart({ department: parsed.data.shipping.department, city: parsed.data.shipping.city, lines: parsed.data.items })
+      : undefined;
+    const order = await createOrder(parsed.data, undefined, await getShippingZones(), override);
     invalidateProducts(); // el stock visible cambió
+    notifyCustomer("created", { id: order.id });
 
     if (parsed.data.paymentMethod === "card" || parsed.data.paymentMethod === "pse") {
       const gateway = new WompiGateway();

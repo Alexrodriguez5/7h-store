@@ -8,6 +8,7 @@ function matches(row: Row, where: Row | undefined): boolean {
     if (k === "OR") { if (!(cond as Row[]).some((w) => matches(row, w))) return false; continue; }
     if (k === "AND") { if (!(cond as Row[]).every((w) => matches(row, w))) return false; continue; }
     if (k === "productId_size") { if (row.productId !== cond.productId || row.size !== cond.size) return false; continue; }
+    if (k === "provider_providerUserId") { if (row.provider !== cond.provider || row.providerUserId !== cond.providerUserId) return false; continue; }
     const val = row[k];
     if (cond === null) { if (val !== null && val !== undefined) return false; continue; }
     if (cond && typeof cond === "object" && !(cond instanceof Date)) {
@@ -37,17 +38,23 @@ export function createFakeDb() {
   const state = {
     category: [] as Row[], product: [] as Row[], productVariant: [] as Row[], order: [] as Row[], orderItem: [] as Row[], payment: [] as Row[],
     adminUser: [] as Row[], adminSession: [] as Row[], adminPasswordReset: [] as Row[], adminAuditLog: [] as Row[], rateLimit: [] as Row[],
+    customer: [] as Row[], customerIdentity: [] as Row[], customerSession: [] as Row[], customerToken: [] as Row[], customerAddress: [] as Row[],
+    supportRequest: [] as Row[], supportRequestItem: [] as Row[], supportAttachment: [] as Row[], supportEvent: [] as Row[], counter: [] as Row[], emailLog: [] as Row[],
   };
   type Table = keyof typeof state;
   const id = (p: string) => `${p}_${++seq}`;
   /** Registro de operaciones (para medir cuántas consultas hace cada acción). */
   const ops: string[] = [];
-  const unique: Partial<Record<Table, string[]>> = { category: ["slug"], product: ["slug"], adminUser: ["email"], adminSession: ["tokenHash"], adminPasswordReset: ["tokenHash"] };
+  const unique: Partial<Record<Table, string[]>> = { category: ["slug"], product: ["slug"], adminUser: ["email"], adminSession: ["tokenHash"], adminPasswordReset: ["tokenHash"], customer: ["email"], customerSession: ["tokenHash"], supportRequest: ["code"], counter: ["key"] };
   const defaults: Partial<Record<Table, Row>> = {
     category: { active: true, sortOrder: 0, imageUrl: null },
     adminUser: { role: "ADMIN", active: true, lastLoginAt: null, passwordChangedAt: new Date(0) },
     adminSession: { revokedAt: null },
     adminPasswordReset: { usedAt: null },
+    customer: { emailVerifiedAt: null, passwordHash: null, blockedAt: null, avatarUrl: null, phone: null, deletionRequestedAt: null },
+    customerSession: { revokedAt: null },
+    customerToken: { usedAt: null, attempts: 0 },
+    supportRequest: { status: "RECIBIDA", assignedAdminId: null, resolution: null, refundAmountCOP: null, refundReference: null },
   };
 
   const model = (name: Table, opts: { onCreate?: (row: Row, data: Row) => void; decorate?: (row: Row, args: Row) => Row } = {}) => {
@@ -73,7 +80,7 @@ export function createFakeDb() {
       update: async (a) => { const r = rows().find((x) => matches(x, a.where)); if (!r) throw new Error("NotFound"); const next = { ...r }; applyData(next, a.data); checkUnique(next, r); applyData(r, a.data); return out(r, a); },
       delete: async (a) => { const i = rows().findIndex((x) => matches(x, a.where)); if (i < 0) throw new Error("NotFound"); const [r] = rows().splice(i, 1); return r; },
       deleteMany: async (a = {}) => { const keep = rows().filter((r) => !matches(r, a.where)); const n = rows().length - keep.length; rows().splice(0, rows().length, ...keep); return { count: n }; },
-      create: async (a) => { const row: Row = { id: id(name), createdAt: new Date(), ...defaults[name], ...a.data }; delete row.items; delete row.variants; checkUnique(row); rows().push(row); opts.onCreate?.(row, a.data); return out(row, a); },
+      create: async (a) => { const row: Row = { id: id(name), createdAt: new Date(), ...defaults[name], ...a.data }; delete row.items; delete row.variants; delete row.attachments; delete row.events; checkUnique(row); rows().push(row); opts.onCreate?.(row, a.data); return out(row, a); },
       createMany: async (a) => { for (const d of a.data) await api.create({ data: d }); return { count: a.data.length }; },
       upsert: async (a) => { const r = rows().find((x) => matches(x, a.where)); if (r) { applyData(r, a.update); return out(r, a); } return api.create({ data: a.create }); },
       aggregate: async (a) => ({ _sum: { stock: rows().filter((r) => matches(r, a.where)).reduce((n, r) => n + r.stock, 0) } }),
@@ -111,7 +118,11 @@ export function createFakeDb() {
       decorate: withVariants,
     }),
     productVariant: model("productVariant"),
-    order: model("order", { onCreate: (row, data) => { for (const it of data.items?.create ?? []) state.orderItem.push({ id: id("item"), orderId: row.id, ...it }); } }),
+    order: model("order", {
+      onCreate: (row, data) => { for (const it of data.items?.create ?? []) state.orderItem.push({ id: id("item"), orderId: row.id, ...it }); },
+      // Las filas sembradas pueden traer `items`; si no, se resuelven desde orderItem.
+      decorate: (r, args) => (args.include?.items && !r.items ? { ...r, items: state.orderItem.filter((i) => i.orderId === r.id), payments: state.payment.filter((p) => p.orderId === r.id) } : r),
+    }),
     orderItem: model("orderItem"),
     payment: model("payment"),
     adminUser: model("adminUser"),
@@ -119,6 +130,32 @@ export function createFakeDb() {
     adminPasswordReset: model("adminPasswordReset", { decorate: withAdmin }),
     adminAuditLog: model("adminAuditLog"),
     rateLimit: model("rateLimit"),
+    customer: model("customer"),
+    customerIdentity: model("customerIdentity"),
+    customerSession: model("customerSession", { decorate: (r, args) => (args.include?.customer ? { ...r, customer: state.customer.find((c) => c.id === r.customerId) } : r) }),
+    customerToken: model("customerToken"),
+    customerAddress: model("customerAddress"),
+    supportRequest: model("supportRequest", {
+      onCreate: (row, data) => {
+        for (const it of data.items?.create ?? []) state.supportRequestItem.push({ id: id("sri"), requestId: row.id, ...it });
+        for (const a of data.attachments?.create ?? []) state.supportAttachment.push({ id: id("att"), requestId: row.id, createdAt: new Date(), ...a });
+        const evs = data.events?.create ? (Array.isArray(data.events.create) ? data.events.create : [data.events.create]) : [];
+        for (const e of evs) state.supportEvent.push({ id: id("evt"), requestId: row.id, createdAt: new Date(), visibleToCustomer: true, ...e });
+      },
+      decorate: (r, args) => {
+        const inc = args.include ?? {};
+        return {
+          ...r,
+          ...(inc.customer ? { customer: state.customer.find((c) => c.id === r.customerId) } : {}),
+          ...(inc.order ? { order: state.order.find((o) => o.id === r.orderId) } : {}),
+        };
+      },
+    }),
+    supportRequestItem: model("supportRequestItem"),
+    supportAttachment: model("supportAttachment"),
+    supportEvent: model("supportEvent"),
+    counter: model("counter"),
+    emailLog: model("emailLog"),
   };
   // `product.delete` en Prisma cascada a variantes
   const origDelete = tx.product.delete;

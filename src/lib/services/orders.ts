@@ -1,8 +1,13 @@
 import { prisma } from "@/lib/prisma";
-import { calculateShipping } from "@/lib/shipping";
+import { quoteShipping, totalWeight, type ShippingQuote, type ShippingZoneRule } from "@/lib/shipping";
 import type { CheckoutInput } from "@/lib/schemas/checkout";
 import { mergeLines, reserveStock, type StockLine } from "@/lib/stock";
-import { randomBytes } from "node:crypto";
+import { randomInt } from "node:crypto";
+
+/** Alfabeto sin caracteres confusos (sin 0/O, 1/I/L, U/V). */
+export const ORDER_CODE_ALPHABET = "23456789ABCDEFGHJKMNPQRSTWXYZ";
+/** Número de pedido corto y fácil de dictar: 7H-XXXXXX (29^6 ≈ 594 millones de combinaciones). */
+export const newOrderCode = () => `7H-${Array.from({ length: 6 }, () => ORDER_CODE_ALPHABET[randomInt(ORDER_CODE_ALPHABET.length)]).join("")}`;
 import type { PrismaClient } from "@prisma/client";
 
 const paymentMethodMap = {
@@ -12,7 +17,8 @@ const paymentMethodMap = {
   cash_deposit: "CASH_DEPOSIT",
 } as const;
 
-export async function createOrder(input: CheckoutInput, db: PrismaClient = prisma) {
+/** `zones`: tarifas por zona vigentes. Sin zonas se cobra la tarifa histórica (comportamiento anterior). */
+export async function createOrder(input: CheckoutInput, db: PrismaClient = prisma, zones: readonly ShippingZoneRule[] = [], shippingOverride?: ShippingQuote) {
   return db.$transaction(async (tx) => {
     const lines = mergeLines(input.items);
     const ids = [...new Set(lines.map((item) => item.productId))];
@@ -42,9 +48,13 @@ export async function createOrder(input: CheckoutInput, db: PrismaClient = prism
       return { product, size, stockLine };
     });
 
-    const shipping = calculateShipping(subtotal);
+    // El servidor cotiza con los pesos REALES de la base de datos (no confía en el navegador).
+    const weightGrams = totalWeight(resolved.map(({ product, stockLine }) => ({ weightGrams: (product as { weightGrams?: number | null }).weightGrams, quantity: stockLine.quantity })));
+    // `shippingOverride`: cotización ya hecha en el servidor con la tarifa real de la transportadora (Envia).
+    const quote = shippingOverride ?? quoteShipping({ subtotalCOP: subtotal, weightGrams, department: input.shipping.department, zones });
+    const shipping = quote.costCOP;
     const total = subtotal + shipping;
-    const publicCode = `7H-${new Date().getFullYear()}-${randomBytes(4).toString("hex").toUpperCase()}`;
+    const publicCode = newOrderCode();
 
     // Reserva atómica ANTES de crear el pedido: si falta stock se revierte todo.
     for (const { stockLine } of resolved) await reserveStock(tx, stockLine);
@@ -65,6 +75,8 @@ export async function createOrder(input: CheckoutInput, db: PrismaClient = prism
         notes: [input.shipping.neighborhood, input.shipping.notes].filter(Boolean).join(" · ") || null,
         subtotalCOP: subtotal,
         shippingCOP: shipping,
+        shippingZone: quote.zone,
+        shippingEta: quote.eta,
         totalCOP: total,
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
         items: {
@@ -82,9 +94,3 @@ export async function createOrder(input: CheckoutInput, db: PrismaClient = prism
   }, { maxWait: 10_000, timeout: 15_000 }); // margen para bases de datos lejanas (Supabase en otra región)
 }
 
-export async function getOrderForTracking(publicCode: string, email: string) {
-  return prisma.order.findFirst({
-    where: { publicCode, customerEmail: email.toLowerCase() },
-    include: { items: true, payments: { orderBy: { createdAt: "desc" } } },
-  });
-}

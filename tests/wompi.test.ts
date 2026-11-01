@@ -45,6 +45,14 @@ describe("firma del webhook de Wompi", () => {
     delete env.WOMPI_EVENTS_SECRET;
     await expect(new WompiGateway().verifyWebhook(post(wompiEvent()))).rejects.toThrow();
   });
+  it("en la tienda pública un pago Sandbox nunca marca el pedido como pagado", async () => {
+    process.env.VERCEL_ENV = "production";
+    try {
+      await expect(new WompiGateway().verifyWebhook(post(wompiEvent()))).rejects.toThrow(/Sandbox/);
+    } finally {
+      delete process.env.VERCEL_ENV;
+    }
+  });
   it("ERROR y VOIDED cuentan como no aprobados", async () => {
     expect((await new WompiGateway().verifyWebhook(post(wompiEvent({ status: "ERROR" })))).status).toBe("DECLINED");
     expect((await new WompiGateway().verifyWebhook(post(wompiEvent({ status: "VOIDED" })))).status).toBe("DECLINED");

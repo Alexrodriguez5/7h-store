@@ -20,7 +20,7 @@ export function CategoryManager({ initial }: { initial: AdminCategory[] }) {
     <div className="space-y-8">
       <NewCategoryForm onCreated={(c) => { setCats((l) => sortCats([...l, c])); setFlash(`Categoría «${c.label}» creada. Ya aparece en la tienda.`); }} />
       {flash && <p role="status" className="border border-success/40 bg-white p-3 text-sm text-success">{flash}</p>}
-      <div className="overflow-x-auto border border-ink/10 bg-white">
+      <div className="overflow-x-auto rounded-2xl border border-ink/[.07] bg-white shadow-soft">
         <table className="w-full min-w-[860px]">
           <caption className="sr-only">Categorías de la tienda</caption>
           <thead className="border-b border-ink/10">
@@ -59,7 +59,7 @@ function NewCategoryForm({ onCreated }: { onCreated: (c: AdminCategory) => void 
   };
 
   return (
-    <form onSubmit={submit} className="grid gap-5 border border-ink/10 bg-white p-5 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-start" noValidate>
+    <form onSubmit={submit} className="grid gap-5 rounded-2xl border border-ink/[.07] bg-white p-5 shadow-soft lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-start" noValidate>
       <h2 className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft lg:col-span-4">Nueva categoría</h2>
       <div>
         <label htmlFor="new-label" className={labelCls}>Nombre visible *</label>

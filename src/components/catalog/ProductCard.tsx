@@ -1,54 +1,95 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { Tilt } from "@/components/home/Motion";
+import Link from "next/link";
+import { memo, useState } from "react";
 import { formatCOP } from "@/lib/format";
 import { useCartStore } from "@/store/cart-store";
 import { isSizeAvailable } from "@/lib/sizes";
 import type { Product } from "@/types";
 
-export function ProductCard({ product }: { product: Product }) {
+function ProductCardBase({ product, priority = false }: { product: Product; priority?: boolean }) {
   const addItem = useCartStore((s) => s.addItem);
   const [size, setSize] = useState<string | undefined>();
 
   const needsSize = !!product.sizes?.length;
   const soldOut = product.stock === 0;
+  const discount =
+    product.compareAtPriceCOP && product.compareAtPriceCOP > product.priceCOP
+      ? Math.round((1 - product.priceCOP / product.compareAtPriceCOP) * 100)
+      : 0;
+  const href = `/producto/${product.slug}`;
 
   return (
     <article className="group flex h-full flex-col">
-      {/* IMAGEN */}
-      <div className="relative aspect-4/5 overflow-hidden rounded-sm bg-ivory-200">
-        <Image
-          src={product.images[0]}
-          alt={product.name}
-          fill
-          sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-          className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-        />
-      </div>
+      {/* IMAGEN (inclinación 3D al pasar el cursor) */}
+      <Tilt className="rounded-2xl">
+      <Link
+        href={href}
+        className="relative block aspect-4/5 overflow-hidden rounded-2xl bg-ivory-200 shadow-soft transition-shadow duration-300 group-hover:shadow-lift"
+        aria-label={`Ver ${product.name}`}
+      >
+        {product.images[0] && (
+          <Image
+            src={product.images[0]}
+            alt={product.name}
+            fill
+            priority={priority}
+            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+            className={`object-cover transition-[transform,opacity] duration-700 ease-out group-hover:scale-[1.04] ${product.images[1] ? "sm:group-hover:opacity-0" : ""} ${soldOut ? "opacity-60 grayscale-[.4]" : ""}`}
+          />
+        )}
+        {/* Segunda foto al pasar el cursor (solo con mouse; en celular se mantiene la principal). */}
+        {product.images[1] && !soldOut && (
+          <Image
+            src={product.images[1]}
+            alt=""
+            aria-hidden="true"
+            fill
+            loading="lazy"
+            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+            className="hidden scale-[1.04] object-cover opacity-0 transition-[transform,opacity] duration-700 ease-out sm:block sm:group-hover:scale-100 sm:group-hover:opacity-100"
+          />
+        )}
+        <div className="pointer-events-none absolute left-3 top-3 flex flex-col items-start gap-1.5">
+          {soldOut ? (
+            <span className="rounded-full bg-ink/85 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-ivory backdrop-blur">
+              Agotado
+            </span>
+          ) : discount > 0 ? (
+            <span className="rounded-full bg-gold px-2.5 py-1 text-[10px] font-semibold text-ink">
+              -{discount}%
+            </span>
+          ) : null}
+        </div>
+      </Link>
+      </Tilt>
 
       {/* INFORMACIÓN */}
-      <div className="mt-4 flex flex-1 flex-col">
-        {/* MARCA */}
-        <p className="text-xs text-ink-soft">
+      <div className="mt-4 flex flex-1 flex-col px-0.5">
+        <p className="text-[11px] font-medium uppercase tracking-[.14em] text-ink-soft/70">
           {product.brand}
         </p>
 
-        {/* NOMBRE */}
-        <h3 className="min-h-13 font-display text-xl leading-snug">
-          {product.name}
+        <h3 className="mt-1 min-h-13 font-display text-xl leading-snug">
+          <Link href={href} className="transition-colors hover:text-gold">
+            {product.name}
+          </Link>
         </h3>
 
-        {/* PRECIO */}
-        <p className="text-sm font-semibold">
-          {formatCOP(product.priceCOP)}
+        <p className="mt-1 flex items-baseline gap-2">
+          <span className="text-sm font-semibold">{formatCOP(product.priceCOP)}</span>
+          {discount > 0 && (
+            <del className="text-xs text-ink-soft/50">{formatCOP(product.compareAtPriceCOP!)}</del>
+          )}
         </p>
 
         {/* TALLAS */}
-        <div className="mt-3 h-9">
+        <div className="mt-3 min-h-9">
           {needsSize && (
             <div
-              className="flex h-9 flex-nowrap items-center gap-1"
+              className="flex flex-wrap items-center gap-1.5"
               role="radiogroup"
               aria-label={`Seleccionar talla para ${product.name}`}
             >
@@ -66,22 +107,15 @@ export function ProductCard({ product }: { product: Product }) {
                     disabled={!available}
                     title={available ? undefined : "Talla agotada"}
                     onClick={() => setSize(s)}
-                    className={`relative h-8 min-w-7 px-1 text-xs transition-all ${
+                    className={`h-8 min-w-8 shrink-0 rounded-full border px-2.5 text-xs transition-colors ${
                       !available
-                        ? "cursor-not-allowed text-ink/30 line-through"
+                        ? "cursor-not-allowed border-ink/10 text-ink/30 line-through"
                         : isSelected
-                          ? "font-bold text-ink"
-                          : "text-ink hover:font-semibold"
+                          ? "border-ink bg-ink font-semibold text-ivory"
+                          : "border-ink/15 text-ink hover:border-gold"
                     }`}
                   >
                     {s}
-
-                    {isSelected && (
-                      <span
-                        aria-hidden="true"
-                        className="absolute bottom-0 left-1/2 h-0.5 w-4 -translate-x-1/2 bg-ink"
-                      />
-                    )}
                   </button>
                 );
               })}
@@ -90,17 +124,15 @@ export function ProductCard({ product }: { product: Product }) {
         </div>
 
         {/* BOTÓN */}
-        <div className="mt-3 min-h-10.5">
+        <div className="mt-auto pt-3">
           <button
             type="button"
             disabled={soldOut || (needsSize && !size)}
             onClick={() => addItem(product, size)}
-            className={`w-full border py-2.5 text-sm font-medium transition-colors ${
-              soldOut
-                ? "cursor-not-allowed border-ink bg-ink text-ivory/50"
-                : needsSize && !size
-                  ? "cursor-not-allowed border-ink bg-ink text-ivory/60"
-                  : "border-ink bg-ink text-ivory hover:bg-gold hover:text-ink"
+            className={`w-full rounded-full py-2.5 text-sm font-medium transition-all duration-200 ${
+              soldOut || (needsSize && !size)
+                ? "cursor-not-allowed bg-ink/[.06] text-ink/45"
+                : "bg-ink text-ivory hover:bg-gold hover:text-ink active:scale-[.98]"
             }`}
           >
             {soldOut
@@ -114,3 +146,6 @@ export function ProductCard({ product }: { product: Product }) {
     </article>
   );
 }
+
+/** Memorizada: al filtrar el catálogo solo se vuelven a dibujar las tarjetas que cambian. */
+export const ProductCard = memo(ProductCardBase);

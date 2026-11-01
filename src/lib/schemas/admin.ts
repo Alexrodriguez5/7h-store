@@ -47,6 +47,11 @@ export const productInput = z
     /** Stock que el admin vio al abrir el formulario (producto sin tallas). */
     expectedStock: stockInt.optional(),
     variants: z.array(variantInput).max(30).default([]),
+    /** Peso empacado en gramos y medidas del paquete en cm (para cotizar envíos). Opcionales. */
+    weightGrams: z.number({ error: "Peso inválido" }).int("El peso debe ser entero (gramos)").min(1, "El peso debe ser mayor a 0").max(100_000, "Máximo 100 kg").nullable().optional(),
+    lengthCm: z.number().int().min(1).max(300).nullable().optional(),
+    widthCm: z.number().int().min(1).max(300).nullable().optional(),
+    heightCm: z.number().int().min(1).max(300).nullable().optional(),
   })
   .superRefine((v, ctx) => {
     if (v.compareAtPriceCOP != null && v.compareAtPriceCOP <= v.priceCOP) {

@@ -1,6 +1,19 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import type { PaymentGateway, GatewayOrder } from "./gateway";
 
+/**
+ * Barrera de seguridad: fuera de producción (Preview de Vercel, local) solo se permiten llaves Sandbox de Wompi
+ * (pub_test). Así una versión de prueba nunca cobra dinero real. Para probar llaves reales localmente a propósito:
+ * WOMPI_ALLOW_LIVE_OUTSIDE_PRODUCTION=1.
+ */
+export function assertSafePaymentEnvironment(publicKey: string, env: Record<string, string | undefined> = process.env) {
+  const isProduction = env.VERCEL_ENV ? env.VERCEL_ENV === "production" : env.NODE_ENV === "production";
+  const live = publicKey.startsWith("pub_prod");
+  if (live && !isProduction && env.WOMPI_ALLOW_LIVE_OUTSIDE_PRODUCTION !== "1") {
+    throw new Error("Pagos bloqueados: esta versión de prueba tiene llaves reales de Wompi. Usa llaves Sandbox (pub_test) en Preview.");
+  }
+}
+
 export class WompiGateway implements PaymentGateway {
   async createCheckout(order: GatewayOrder) {
     const publicKey = process.env.WOMPI_PUBLIC_KEY;
@@ -13,6 +26,7 @@ export class WompiGateway implements PaymentGateway {
     if (!integritySecret) {
       throw new Error("WOMPI_INTEGRITY_SECRET no configurada");
     }
+    assertSafePaymentEnvironment(publicKey);
 
     const amountInCents = order.totalCOP * 100;
     const currency = "COP";
@@ -31,6 +45,9 @@ export class WompiGateway implements PaymentGateway {
       reference: order.publicCode,
       "signature:integrity": integritySignature,
     });
+    // Al terminar en Wompi, el cliente vuelve a la página de su pedido (el pago lo confirma el webhook, no esta URL).
+    const redirectUrl = orderPageUrl(order.publicCode);
+    if (redirectUrl) params.set("redirect-url", redirectUrl);
 
     return {
       redirectUrl: `https://checkout.wompi.co/p/?${params.toString()}`,
@@ -103,6 +120,11 @@ export class WompiGateway implements PaymentGateway {
       );
     }
 
+    // En la tienda pública (producción) un pago Sandbox nunca marca un pedido como pagado: no hubo dinero real.
+    if (process.env.VERCEL_ENV === "production" && payload.environment === "test" && process.env.WOMPI_ACCEPT_TEST_EVENTS !== "1") {
+      throw new Error("Evento de pruebas (Sandbox) ignorado en producción");
+    }
+
     const transaction = getPath(
       payload.data,
       "transaction"
@@ -144,6 +166,19 @@ export class WompiGateway implements PaymentGateway {
       publicCode,
       rawPayload: payload,
     };
+  }
+}
+
+/** URL pública del pedido, solo si NEXT_PUBLIC_SITE_URL es una URL https válida (producción o Preview). */
+export function orderPageUrl(publicCode: string): string | null {
+  const site = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, "");
+  if (!site) return null;
+  try {
+    const u = new URL(`${site}/pedido/${encodeURIComponent(publicCode)}`);
+    // Solo HTTPS: el firewall de Wompi rechaza (403) el checkout si redirect-url apunta a http://localhost.
+    return u.protocol === "https:" ? u.toString() : null;
+  } catch {
+    return null;
   }
 }
 

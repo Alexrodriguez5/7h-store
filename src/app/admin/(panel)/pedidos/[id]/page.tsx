@@ -5,6 +5,7 @@ import { getOrderDetail } from "@/lib/services/admin-queries";
 import { derivePaymentStatus } from "@/lib/order-status";
 import { formatCOP } from "@/lib/format";
 import { OrderActions } from "@/components/admin/OrderActions";
+import { isEnviaConfigured } from "@/lib/envia";
 import { Badge, Card, OrderStatusBadge, PageHeader, PaymentBadge, fmtDate, methodLabel } from "@/components/admin/ui";
 
 export const metadata = { title: "Detalle de pedido" };
@@ -75,7 +76,7 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ i
         </div>
 
         <div className="space-y-6">
-          <Card title="Gestionar pedido"><OrderActions orderId={order.id} status={order.status} isManualPayment={manual} /></Card>
+          <Card title="Gestionar pedido"><OrderActions orderId={order.id} status={order.status} isManualPayment={manual} enviaEnabled={isEnviaConfigured()} carrier={order.carrier} trackingNumber={order.trackingNumber} /></Card>
           <Card title="Cliente">
             <dl>
               <Row k="Nombre" v={order.customerFullName} />

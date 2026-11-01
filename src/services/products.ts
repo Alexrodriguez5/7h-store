@@ -8,7 +8,7 @@ import type { Category, Gender, Product } from "@/types";
 type Row = {
   id: string; slug: string; name: string; brand: string; description: string; priceCOP: number; compareAtPriceCOP: number | null; gender: string;
   isAccessory: boolean; images: string[]; sizes: string[]; stock: number; tags: string[]; featured: boolean; category: { slug: string };
-  variants: { id: string; size: string; stock: number }[];
+  variants: { id: string; size: string; stock: number }[]; weightGrams?: number | null;
 };
 
 /** Con variantes, el stock y las tallas salen de ellas (las agotadas se envían con stock 0 para mostrarlas deshabilitadas). */
@@ -20,14 +20,14 @@ export function mapProduct(p: Row): Product {
     compareAtPriceCOP: p.compareAtPriceCOP ?? undefined, category: p.category.slug, gender: p.gender.toLowerCase() as Gender,
     isAccessory: p.isAccessory, images: p.images, sizes: sizes.length ? sizes : undefined,
     variants: hasVariants ? sizes.map((s) => { const v = p.variants.find((x) => x.size === s)!; return { id: v.id, size: v.size, stock: v.stock }; }) : undefined,
-    stock: totalStock(p.variants, p.stock), tags: p.tags, featured: p.featured,
+    stock: totalStock(p.variants, p.stock), tags: p.tags, featured: p.featured, weightGrams: p.weightGrams ?? null,
   };
 }
 
 /** Solo los campos que usa la tienda (sin fechas ni datos internos). */
 const select = {
   id: true, slug: true, name: true, brand: true, description: true, priceCOP: true, compareAtPriceCOP: true, gender: true, isAccessory: true,
-  images: true, sizes: true, stock: true, tags: true, featured: true, category: { select: { slug: true } }, variants: { select: { id: true, size: true, stock: true } },
+  images: true, sizes: true, stock: true, tags: true, featured: true, category: { select: { slug: true } }, variants: { select: { id: true, size: true, stock: true } }, weightGrams: true,
 } satisfies Prisma.ProductSelect;
 
 /** Visible en la tienda: producto activo dentro de una categoría activa. */
