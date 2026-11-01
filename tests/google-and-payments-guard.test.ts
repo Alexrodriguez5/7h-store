@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createHash } from "node:crypto";
 import { buildGoogleAuth, exchangeGoogleCode, googleRedirectUri } from "@/lib/customer/google";
 import { assertSafePaymentEnvironment } from "@/lib/payments/wompi";
+import { runtimeDatabaseUrl } from "@/lib/db-url";
 
 beforeEach(() => { process.env.GOOGLE_CLIENT_ID = "cliente-de-prueba.apps.googleusercontent.com"; process.env.GOOGLE_CLIENT_SECRET = "secreto-de-prueba"; });
 afterEach(() => { delete process.env.GOOGLE_CLIENT_ID; delete process.env.GOOGLE_CLIENT_SECRET; });
@@ -52,5 +53,20 @@ describe("barrera de pagos reales", () => {
   it("permite Sandbox en cualquier entorno y llaves reales solo en producción", () => {
     expect(() => assertSafePaymentEnvironment("pub_test_x", { VERCEL_ENV: "preview" })).not.toThrow();
     expect(() => assertSafePaymentEnvironment("pub_prod_x", { VERCEL_ENV: "production" })).not.toThrow();
+  });
+});
+
+describe("conexión a la base de datos en Vercel", () => {
+  const session = "postgresql://user:pw@aws-0-ca-central-1.pooler.supabase.com:5432/postgres";
+  it("en Vercel usa el pooler de transacciones con 1 conexión por instancia", () => {
+    const u = new URL(runtimeDatabaseUrl(session, { VERCEL: "1" })!);
+    expect(u.port).toBe("6543");
+    expect(u.searchParams.get("pgbouncer")).toBe("true");
+    expect(u.searchParams.get("connection_limit")).toBe("1");
+  });
+  it("en local deja el puerto y limita el grupo de conexiones", () => {
+    const u = new URL(runtimeDatabaseUrl(session, {})!);
+    expect(u.port).toBe("5432");
+    expect(u.searchParams.get("connection_limit")).toBe("5");
   });
 });
