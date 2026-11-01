@@ -12,7 +12,7 @@ const STEPS = [
   ["Elige", <>Explora el <Link href="/catalogo" className="underline">catálogo</Link>, usa el buscador o los filtros y selecciona la talla si el producto la tiene.</>],
   ["Agrega al carrito", "Revisa cantidades, subtotal y costo de envío. El carrito se guarda en tu navegador."],
   ["Paga", "Completa tus datos de entrega y elige tarjeta o PSE (a través de Wompi), transferencia o consignación. Las unidades quedan reservadas 24 horas mientras completas el pago."],
-  ["Rastrea", <>Guarda tu número de pedido y consulta su estado en <Link href="/pedidos" className="underline">Rastrear pedido</Link>.</>],
+  ["Rastrea", <>Entra a <Link href="/cuenta" className="underline">Mi cuenta</Link> con el correo de la compra: verás el estado de pago, el envío y la guía de todos tus pedidos.</>],
 ] as const;
 
 export default function HowToBuyPage() {
