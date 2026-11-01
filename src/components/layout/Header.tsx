@@ -118,10 +118,10 @@ export function Header({ categories }: { categories: Category[] }) {
           </form>
 
           <Link
-            href="/pedidos"
+            href="/cuenta"
             className="ml-auto hidden shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium text-ivory/80 transition-colors hover:bg-white/5 hover:text-gold-light sm:block md:ml-0"
           >
-            Mis pedidos
+            Mi cuenta
           </Link>
 
           <button
@@ -197,11 +197,11 @@ export function Header({ categories }: { categories: Category[] }) {
               </Link>
             ))}
             <Link
-              href="/pedidos"
+              href="/cuenta"
               onClick={() => setMobile(false)}
               className="py-4 font-display text-3xl transition-colors hover:text-gold-light"
             >
-              Mis pedidos
+              Mi cuenta
             </Link>
           </nav>
         </div>

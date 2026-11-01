@@ -9,7 +9,7 @@ import { ShieldIcon, TruckIcon } from "@/components/ui/Icons";
 
 export const metadata: Metadata = { title: "Mi cuenta", description: "Entra a tu cuenta 7H STORE para ver tus pedidos, envíos y solicitudes.", robots: { index: false } };
 
-export default async function AccountEntryPage({ searchParams }: { searchParams: Promise<{ next?: string; aviso?: string }> }) {
+export default async function AccountEntryPage({ searchParams }: { searchParams: Promise<{ next?: string; aviso?: string; modo?: string }> }) {
   const sp = await searchParams;
   if (await getCurrentCustomer()) redirect(safeNext(sp.next));
   return (
@@ -26,7 +26,7 @@ export default async function AccountEntryPage({ searchParams }: { searchParams:
           </ul>
           <IsoPackage className="mt-6 hidden w-full max-w-[340px] drop-shadow-2xl lg:block" />
         </div>
-        <AuthPanel next={safeNext(sp.next)} aviso={sp.aviso} googleEnabled={isGoogleConfigured()} otpEnabled={isEmailConfigured()} />
+        <AuthPanel next={safeNext(sp.next)} aviso={sp.aviso} register={sp.modo === "registro"} googleEnabled={isGoogleConfigured()} otpEnabled={isEmailConfigured()} />
       </div>
     </main>
   );

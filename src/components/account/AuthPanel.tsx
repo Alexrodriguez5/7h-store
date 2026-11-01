@@ -18,10 +18,10 @@ const AVISOS: Record<string, string> = {
 };
 
 /** Acceso de clientes: Google, código al correo o correo y contraseña. Un solo perfil por correo. */
-export function AuthPanel({ next = "/cuenta/pedidos", aviso, googleEnabled, otpEnabled }: { next?: string; aviso?: string; googleEnabled: boolean; otpEnabled: boolean }) {
+export function AuthPanel({ next = "/cuenta/pedidos", aviso, register = false, googleEnabled, otpEnabled }: { next?: string; aviso?: string; register?: boolean; googleEnabled: boolean; otpEnabled: boolean }) {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>(otpEnabled ? "codigo" : "clave");
-  const [mode, setMode] = useState<ClaveMode>("entrar");
+  const [tab, setTab] = useState<Tab>(otpEnabled && !register ? "codigo" : "clave");
+  const [mode, setMode] = useState<ClaveMode>(register ? "registro" : "entrar");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
