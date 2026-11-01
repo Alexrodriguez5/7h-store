@@ -21,7 +21,7 @@ type Props = LinkButtonProps | NativeButtonProps;
 const styles = {
   primary: "bg-ink text-ivory shadow-soft hover:bg-ink-soft hover:shadow-lift",
   secondary: "border border-ink/25 bg-transparent text-ink hover:border-gold hover:bg-ink/[.03]",
-  gold: "bg-gold text-ink shadow-soft hover:bg-gold-light hover:shadow-lift",
+  gold: "btn-shine bg-gold text-ink shadow-soft hover:bg-gold-light hover:shadow-lift",
 };
 
 export function Button(props: Props) {

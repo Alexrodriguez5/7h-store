@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
-import { selectCount, useCartStore } from "@/store/cart-store";
+import { selectCount, selectSubtotal, useCartStore } from "@/store/cart-store";
+import { amountToFreeShipping, FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
+import { formatCOP } from "@/lib/format";
 import { BagIcon, CloseIcon, MenuIcon, SearchIcon } from "@/components/ui/Icons";
 
 import type { Category } from "@/types";
@@ -24,6 +26,11 @@ export function Header({ categories }: { categories: Category[] }) {
   const [mobile, setMobile] = useState(false);
   const open = useCartStore((s) => s.setOpen);
   const count = useCartStore(selectCount);
+  const subtotal = useCartStore(selectSubtotal);
+  // El carrito vive en el navegador: el aviso personalizado solo se muestra después de montar (evita diferencias con el HTML del servidor).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const missing = amountToFreeShipping(subtotal);
   const category = searchParams.get("categoria");
 
   // Con el menú móvil abierto: la página de fondo no se desplaza y Escape lo cierra.
@@ -55,7 +62,15 @@ export function Header({ categories }: { categories: Category[] }) {
   return (
     <>
       <div className="bg-gold px-4 py-2 text-center text-[10px] font-semibold tracking-wide text-ink sm:text-xs">
-        Envío gratis a toda Colombia en compras desde $500.000 · Productos 100% originales de EE.UU.
+        {mounted && subtotal > 0 ? (
+          missing > 0 ? (
+            <span>Te faltan <strong>{formatCOP(missing)}</strong> para tu envío gratis · Agrega algo más y ahorra el envío</span>
+          ) : (
+            <span>¡Listo! Tu pedido tiene <strong>envío gratis</strong> a toda Colombia</span>
+          )
+        ) : (
+          <>Envío gratis a toda Colombia en compras desde {formatCOP(FREE_SHIPPING_THRESHOLD)} · Productos 100% originales de EE.UU.</>
+        )}
       </div>
 
       <header className="sticky top-0 z-40 border-b border-white/10 bg-ink/90 text-ivory backdrop-blur-md supports-[backdrop-filter]:bg-ink/80">

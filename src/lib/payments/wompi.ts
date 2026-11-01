@@ -120,6 +120,11 @@ export class WompiGateway implements PaymentGateway {
       );
     }
 
+    // En la tienda pública (producción) un pago Sandbox nunca marca un pedido como pagado: no hubo dinero real.
+    if (process.env.VERCEL_ENV === "production" && payload.environment === "test" && process.env.WOMPI_ACCEPT_TEST_EVENTS !== "1") {
+      throw new Error("Evento de pruebas (Sandbox) ignorado en producción");
+    }
+
     const transaction = getPath(
       payload.data,
       "transaction"

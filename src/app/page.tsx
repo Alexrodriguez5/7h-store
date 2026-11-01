@@ -7,7 +7,7 @@ import { FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
 import { ProductCard } from "@/components/catalog/ProductCard";
 import { Button } from "@/components/ui/Button";
 import { ArrowRightIcon, CardIcon, ShieldIcon, TruckIcon } from "@/components/ui/Icons";
-import { Parallax, Rail, Reveal } from "@/components/home/Motion";
+import { Parallax, Rail, Reveal, Tilt } from "@/components/home/Motion";
 
 /**
  * Fotografía de campaña (Unsplash License, uso comercial permitido, sin marcas visibles):
@@ -122,6 +122,7 @@ export default async function HomePage() {
                 const big = i === 0;
                 return (
                   <Reveal key={c.slug} delay={i * 90} className={big ? "col-span-2 row-span-2" : i === 3 ? "col-span-2 lg:col-span-1" : ""}>
+                    <Tilt className="h-full rounded-2xl" max={5}>
                     <Link href={`/catalogo?categoria=${c.slug}`} className="group relative block h-full overflow-hidden rounded-2xl bg-ink-soft">
                       {image ? (
                         <Image src={image} alt="" fill sizes={big ? "(min-width:1024px) 50vw, 100vw" : "(min-width:1024px) 25vw, 50vw"} className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.07]" />
@@ -136,6 +137,7 @@ export default async function HomePage() {
                         </span>
                       </div>
                     </Link>
+                    </Tilt>
                   </Reveal>
                 );
               })}

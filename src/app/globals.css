@@ -44,3 +44,13 @@ body { margin:0; background:var(--color-ivory); color:var(--color-ink); font-fam
 .marquee-wrap:hover .marquee { animation-play-state:paused; }
 @media (max-width: 639px) { .marquee { animation-duration:48s; } .hero-zoom { animation-duration:1.4s; } }
 @media (prefers-reduced-motion: reduce) { .reveal { opacity:1; transform:none; } .marquee { animation:none; } }
+
+/* Inclinación 3D con brillo dorado (componente Tilt) */
+.tilt { position:relative; transform-style:preserve-3d; transition:transform .5s cubic-bezier(.22,1,.36,1); will-change:transform; }
+.tilt::after { content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; opacity:0; transition:opacity .4s; background:radial-gradient(420px circle at var(--shine-x,50%) var(--shine-y,50%), rgb(216 184 102 / .22), transparent 45%); }
+.tilt:hover::after { opacity:1; }
+/* Botones dorados con destello al pasar el cursor */
+.btn-shine { position:relative; overflow:hidden; }
+.btn-shine::before { content:""; position:absolute; inset:0; transform:translateX(-120%) skewX(-20deg); background:linear-gradient(90deg, transparent, rgb(255 255 255 / .45), transparent); transition:transform .8s ease; }
+.btn-shine:hover::before { transform:translateX(120%) skewX(-20deg); }
+@media (prefers-reduced-motion: reduce) { .tilt { transform:none!important; } .btn-shine::before { display:none; } }

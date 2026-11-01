@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { Tilt } from "@/components/home/Motion";
 import Link from "next/link";
 import { memo, useState } from "react";
 import { formatCOP } from "@/lib/format";
@@ -22,7 +23,8 @@ function ProductCardBase({ product, priority = false }: { product: Product; prio
 
   return (
     <article className="group flex h-full flex-col">
-      {/* IMAGEN */}
+      {/* IMAGEN (inclinación 3D al pasar el cursor) */}
+      <Tilt className="rounded-2xl">
       <Link
         href={href}
         className="relative block aspect-4/5 overflow-hidden rounded-2xl bg-ivory-200 shadow-soft transition-shadow duration-300 group-hover:shadow-lift"
@@ -62,6 +64,7 @@ function ProductCardBase({ product, priority = false }: { product: Product; prio
           ) : null}
         </div>
       </Link>
+      </Tilt>
 
       {/* INFORMACIÓN */}
       <div className="mt-4 flex flex-1 flex-col px-0.5">

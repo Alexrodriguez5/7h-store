@@ -64,3 +64,31 @@ export function Rail({ children, label }: { children: ReactNode; label: string }
     </div>
   );
 }
+
+/**
+ * Inclinación 3D al mover el cursor, con un brillo dorado que sigue al puntero.
+ * Solo con mouse (no en pantallas táctiles) y sin movimiento reducido.
+ */
+export function Tilt({ children, className = "", max = 7 }: { children: ReactNode; className?: string; max?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const enabled = useRef(false);
+  useEffect(() => {
+    enabled.current = !reduced() && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  }, []);
+  const onMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const el = ref.current;
+    if (!el || !enabled.current) return;
+    const r = el.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width;
+    const y = (e.clientY - r.top) / r.height;
+    el.style.transform = `perspective(900px) rotateX(${(0.5 - y) * max}deg) rotateY(${(x - 0.5) * max}deg) translateZ(0)`;
+    el.style.setProperty("--shine-x", `${x * 100}%`);
+    el.style.setProperty("--shine-y", `${y * 100}%`);
+  };
+  const reset = () => { if (ref.current) ref.current.style.transform = ""; };
+  return (
+    <div ref={ref} onPointerMove={onMove} onPointerLeave={reset} className={`tilt ${className}`}>
+      {children}
+    </div>
+  );
+}
