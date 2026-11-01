@@ -108,3 +108,79 @@ export async function getDashboard() {
     proofsToReview,
   };
 }
+
+/** Día calendario en Colombia (YYYY-MM-DD) para agrupar ventas por día. */
+const bogotaDay = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Bogota" }).format(d);
+
+export interface SalesAnalytics {
+  days: number;
+  /** Ventas confirmadas por día (incluye días en cero). */
+  daily: { day: string; totalCOP: number; orders: number }[];
+  current: { salesCOP: number; orders: number; avgTicketCOP: number; createdOrders: number; units: number };
+  previous: { salesCOP: number; orders: number; avgTicketCOP: number };
+  /** % de pedidos creados en el periodo que llegaron a pago confirmado. */
+  paidRate: number | null;
+  byMethod: { method: string; salesCOP: number; orders: number }[];
+  topProducts: { name: string; units: number; salesCOP: number }[];
+  topDepartments: { department: string; salesCOP: number; orders: number }[];
+  byStatus: { status: string; orders: number }[];
+}
+
+/**
+ * Analítica del panel con datos reales: solo cuentan como venta los pedidos pagados, preparando, enviados o entregados.
+ * Compara el periodo elegido con el periodo anterior de la misma duración.
+ */
+export async function getSalesAnalytics(days = 30): Promise<SalesAnalytics> {
+  const now = new Date();
+  const start = new Date(now.getTime() - days * 864e5);
+  const prevStart = new Date(start.getTime() - days * 864e5);
+  const orders = await prisma.order.findMany({
+    where: { createdAt: { gte: prevStart } },
+    select: { createdAt: true, status: true, totalCOP: true, paymentMethod: true, department: true, items: { select: { name: true, quantity: true, unitPriceCOP: true } } },
+  });
+  const isSale = (s: string) => (REVENUE_STATUSES as string[]).includes(s);
+  const cur = orders.filter((o) => o.createdAt >= start);
+  const prev = orders.filter((o) => o.createdAt < start);
+  const curSales = cur.filter((o) => isSale(o.status));
+  const prevSales = prev.filter((o) => isSale(o.status));
+  const sum = (list: typeof orders) => list.reduce((n, o) => n + o.totalCOP, 0);
+
+  const dailyMap = new Map<string, { totalCOP: number; orders: number }>();
+  for (let i = days - 1; i >= 0; i--) dailyMap.set(bogotaDay(new Date(now.getTime() - i * 864e5)), { totalCOP: 0, orders: 0 });
+  for (const o of curSales) {
+    const k = bogotaDay(o.createdAt);
+    const e = dailyMap.get(k);
+    if (e) { e.totalCOP += o.totalCOP; e.orders += 1; }
+  }
+
+  const group = <K extends string>(list: typeof curSales, key: (o: (typeof curSales)[number]) => K) => {
+    const m = new Map<K, { salesCOP: number; orders: number }>();
+    for (const o of list) { const k = key(o); const e = m.get(k) ?? { salesCOP: 0, orders: 0 }; e.salesCOP += o.totalCOP; e.orders += 1; m.set(k, e); }
+    return [...m].map(([k, v]) => ({ k, ...v })).sort((a, b) => b.salesCOP - a.salesCOP);
+  };
+  const products = new Map<string, { units: number; salesCOP: number }>();
+  for (const o of curSales) for (const it of o.items) {
+    const e = products.get(it.name) ?? { units: 0, salesCOP: 0 };
+    e.units += it.quantity; e.salesCOP += it.quantity * it.unitPriceCOP; products.set(it.name, e);
+  }
+  const statusMap = new Map<string, number>();
+  for (const o of cur) statusMap.set(o.status, (statusMap.get(o.status) ?? 0) + 1);
+  const curTotal = sum(curSales);
+  const prevTotal = sum(prevSales);
+  const decided = cur.filter((o) => o.status !== "PENDING_PAYMENT");
+
+  return {
+    days,
+    daily: [...dailyMap].map(([day, v]) => ({ day, ...v })),
+    current: {
+      salesCOP: curTotal, orders: curSales.length, avgTicketCOP: curSales.length ? Math.round(curTotal / curSales.length) : 0,
+      createdOrders: cur.length, units: curSales.reduce((n, o) => n + o.items.reduce((m, i) => m + i.quantity, 0), 0),
+    },
+    previous: { salesCOP: prevTotal, orders: prevSales.length, avgTicketCOP: prevSales.length ? Math.round(prevTotal / prevSales.length) : 0 },
+    paidRate: decided.length ? Math.round((curSales.length / decided.length) * 100) : null,
+    byMethod: group(curSales, (o) => o.paymentMethod).map(({ k, ...v }) => ({ method: k, ...v })),
+    topProducts: [...products].map(([name, v]) => ({ name, ...v })).sort((a, b) => b.salesCOP - a.salesCOP).slice(0, 6),
+    topDepartments: group(curSales, (o) => o.department).slice(0, 6).map(({ k, ...v }) => ({ department: k, ...v })),
+    byStatus: [...statusMap].map(([status, n]) => ({ status, orders: n })).sort((a, b) => b.orders - a.orders),
+  };
+}
