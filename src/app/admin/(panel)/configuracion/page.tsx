@@ -21,10 +21,15 @@ const VARS: [string, string, boolean][] = [
   ["CRON_SECRET", "Cron de expiración de pedidos", true],
   ["RESEND_API_KEY", "Correos a clientes (pedido, pago, envío) y recuperación de contraseña", false],
   ["EMAIL_FROM", "Remitente de los correos", false],
+  ["SUPPORT_INBOX_EMAIL", "Buzón de atención: avisos de solicitudes y garantías", false],
+  ["RESEND_WEBHOOK_SECRET", "Correo entrante: asocia respuestas de clientes a su solicitud", false],
+  ["GOOGLE_CLIENT_ID", "Clientes · iniciar sesión con Google (ID de cliente)", false],
+  ["GOOGLE_CLIENT_SECRET", "Clientes · iniciar sesión con Google (secreto)", false],
   ["ENVIA_API_TOKEN", "Envia · token de API (guías automáticas y tarifas reales)", false],
   ["ENVIA_ENV", "Envia · ambiente: sandbox (pruebas) o production", false],
   ["ENVIA_CARRIERS", "Envia · transportadoras a cotizar (p. ej. servientrega,coordinadora)", false],
   ["ENVIA_CHECKOUT_RATES", "Envia · \"1\" para cobrar en el checkout la tarifa real", false],
+  ["ENVIA_MIN_SHIPPING_COP", "Envia · envío mínimo cobrado (por defecto 15000)", false],
 ];
 
 export default async function SettingsPage() {

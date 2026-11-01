@@ -59,6 +59,23 @@ Revisión del 31 de octubre de 2026. Ordenado por riesgo: legal, quejas de clien
 - Pedido de prueba **7H-2026-AD612683**: cancelarlo en /admin → Pedidos. La mochila vuelve al stock.
 - Revisar los 6 pedidos "pendientes de pago" antiguos y los productos de ejemplo del seed (por ejemplo "Mochila Classic"). Si no son productos reales, desactívalos.
 
+## G. Portal de clientes (Mi cuenta, Mis pedidos, Solicitudes)
+
+Ya está construido en la rama `mejora-diseno-rendimiento` (sin publicar). Para que funcione:
+
+| Prioridad | Qué | Cómo |
+|---|---|---|
+| 🔴 | Crear las tablas nuevas | Cierra los servidores (`Ctrl+C`) y ejecuta `npm.cmd run db:push`. Solo agrega tablas. Si aparece una advertencia de "data loss", **no aceptes** y avísame. Después ejecuta `prisma/sql/enable-rls.sql` en Supabase → SQL Editor. |
+| 🔴 | Correos (código de 6 dígitos, verificación, avisos) | Sin `RESEND_API_KEY` y `EMAIL_FROM` de un dominio propio verificado en Resend no sale ningún correo. Mientras tanto solo funciona entrar con contraseña, y la cuenta no se puede verificar. |
+| 🟠 | Buzón de soporte | `SUPPORT_INBOX_EMAIL` (por ejemplo soporte@tudominio.com). Recibe un aviso por cada solicitud y cada mensaje de cliente. |
+| 🟠 | Respuestas por correo dentro del caso | Resend → Inbound en tu dominio y Webhook `email.received` a `<sitio>/api/webhooks/correo-entrante`. Su secreto va en `RESEND_WEBHOOK_SECRET`. |
+| 🟢 | Entrar con Google | Google Cloud Console → Credenciales → ID de cliente OAuth (web). URI de redirección: `<sitio>/api/cuenta/google/callback`. Variables `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`. Sin ellas el botón de Google no aparece. |
+
+Notas:
+- El rastreo de pedidos ahora exige iniciar sesión. Ya no se puede consultar un pedido solo con número y correo.
+- Registrar un reembolso en una solicitud **no mueve dinero**. Solo deja constancia del reembolso hecho en Wompi o en el banco.
+- Las solicitudes de supresión de datos (Ley 1581) llegan al buzón. Se responden en máximo 15 días hábiles y no borran pedidos.
+
 ---
 
 ### Orden sugerido

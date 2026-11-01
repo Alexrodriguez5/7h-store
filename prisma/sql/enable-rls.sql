@@ -19,6 +19,18 @@ ALTER TABLE "AdminPasswordReset" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "AdminAuditLog"      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "RateLimit"          ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "ShippingZone"       ENABLE ROW LEVEL SECURITY;
+-- Portal de clientes y posventa
+ALTER TABLE "Customer"           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "CustomerIdentity"   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "CustomerSession"    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "CustomerToken"      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "CustomerAddress"    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "SupportRequest"     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "SupportRequestItem" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "SupportAttachment"  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "SupportEvent"       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "EmailLog"           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "Counter"            ENABLE ROW LEVEL SECURITY;
 
 -- Comprobación: todas deben mostrar rowsecurity = true
 SELECT tablename, rowsecurity FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename;
