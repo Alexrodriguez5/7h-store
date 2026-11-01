@@ -35,7 +35,19 @@ function ProductCardBase({ product, priority = false }: { product: Product; prio
             fill
             priority={priority}
             sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-            className={`object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04] ${soldOut ? "opacity-60 grayscale-[.4]" : ""}`}
+            className={`object-cover transition-[transform,opacity] duration-700 ease-out group-hover:scale-[1.04] ${product.images[1] ? "sm:group-hover:opacity-0" : ""} ${soldOut ? "opacity-60 grayscale-[.4]" : ""}`}
+          />
+        )}
+        {/* Segunda foto al pasar el cursor (solo con mouse; en celular se mantiene la principal). */}
+        {product.images[1] && !soldOut && (
+          <Image
+            src={product.images[1]}
+            alt=""
+            aria-hidden="true"
+            fill
+            loading="lazy"
+            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+            className="hidden scale-[1.04] object-cover opacity-0 transition-[transform,opacity] duration-700 ease-out sm:block sm:group-hover:scale-100 sm:group-hover:opacity-100"
           />
         )}
         <div className="pointer-events-none absolute left-3 top-3 flex flex-col items-start gap-1.5">
