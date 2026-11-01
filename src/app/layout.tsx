@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { BUSINESS } from "@/lib/business";
 import { jsonLdScript, siteUrl } from "@/lib/seo";
-import { Cormorant_Garamond, Montserrat } from "next/font/google";
+import localFont from "next/font/local";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
 import { Footer } from "@/components/layout/Footer";
@@ -19,16 +19,12 @@ import "./globals.css";
  * cuando el admin cambia algo o cambia el stock (ver lib/cache.ts).
  */
 export const dynamic = "force-dynamic";
-const display = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-cormorant",
-});
-const sans = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-montserrat",
-});
+/**
+ * Tipografías alojadas en la propia tienda (latín, pesos 400 a 600, archivos variables de Google Fonts, licencia OFL).
+ * No se descargan durante el build: así un fallo de Google Fonts nunca impide publicar.
+ */
+const display = localFont({ src: "./fonts/cormorant-variable.woff2", weight: "400 600", variable: "--font-cormorant", display: "swap" });
+const sans = localFont({ src: "./fonts/montserrat-variable.woff2", weight: "400 600", variable: "--font-montserrat", display: "swap" });
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: { default: "7H STORE — Calidad. Estilo. Confianza.", template: "%s | 7H STORE" },
