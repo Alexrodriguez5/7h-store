@@ -51,7 +51,11 @@ export default function TermsPage() {
       </section>
       <section>
         <h2>8. PQR</h2>
-        <p>Peticiones, quejas y reclamos: <strong>{orPending(BUSINESS.email, "correo")}</strong>. Respondemos en un máximo de 15 días hábiles.</p>
+        <p>Peticiones, quejas y reclamos: <strong>{orPending(BUSINESS.email, "correo")}</strong>. Respondemos en un máximo de 15 días hábiles. También puedes radicarlas desde <Link href="/cuenta/solicitudes" className="underline">Mi cuenta → Solicitudes y garantías</Link>, con número de radicado. Si no quedas satisfecho, puedes acudir a la <a href="https://www.sic.gov.co" target="_blank" rel="noreferrer" className="underline">Superintendencia de Industria y Comercio</a>.</p>
+      </section>
+      <section>
+        <h2>9. Cuenta de cliente</h2>
+        <p>Crear una cuenta es opcional: puedes comprar como invitado. Si la creas, tu cuenta queda ligada a tu correo verificado (un solo perfil por correo, ya sea que entres con Google, con un código enviado al correo o con contraseña) y en ella ves todos los pedidos hechos con ese correo. Eres responsable de no compartir tu acceso. Podemos suspender una cuenta usada para fraude o abuso, sin afectar tus pedidos ni tus derechos como consumidor.</p>
       </section>
     </LegalPage>
   );

@@ -25,6 +25,8 @@ export default function PrivacyPage() {
           <li>Identificación y contacto: nombre, tipo y número de documento, correo y celular.</li>
           <li>Entrega: departamento, ciudad, dirección e indicaciones.</li>
           <li>Pedido y pago: productos, valores, estado del pago y comprobantes de transferencia. No almacenamos datos de tarjetas (los procesa Wompi).</li>
+          <li>Cuenta de cliente (si creas una): correo verificado, nombre, celular, foto de perfil si entras con Google, contraseña cifrada (nunca en texto legible), direcciones guardadas y registro de inicios de sesión (fecha, dirección IP y navegador) para proteger tu cuenta.</li>
+          <li>Solicitudes, garantías y devoluciones: la descripción del caso, los mensajes y las fotos o videos que adjuntes, que solo ven tú y el equipo de atención.</li>
         </ul>
       </section>
       <section>
@@ -38,7 +40,7 @@ export default function PrivacyPage() {
       </section>
       <section>
         <h2>4. Con quién los compartimos</h2>
-        <p>Con la pasarela de pagos (Wompi), la transportadora que entrega tu pedido y los proveedores de infraestructura tecnológica (hosting y base de datos), únicamente para las finalidades anteriores. Nuestros proveedores de hosting y base de datos pueden almacenar la información en servidores ubicados fuera de Colombia (por ejemplo, en Canadá o Estados Unidos), con medidas de seguridad equivalentes.</p>
+        <p>Con la pasarela de pagos (Wompi), la transportadora que entrega tu pedido (directamente o mediante la plataforma de envíos Envia.com), Google (solo si eliges entrar con tu cuenta de Google: recibimos tu nombre, correo y foto), el servicio de envío de correos (Resend) y los proveedores de infraestructura tecnológica (hosting y base de datos), únicamente para las finalidades anteriores. Nuestros proveedores de hosting y base de datos pueden almacenar la información en servidores ubicados fuera de Colombia (por ejemplo, en Canadá o Estados Unidos), con medidas de seguridad equivalentes.</p>
       </section>
       <section>
         <h2>5. Tus derechos</h2>
@@ -50,7 +52,7 @@ export default function PrivacyPage() {
       </section>
       <section>
         <h2>7. Cookies</h2>
-        <p>Usamos almacenamiento local del navegador para recordar tu carrito y una cookie técnica para la sesión del panel administrativo. No usamos cookies publicitarias.</p>
+        <p>Usamos almacenamiento local del navegador para recordar tu carrito y cookies técnicas indispensables: la de tu sesión de cliente (si inicias sesión), una temporal de seguridad durante el acceso con Google y la de la sesión del panel administrativo. No usamos cookies publicitarias ni de seguimiento.</p>
       </section>
     </LegalPage>
   );

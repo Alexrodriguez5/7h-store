@@ -24,16 +24,17 @@ export default function ReturnsPage() {
       </section>
       <section>
         <h2>Garantía legal</h2>
-        <p>Todos los productos tienen la garantía legal de calidad, idoneidad y seguridad prevista en la Ley 1480 de 2011 y el Decreto 735 de 2013. Si un producto presenta un defecto, escríbenos con tu número de pedido, fotos y una descripción del problema. Repararemos, cambiaremos o devolveremos el dinero según corresponda legalmente.</p>
+        <p>Todos los productos tienen la garantía legal de calidad, idoneidad y seguridad prevista en la Ley 1480 de 2011 y el Decreto 735 de 2013. Si un producto presenta un defecto, escríbenos con tu número de pedido, fotos y una descripción del problema. Repararemos, cambiaremos o devolveremos el dinero según corresponda legalmente. Si el fabricante no indica un plazo, la garantía legal es de <strong>un (1) año</strong> desde la entrega (artículo 8 de la Ley 1480 de 2011).</p>
       </section>
       <section>
         <h2>Reversión del pago</h2>
-        <p>Si pagaste con tarjeta o PSE y fuiste objeto de fraude, la operación no fue solicitada, el producto no se recibió o no corresponde a lo pedido o es defectuoso, puedes solicitar la reversión del pago dentro de los 5 días hábiles siguientes a la fecha en que tuviste noticia de ello (artículo 51 de la Ley 1480 de 2011).</p>
+        <p>Si pagaste con tarjeta o PSE y fuiste objeto de fraude, la operación no fue solicitada, el producto no se recibió o no corresponde a lo pedido o es defectuoso, puedes solicitar la reversión del pago dentro de los 5 días hábiles siguientes a la fecha en que tuviste noticia de ello (artículo 51 de la Ley 1480 de 2011 y Decreto 587 de 2016). Debes informarlo a 7H STORE y también al emisor de tu tarjeta o a tu banco. Si la solicitud procede, el dinero se reintegra en los plazos que fija la ley.</p>
       </section>
       <section>
         <h2>Cómo solicitarlo</h2>
         <ul>
-          <li>Escríbenos a <strong>{contact}</strong> o por Instagram <a href={BUSINESS.instagram.url} target="_blank" rel="noreferrer" className="underline">{BUSINESS.instagram.handle}</a>.</li>
+          <li><strong>Lo más rápido:</strong> entra a <Link href="/cuenta/solicitudes" className="underline">Mi cuenta → Solicitudes y garantías</Link>, elige el pedido y adjunta fotos o video. Recibes un número de radicado y la respuesta por correo.</li>
+          <li>También puedes escribirnos a <strong>{contact}</strong> o por Instagram <a href={BUSINESS.instagram.url} target="_blank" rel="noreferrer" className="underline">{BUSINESS.instagram.handle}</a>.</li>
           <li>Incluye tu número de pedido (por ejemplo, 7H-K4M9QX) y el correo de la compra.</li>
           <li>Conserva el producto, el empaque y el comprobante mientras revisamos la solicitud.</li>
         </ul>
