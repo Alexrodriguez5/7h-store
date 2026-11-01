@@ -8,6 +8,8 @@ import { CloseIcon, MenuIcon } from "@/components/ui/Icons";
 const NAV: { href: string; label: string; exact?: boolean; owner?: boolean }[] = [
   { href: "/admin", label: "Dashboard", exact: true },
   { href: "/admin/pedidos", label: "Pedidos" },
+  { href: "/admin/solicitudes", label: "Solicitudes" },
+  { href: "/admin/clientes", label: "Clientes" },
   { href: "/admin/productos", label: "Productos" },
   { href: "/admin/categorias", label: "Categorías" },
   { href: "/admin/inventario", label: "Inventario" },
