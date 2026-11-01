@@ -13,6 +13,7 @@ const AVISOS: Record<string, string> = {
   "google-no-disponible": "El acceso con Google estará disponible muy pronto. Usa otro método.",
   "google-error": "No pudimos completar el acceso con Google. Inténtalo de nuevo.",
   "google-correo-sin-verificar": "Tu correo de Google no está verificado. Usa otro método.",
+  "google-cancelado": "Cancelaste el inicio de sesión con Google. Puedes intentarlo de nuevo o usar otro método.",
   "cuenta-bloqueada": "Esta cuenta está bloqueada. Escríbenos para ayudarte.",
   "demasiados-intentos": "Demasiados intentos. Espera unos minutos.",
 };

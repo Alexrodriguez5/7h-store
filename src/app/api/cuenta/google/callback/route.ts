@@ -13,6 +13,8 @@ export async function GET(req: Request) {
     return r;
   };
   if (!isGoogleConfigured()) return fail("google-no-disponible");
+  // El cliente canceló en la pantalla de Google (error=access_denied) u otro error devuelto por Google.
+  if (url.searchParams.get("error")) return fail(url.searchParams.get("error") === "access_denied" ? "google-cancelado" : "google-error");
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
   let saved: { state?: string; verifier?: string; next?: string } = {};
@@ -23,7 +25,7 @@ export async function GET(req: Request) {
   }
   if (!code || !state || !saved.state || !saved.verifier || !safeEqual(state, saved.state)) return fail("google-error");
   try {
-    const profile = await exchangeGoogleCode(code, saved.verifier);
+    const profile = await exchangeGoogleCode(code, saved.verifier, url.origin);
     if (!profile.emailVerified) return fail("google-correo-sin-verificar");
     const customer = await signInVerifiedEmail({ email: profile.email, name: profile.name, avatarUrl: profile.picture, provider: "google", providerUserId: profile.sub });
     const res = NextResponse.redirect(new URL(safeNext(saved.next), url));

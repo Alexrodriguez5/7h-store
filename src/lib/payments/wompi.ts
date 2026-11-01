@@ -1,6 +1,19 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import type { PaymentGateway, GatewayOrder } from "./gateway";
 
+/**
+ * Barrera de seguridad: fuera de producción (Preview de Vercel, local) solo se permiten llaves Sandbox de Wompi
+ * (pub_test). Así una versión de prueba nunca cobra dinero real. Para probar llaves reales localmente a propósito:
+ * WOMPI_ALLOW_LIVE_OUTSIDE_PRODUCTION=1.
+ */
+export function assertSafePaymentEnvironment(publicKey: string, env: Record<string, string | undefined> = process.env) {
+  const isProduction = env.VERCEL_ENV ? env.VERCEL_ENV === "production" : env.NODE_ENV === "production";
+  const live = publicKey.startsWith("pub_prod");
+  if (live && !isProduction && env.WOMPI_ALLOW_LIVE_OUTSIDE_PRODUCTION !== "1") {
+    throw new Error("Pagos bloqueados: esta versión de prueba tiene llaves reales de Wompi. Usa llaves Sandbox (pub_test) en Preview.");
+  }
+}
+
 export class WompiGateway implements PaymentGateway {
   async createCheckout(order: GatewayOrder) {
     const publicKey = process.env.WOMPI_PUBLIC_KEY;
@@ -13,6 +26,7 @@ export class WompiGateway implements PaymentGateway {
     if (!integritySecret) {
       throw new Error("WOMPI_INTEGRITY_SECRET no configurada");
     }
+    assertSafePaymentEnvironment(publicKey);
 
     const amountInCents = order.totalCOP * 100;
     const currency = "COP";
