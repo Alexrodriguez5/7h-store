@@ -57,7 +57,7 @@ export default async function MyOrdersPage({ searchParams }: { searchParams: Pro
       </div>
       {sp.bienvenida && <Notice tone="success">¡Listo! Tu correo quedó confirmado.</Notice>}
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3">
         <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1">
           {FILTERS.map((f) => (
             <Link key={f.key} href={`/cuenta/pedidos${q({ estado: f.key })}`} className={`shrink-0 rounded-full border px-4 py-2 text-xs font-medium transition-colors ${filter.key === f.key ? "border-ink bg-ink text-ivory" : "border-ink/15 bg-white/60 hover:border-gold"}`}>
@@ -65,9 +65,9 @@ export default async function MyOrdersPage({ searchParams }: { searchParams: Pro
             </Link>
           ))}
         </div>
-        <div className="flex gap-2 text-xs">
+        <div className="no-scrollbar flex gap-1 overflow-x-auto text-xs">
           {[["", "Siempre"], ["30", "30 días"], ["90", "3 meses"], ["365", "1 año"]].map(([k, l]) => (
-            <Link key={k} href={`/cuenta/pedidos${q({ periodo: k || undefined })}`} className={`rounded-full px-3 py-1.5 ${(sp.periodo ?? "") === k ? "bg-gold/20 font-semibold" : "text-ink-soft hover:text-ink"}`}>{l}</Link>
+            <Link key={k} href={`/cuenta/pedidos${q({ periodo: k || undefined })}`} className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 ${(sp.periodo ?? "") === k ? "bg-gold/20 font-semibold" : "text-ink-soft hover:text-ink"}`}>{l}</Link>
           ))}
         </div>
       </div>
