@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import type { OrderStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getCurrentCustomer } from "@/lib/customer/auth";
+import { requireCustomerPage } from "@/lib/customer/auth";
 import { customerOrdersWhere } from "@/lib/services/support";
 import { canRequestSupport, logisticsView, paymentView } from "@/lib/customer/order-view";
 import { formatCOP } from "@/lib/format";
@@ -22,7 +22,7 @@ const PERIODS: Record<string, number> = { "30": 30, "90": 90, "365": 365 };
 
 /** Todos los pedidos del correo verificado (también los hechos como invitado), del más reciente al más antiguo. */
 export default async function MyOrdersPage({ searchParams }: { searchParams: Promise<{ estado?: string; periodo?: string; bienvenida?: string }> }) {
-  const c = (await getCurrentCustomer())!;
+  const c = await requireCustomerPage();
   const sp = await searchParams;
   const filter = FILTERS.find((f) => f.key === sp.estado) ?? FILTERS[0];
   const days = PERIODS[sp.periodo ?? ""];

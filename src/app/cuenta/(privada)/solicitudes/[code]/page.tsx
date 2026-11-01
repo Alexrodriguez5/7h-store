@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { getCurrentCustomer } from "@/lib/customer/auth";
+import { requireCustomerPage } from "@/lib/customer/auth";
 import { SUPPORT_STATUS, SUPPORT_TYPES } from "@/lib/support";
 import { formatCOP } from "@/lib/format";
 import { SupportReplyForm } from "@/components/account/SupportReplyForm";
@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: "Solicitud" };
 
 /** Detalle de una solicitud: solo eventos visibles para el cliente (las notas internas nunca se consultan aquí). */
 export default async function MyRequestDetail({ params, searchParams }: { params: Promise<{ code: string }>; searchParams: Promise<{ nueva?: string }> }) {
-  const c = (await getCurrentCustomer())!;
+  const c = await requireCustomerPage();
   const [{ code }, sp] = await Promise.all([params, searchParams]);
   const r = await prisma.supportRequest.findFirst({
     where: { code, customerId: c.id },

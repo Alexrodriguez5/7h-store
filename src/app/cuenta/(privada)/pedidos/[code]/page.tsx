@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { getCurrentCustomer } from "@/lib/customer/auth";
+import { requireCustomerPage } from "@/lib/customer/auth";
 import { findCustomerOrder } from "@/lib/services/support";
 import { canRequestSupport, carrierSite, logisticsView, paymentView } from "@/lib/customer/order-view";
 import { PAYMENT_METHOD_LABEL } from "@/lib/order-status";
@@ -16,7 +16,7 @@ export const metadata: Metadata = { title: "Detalle del pedido" };
 
 /** Detalle de un pedido del cliente (solo si es de su correo verificado). Datos tal como quedaron al comprar. */
 export default async function MyOrderDetail({ params }: { params: Promise<{ code: string }> }) {
-  const c = (await getCurrentCustomer())!;
+  const c = await requireCustomerPage();
   const order = await findCustomerOrder(c, (await params).code);
   if (!order) notFound();
   const requests = await prisma.supportRequest.findMany({ where: { orderId: order.id, customerId: c.id }, orderBy: { createdAt: "desc" }, select: { code: true, type: true, status: true, createdAt: true } });

@@ -7,6 +7,7 @@
  */
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { cache } from "react";
 import { randomInt } from "node:crypto";
 import type { Customer } from "@prisma/client";
@@ -55,6 +56,13 @@ export async function customerFromToken(token: string | undefined | null): Promi
 
 /** Cliente actual en páginas (una consulta por petición). */
 export const getCurrentCustomer = cache(async () => customerFromToken((await cookies()).get(CUSTOMER_COOKIE)?.value));
+
+/** Para páginas privadas: Next ejecuta la página a la vez que el layout, así que cada página valida la sesión por su cuenta. */
+export async function requireCustomerPage(): Promise<Customer> {
+  const c = await getCurrentCustomer();
+  if (!c) redirect("/cuenta");
+  return c;
+}
 
 const MUTATING = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 

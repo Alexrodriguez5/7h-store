@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { getCurrentCustomer } from "@/lib/customer/auth";
+import { requireCustomerPage } from "@/lib/customer/auth";
 import { PasswordForm, PrivacyRequestForm, ProfileForm } from "@/components/account/ProfileForms";
 import { Panel, Pill, fmtDate } from "@/components/account/ui";
 
@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Mi perfil" };
 const PROVIDERS: Record<string, string> = { google: "Google", password: "Correo y contraseña", email_otp: "Código por correo" };
 
 export default async function ProfilePage() {
-  const c = (await getCurrentCustomer())!;
+  const c = await requireCustomerPage();
   const identities = await prisma.customerIdentity.findMany({ where: { customerId: c.id }, orderBy: { createdAt: "asc" }, select: { id: true, provider: true, createdAt: true } });
 
   return (

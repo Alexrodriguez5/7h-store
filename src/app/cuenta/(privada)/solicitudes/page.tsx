@@ -1,14 +1,14 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { getCurrentCustomer } from "@/lib/customer/auth";
+import { requireCustomerPage } from "@/lib/customer/auth";
 import { SUPPORT_STATUS, SUPPORT_TYPES } from "@/lib/support";
 import { Panel, Pill, fmtDate } from "@/components/account/ui";
 
 export const metadata: Metadata = { title: "Solicitudes y garantías" };
 
 export default async function MyRequestsPage() {
-  const c = (await getCurrentCustomer())!;
+  const c = await requireCustomerPage();
   const list = await prisma.supportRequest.findMany({
     where: { customerId: c.id },
     orderBy: { updatedAt: "desc" },

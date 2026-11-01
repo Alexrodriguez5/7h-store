@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { getCurrentCustomer } from "@/lib/customer/auth";
+import { requireCustomerPage } from "@/lib/customer/auth";
 import { customerOrdersWhere } from "@/lib/services/support";
 import { SUPPORT_TYPES } from "@/lib/support";
 import { NewSupportForm } from "@/components/account/NewSupportForm";
@@ -10,7 +10,7 @@ import { Notice, Panel } from "@/components/account/ui";
 export const metadata: Metadata = { title: "Nueva solicitud" };
 
 export default async function NewRequestPage({ searchParams }: { searchParams: Promise<{ pedido?: string }> }) {
-  const c = (await getCurrentCustomer())!;
+  const c = await requireCustomerPage();
   const { pedido } = await searchParams;
   if (!c.emailVerifiedAt) return <Notice>Confirma tu correo para poder crear solicitudes.</Notice>;
   const orders = await prisma.order.findMany({

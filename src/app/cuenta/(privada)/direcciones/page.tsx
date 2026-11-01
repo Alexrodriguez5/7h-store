@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { getCurrentCustomer } from "@/lib/customer/auth";
+import { requireCustomerPage } from "@/lib/customer/auth";
 import { MAX_ADDRESSES } from "@/lib/customer/addresses";
 import { AddressBook } from "@/components/account/AddressBook";
 
 export const metadata: Metadata = { title: "Direcciones" };
 
 export default async function AddressesPage() {
-  const c = (await getCurrentCustomer())!;
+  const c = await requireCustomerPage();
   const addresses = await prisma.customerAddress.findMany({
     where: { customerId: c.id },
     orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
