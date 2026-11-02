@@ -37,7 +37,7 @@ function ProductCardBase({ product, priority = false }: { product: Product; prio
             fill
             priority={priority}
             sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-            className={`object-cover transition-[transform,opacity] duration-700 ease-out group-hover:scale-[1.04] ${product.images[1] ? "sm:group-hover:opacity-0" : ""} ${soldOut ? "opacity-60 grayscale-[.4]" : ""}`}
+            className={`object-cover transition-[transform,opacity] duration-700 ease-out group-hover:scale-[1.06] ${product.images[1] ? "sm:group-hover:opacity-0" : ""} ${soldOut ? "opacity-60 grayscale-[.4]" : ""}`}
           />
         )}
         {/* Segunda foto al pasar el cursor (solo con mouse; en celular se mantiene la principal). */}
@@ -63,6 +63,10 @@ function ProductCardBase({ product, priority = false }: { product: Product; prio
             </span>
           ) : null}
         </div>
+        {/* Llamado al pasar el cursor (solo computador) */}
+        <span aria-hidden="true" className="pointer-events-none absolute inset-x-3 bottom-3 hidden translate-y-3 rounded-full bg-ivory/95 py-2 text-center text-xs font-semibold text-ink opacity-0 shadow-soft backdrop-blur transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 sm:block">
+          Ver producto
+        </span>
       </Link>
       </Tilt>
 
@@ -72,14 +76,14 @@ function ProductCardBase({ product, priority = false }: { product: Product; prio
           {product.brand}
         </p>
 
-        <h3 className="mt-1 min-h-13 font-display text-xl leading-snug">
+        <h3 className="mt-1 line-clamp-2 min-h-13 font-display text-xl leading-snug">
           <Link href={href} className="transition-colors hover:text-gold">
             {product.name}
           </Link>
         </h3>
 
         <p className="mt-1 flex items-baseline gap-2">
-          <span className="text-sm font-semibold">{formatCOP(product.priceCOP)}</span>
+          <span className="text-base font-semibold tabular-nums">{formatCOP(product.priceCOP)}</span>
           {discount > 0 && (
             <del className="text-xs text-ink-soft/50">{formatCOP(product.compareAtPriceCOP!)}</del>
           )}
@@ -89,7 +93,7 @@ function ProductCardBase({ product, priority = false }: { product: Product; prio
         <div className="mt-3 min-h-9">
           {needsSize && (
             <div
-              className="flex flex-wrap items-center gap-1.5"
+              className="no-scrollbar -mx-0.5 flex items-center gap-1.5 overflow-x-auto px-0.5 pb-0.5"
               role="radiogroup"
               aria-label={`Seleccionar talla para ${product.name}`}
             >

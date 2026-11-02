@@ -19,6 +19,17 @@ const HERO_IMAGE = "https://images.unsplash.com/photo-1780764337454-d222bec28c5c
 const EDITORIAL_IMAGE = "https://images.unsplash.com/photo-1511474274885-186ea2ca6b24?auto=format&fit=crop&w=1600&q=80";
 
 /**
+ * Fotos editoriales por categoría (Unsplash License, sin logos de marcas visibles). Si la categoría tiene
+ * imagen propia en el panel (`imageUrl`), esa tiene prioridad.
+ */
+const CATEGORY_EDITORIAL: Record<string, { src: string; alt: string; kicker: string }> = {
+  calzado: { src: "https://images.unsplash.com/photo-1548122018-5e9e8d135d71?auto=format&fit=crop&w=1400&q=80", alt: "Tenis blancos sobre una línea roja en la calle", kicker: "Pisa fuerte" },
+  ropa: { src: "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=1400&q=80", alt: "Perchero con prendas en tonos neutros", kicker: "Capas que hablan" },
+  tecnologia: { src: "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=1400&q=80", alt: "Audífonos, celular y portátil sobre un escritorio claro", kicker: "Conecta tu día" },
+  accesorios: { src: "https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=1400&q=80", alt: "Reloj con correa de cuero sobre fondo negro", kicker: "El detalle manda" },
+};
+
+/**
  * Imagen de cada categoría: la propia (`imageUrl`, desde el panel) o, si no tiene, la foto de un producto real
  * de esa categoría. Así no se muestran marcas ni artículos que la tienda no vende.
  */
@@ -54,7 +65,7 @@ export default async function HomePage() {
       {/* A. HERO DE CAMPAÑA */}
       <section className="relative isolate flex min-h-[88svh] items-end overflow-hidden bg-ink text-ivory lg:min-h-[94svh]">
         <Parallax className="absolute inset-0 -z-10 h-[115%]">
-          <Image src={HERO_IMAGE} alt="" fill priority sizes="100vw" className="hero-zoom object-cover object-[50%_35%]" />
+          <Image src={HERO_IMAGE} alt="Campaña urbana 7H STORE: persona con ropa urbana bajo un viaducto de concreto" fill priority sizes="100vw" className="hero-zoom object-cover object-[50%_35%]" />
         </Parallax>
         <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-t from-ink via-ink/45 to-ink/10" />
         <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-r from-ink/70 via-transparent to-transparent" />
@@ -63,12 +74,13 @@ export default async function HomePage() {
           <p className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-gold/40 bg-ink/40 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[.3em] text-gold-light backdrop-blur">
             Importados de EE.UU. · Colombia
           </p>
-          <h1 className="mt-6 max-w-5xl font-display text-[52px] leading-[.88] tracking-tight sm:text-8xl lg:text-[128px]">
-            <span className="line-mask"><span>Estilo que llega</span></span>
-            <span className="line-mask"><span style={{ animationDelay: "120ms" }} className="text-gold-light">sin fronteras.</span></span>
+          <h1 className="mt-6 max-w-5xl font-sans text-[44px] font-semibold uppercase leading-[.9] tracking-[-.03em] sm:text-7xl lg:text-[112px]">
+            <span className="line-mask"><span>Original.</span></span>
+            <span className="line-mask"><span style={{ animationDelay: "110ms" }}>Urbano.</span></span>
+            <span className="line-mask"><span style={{ animationDelay: "220ms" }} className="text-gold-light">Sin fronteras.</span></span>
           </h1>
           <div className="mt-8 flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
-            <p className="animate-fade-up max-w-md text-sm leading-7 text-ivory/75 [animation-delay:350ms]">
+            <p className="animate-fade-up max-w-md text-sm leading-7 text-ivory/80 [animation-delay:350ms]">
               Productos originales de Estados Unidos con precios en pesos, impuestos incluidos y seguimiento de cada pedido desde tu cuenta.
             </p>
             <div className="animate-fade-up flex flex-wrap gap-3 [animation-delay:450ms]">
@@ -80,6 +92,11 @@ export default async function HomePage() {
               </Button>
             </div>
           </div>
+        </div>
+        {/* Indicador de desplazamiento */}
+        <div aria-hidden="true" className="absolute bottom-5 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 text-[9px] uppercase tracking-[.4em] text-ivory/50 lg:flex">
+          Desliza
+          <span className="scroll-cue block h-10 w-px bg-ivory/40" />
         </div>
       </section>
 
@@ -118,7 +135,7 @@ export default async function HomePage() {
             </Reveal>
             <div className="mt-10 grid auto-rows-[220px] grid-cols-2 gap-3 sm:auto-rows-[260px] lg:grid-cols-4 lg:gap-4">
               {categories.map((c, i) => {
-                const image = c.imageUrl || all.find((p) => p.category === c.slug && p.images[0])?.images[0];
+                const image = c.imageUrl || CATEGORY_EDITORIAL[c.slug]?.src || all.find((p) => p.category === c.slug && p.images[0])?.images[0];
                 const big = i === 0;
                 return (
                   <Reveal key={c.slug} delay={i * 90} className={big ? "col-span-2 row-span-2" : i === 3 ? "col-span-2 lg:col-span-1" : ""}>
@@ -141,6 +158,37 @@ export default async function HomePage() {
                   </Reveal>
                 );
               })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* C2. LA EDICIÓN 7H: carrusel editorial a pantalla ancha */}
+      {categories.some((c) => CATEGORY_EDITORIAL[c.slug]) && (
+        <section className="overflow-hidden bg-ivory py-20 lg:py-28">
+          <div className="mx-auto max-w-7xl px-5 lg:px-8">
+            <SectionHead kicker="La edición 7H" title="Viste la ciudad." />
+            <div className="mt-10">
+              <Rail label="La edición 7H">
+                {categories.filter((c) => CATEGORY_EDITORIAL[c.slug]).map((c, i) => {
+                  const ed = CATEGORY_EDITORIAL[c.slug];
+                  return (
+                    <Reveal key={c.slug} delay={i * 100} className="w-[82%] shrink-0 snap-start sm:w-[58%] lg:w-[40%]">
+                      <Link href={`/catalogo?categoria=${c.slug}`} className="group relative block aspect-[4/5] overflow-hidden rounded-[28px] bg-ink">
+                        <Image src={ed.src} alt={ed.alt} fill sizes="(min-width:1024px) 40vw, 82vw" className="reveal-clip object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-[1.06]" />
+                        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/10 to-transparent" />
+                        <div className="absolute inset-x-0 bottom-0 p-6 text-ivory lg:p-8">
+                          <p className="text-[10px] font-semibold uppercase tracking-[.3em] text-gold-light">{ed.kicker}</p>
+                          <h3 className="mt-2 font-sans text-4xl font-semibold uppercase leading-none tracking-tight lg:text-5xl">{c.label}</h3>
+                          <span className="mt-5 inline-flex items-center gap-2 rounded-full bg-ivory px-5 py-2.5 text-xs font-semibold text-ink transition-colors group-hover:bg-gold">
+                            Explorar <ArrowRightIcon width={14} height={14} />
+                          </span>
+                        </div>
+                      </Link>
+                    </Reveal>
+                  );
+                })}
+              </Rail>
             </div>
           </div>
         </section>

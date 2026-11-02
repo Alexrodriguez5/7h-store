@@ -17,7 +17,7 @@ export interface SupportTypeInfo {
 }
 
 export const SUPPORT_TYPES: Record<SupportType, SupportTypeInfo> = {
-  RETRACTO: { label: "Derecho de retracto", help: "Te arrepentiste de la compra (compra a distancia).", legal: "Art. 47 Ley 1480: 5 días hábiles desde la entrega; producto sin uso y en su empaque; el transporte de la devolución corre por cuenta del cliente; reintegro máximo en 30 días calendario.", needsItems: true, responseDays: 5 },
+  RETRACTO: { label: "Derecho de retracto", help: "Te arrepentiste de la compra (compra a distancia).", legal: "Art. 47 Ley 1480: 5 días hábiles desde la entrega; producto sin uso y en su empaque; el transporte de la devolución corre por cuenta del cliente; reembolso máximo en 15 días calendario desde que ejerces el retracto y entregas los datos y el producto (Ley 2439 de 2024), al medio de pago que prefieras.", needsItems: true, responseDays: 5 },
   GARANTIA: { label: "Garantía legal", help: "El producto dejó de funcionar o no cumple su calidad.", legal: "Arts. 7 a 11 Ley 1480 y Decreto 735 de 2013: reparación, cambio o devolución del dinero según el caso.", needsItems: true, responseDays: 15 },
   DEFECTUOSO: { label: "Producto defectuoso", help: "Llegó con un defecto de fábrica.", legal: "Garantía legal (Ley 1480): se revisa el defecto con fotos o video.", needsItems: true, responseDays: 15 },
   DANADO_TRANSPORTE: { label: "Dañado en el transporte", help: "El paquete o el producto llegó golpeado o roto.", legal: "Responsabilidad del vendedor frente al consumidor; se gestiona con la transportadora. Adjunta fotos del empaque y la guía.", needsItems: true, responseDays: 10 },
