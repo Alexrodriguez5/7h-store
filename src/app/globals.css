@@ -54,3 +54,10 @@ body { margin:0; background:var(--color-ivory); color:var(--color-ink); font-fam
 .btn-shine::before { content:""; position:absolute; inset:0; transform:translateX(-120%) skewX(-20deg); background:linear-gradient(90deg, transparent, rgb(255 255 255 / .45), transparent); transition:transform .8s ease; }
 .btn-shine:hover::before { transform:translateX(120%) skewX(-20deg); }
 @media (prefers-reduced-motion: reduce) { .tilt { transform:none!important; } .btn-shine::before { display:none; } }
+
+/* Indicador de desplazamiento del hero y revelado de fotos editoriales */
+@keyframes scroll-cue { 0% { transform:scaleY(0); transform-origin:top; } 45% { transform:scaleY(1); transform-origin:top; } 55% { transform:scaleY(1); transform-origin:bottom; } 100% { transform:scaleY(0); transform-origin:bottom; } }
+.scroll-cue { animation:scroll-cue 2.2s cubic-bezier(.65,0,.35,1) infinite; }
+.reveal .reveal-clip { clip-path:inset(12% 0 0 0); transition:clip-path 1.2s cubic-bezier(.22,1,.36,1), transform 1.4s cubic-bezier(.22,1,.36,1); }
+.reveal.is-visible .reveal-clip { clip-path:inset(0 0 0 0); }
+@media (prefers-reduced-motion: reduce) { .scroll-cue { animation:none; } .reveal .reveal-clip { clip-path:none; } }
