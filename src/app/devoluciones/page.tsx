@@ -19,7 +19,7 @@ export default function ReturnsPage() {
     <LegalPage eyebrow="Ayuda" title="Devoluciones, retracto y garantía" updated={orPending(BUSINESS.legalUpdated, "fecha")}>
       <section>
         <h2>Derecho de retracto</h2>
-        <p>Como compraste a distancia, puedes retractarte dentro de los <strong>5 días hábiles</strong> siguientes a la entrega (artículo 47 de la Ley 1480 de 2011). El producto debe devolverse en las mismas condiciones en que lo recibiste, sin uso y con su empaque. Los costos de transporte de la devolución corren por tu cuenta. Te reintegramos el dinero dentro de los 30 días calendario siguientes.</p>
+        <p>Como compraste a distancia, puedes retractarte dentro de los <strong>5 días hábiles</strong> siguientes a la entrega (artículo 47 de la Ley 1480 de 2011). El producto debe devolverse en las mismas condiciones en que lo recibiste, sin uso y con su empaque. Los costos de transporte de la devolución corren por tu cuenta. Te devolvemos el dinero en un plazo máximo de <strong>15 días calendario</strong> desde que ejerces el retracto, siempre que nos hayas dado los datos correctos y completos para el reembolso y hayas devuelto el producto (artículo 47 de la Ley 1480, modificado por la Ley 2439 de 2024). El reembolso se hace al medio de pago que prefieras: el mismo con el que pagaste o el que acordemos contigo.</p>
         <p>No aplica, entre otros, a bienes de uso personal como ropa interior, ni a productos confeccionados según tus especificaciones, conforme a las excepciones de la misma ley.</p>
       </section>
       <section>

@@ -35,11 +35,11 @@ export default function TermsPage() {
       </section>
       <section>
         <h2>4. Envíos</h2>
-        <p>Enviamos a toda Colombia. Los plazos y costos se informan en <Link href="/envios" className="underline">Envíos</Link> y en el checkout. Plazo estimado de entrega: {orPending(BUSINESS.shippingTime, "plazo de entrega")}.</p>
+        <p>Enviamos a toda Colombia. Los plazos y costos se informan en <Link href="/envios" className="underline">Envíos</Link> y en el checkout. Plazo estimado de entrega: {orPending(BUSINESS.shippingTime, "plazo de entrega")}. Si no entregamos en el plazo informado (o, a falta de plazo, en 30 días calendario) o el producto no está disponible, te avisamos de inmediato y puedes terminar la compra y recibir la devolución de todo lo pagado, sin descuentos, en máximo 15 días calendario (art. 50 de la Ley 1480, modificado por la Ley 2439 de 2024).</p>
       </section>
       <section>
         <h2>5. Derecho de retracto, cambios y garantía</h2>
-        <p>Para compras a distancia aplica el derecho de retracto de 5 días hábiles desde la entrega (art. 47, Ley 1480 de 2011), salvo las excepciones legales. La garantía legal y las condiciones de cambios están en <Link href="/devoluciones" className="underline">Devoluciones</Link>.</p>
+        <p>Para compras a distancia aplica el derecho de retracto de 5 días hábiles desde la entrega (art. 47, Ley 1480 de 2011), salvo las excepciones legales. Si te retractas, te devolvemos el dinero en máximo 15 días calendario (Ley 2439 de 2024), por el medio de pago que prefieras. La garantía legal y las condiciones de cambios están en <Link href="/devoluciones" className="underline">Devoluciones</Link>.</p>
       </section>
       <section>
         <h2>6. Reversión del pago</h2>
