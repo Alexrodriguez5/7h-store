@@ -20,11 +20,19 @@ import "./globals.css";
  */
 export const dynamic = "force-dynamic";
 /**
- * Tipografías alojadas en la propia tienda (latín, pesos 400 a 600, archivos variables de Google Fonts, licencia OFL).
- * No se descargan durante el build: así un fallo de Google Fonts nunca impide publicar.
+ * Sistema tipográfico 7H AURA (alojado en la tienda, licencia OFL; no depende de Google en el build):
+ * - Instrument Serif: títulos y mensajes de marca (personalidad editorial).
+ * - Manrope: navegación, textos, formularios y botones (muy legible, variable 300 a 800).
  */
-const display = localFont({ src: "./fonts/cormorant-variable.woff2", weight: "400 600", variable: "--font-cormorant", display: "swap" });
-const sans = localFont({ src: "./fonts/montserrat-variable.woff2", weight: "400 600", variable: "--font-montserrat", display: "swap" });
+const display = localFont({
+  src: [
+    { path: "./fonts/instrument-normal-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/instrument-italic-400.woff2", weight: "400", style: "italic" },
+  ],
+  variable: "--font-instrument",
+  display: "swap",
+});
+const sans = localFont({ src: "./fonts/manrope-normal-300-800.woff2", weight: "300 800", variable: "--font-manrope", display: "swap" });
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: { default: "7H STORE — Calidad. Estilo. Confianza.", template: "%s | 7H STORE" },
