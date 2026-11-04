@@ -1,3 +1,4 @@
+import { median, productIssues } from "@/lib/product-quality";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { REVENUE_STATUSES } from "@/lib/order-status";
@@ -53,13 +54,21 @@ export const getOrderDetail = (id: string) =>
 export async function listProductsAdmin() {
   const rows = await prisma.product.findMany({
     select: {
-      id: true, slug: true, name: true, brand: true, priceCOP: true, images: true, stock: true, featured: true, active: true,
+      id: true, slug: true, name: true, brand: true, priceCOP: true, compareAtPriceCOP: true, description: true, images: true, stock: true, featured: true, active: true, sizes: true,
       category: { select: { label: true, active: true } },
       variants: { select: { id: true, size: true, stock: true } },
     },
     orderBy: { createdAt: "desc" },
   });
-  return rows.map((p) => ({ ...p, variants: [...p.variants], totalStock: totalStock(p.variants, p.stock) }));
+  // Auditoría de calidad: se compara el precio con la mediana de su categoría (solo avisa, no cambia nada).
+  const byCat = new Map<string, number[]>();
+  for (const p of rows) byCat.set(p.category.label, [...(byCat.get(p.category.label) ?? []), p.priceCOP]);
+  return rows.map((p) => ({
+    ...p,
+    variants: [...p.variants],
+    totalStock: totalStock(p.variants, p.stock),
+    issues: productIssues({ name: p.name, description: p.description, priceCOP: p.priceCOP, compareAtPriceCOP: p.compareAtPriceCOP, images: p.images, categoryLabel: p.category.label, hasSizes: p.variants.length > 0 || p.sizes.length > 0 }, median(byCat.get(p.category.label) ?? [])),
+  }));
 }
 
 export async function getDashboard() {

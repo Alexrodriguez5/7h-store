@@ -36,7 +36,7 @@ export default function TermsPage() {
       </section>
       <section>
         <h2>4. Envíos</h2>
-        <p>Enviamos a toda Colombia. Los plazos y costos se informan en <Link href="/envios" className="underline">Envíos</Link> y en el checkout. Plazo estimado de entrega: {orPending(BUSINESS.shippingTime, "plazo de entrega")}. Si no entregamos en el plazo informado (o, a falta de plazo, en 30 días calendario) o el producto no está disponible, te avisamos de inmediato y puedes terminar la compra y recibir la devolución de todo lo pagado, sin descuentos, en máximo 15 días calendario (art. 50 de la Ley 1480, modificado por la Ley 2439 de 2024).</p>
+        <p>Enviamos a toda Colombia. Los plazos y costos se informan en <Link href="/envios" className="underline">Envíos</Link> y en el checkout. Plazo estimado de entrega: {orPending(BUSINESS.shippingTime, "plazo de entrega")}. Si no entregamos dentro del plazo informado (cuando no se informe un plazo, la ley fija un máximo de 30 días calendario para la ENTREGA) o el producto no está disponible, te avisamos de inmediato y puedes terminar la compra. En ese caso, igual que en el retracto, te devolvemos todo lo pagado, sin descuentos, en máximo 15 días calendario (art. 50 de la Ley 1480, modificado por la Ley 2439 de 2024).</p>
       </section>
       <section>
         <h2>5. Derecho de retracto, cambios y garantía</h2>
