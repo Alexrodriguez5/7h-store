@@ -95,7 +95,7 @@ export default async function HomePage() {
               ))}
             </ul>
           </div>
-          <AuraVisual className="relative order-1 mx-auto aspect-square w-[78%] max-w-[560px] lg:order-2 lg:w-full" />
+          <AuraVisual className="relative order-1 mx-auto aspect-square w-[64%] max-w-[560px] sm:w-[70%] lg:order-2 lg:w-full" />
         </div>
         <div aria-hidden="true" className="absolute bottom-5 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 text-[9px] uppercase tracking-[.4em] text-ivory/45 lg:flex">
           Desliza

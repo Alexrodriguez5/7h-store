@@ -13,10 +13,10 @@ export const btnLine =
 
 export function Panel({ title, children, action, className = "" }: { title?: string; children: ReactNode; action?: ReactNode; className?: string }) {
   return (
-    <section className={`rounded-3xl border border-ink/[.07] bg-white/75 p-5 shadow-soft sm:p-7 ${className}`}>
+    <section className={`glass rounded-[28px] p-5 sm:p-7 ${className}`}>
       {(title || action) && (
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          {title && <h2 className="font-display text-2xl">{title}</h2>}
+          {title && <h2 className="font-display text-3xl leading-none">{title}</h2>}
           {action}
         </div>
       )}

@@ -16,7 +16,7 @@ export default async function AccountEntryPage({ searchParams }: { searchParams:
     <main id="contenido" className="aura-bg grain relative isolate overflow-hidden text-ivory">
       <AuraParticles count={12} />
       {/* El Aura 3D detrás del panel de vidrio: la refracción del vidrio se nota sobre la esfera */}
-      <AuraVisual className="pointer-events-none absolute -right-[18%] top-[6%] -z-0 aspect-square w-[70vw] max-w-[720px] opacity-80 lg:right-[2%] lg:w-[46vw]" />
+      <AuraVisual className="pointer-events-none absolute -right-[30%] top-[2%] aspect-square w-[80vw] max-w-[720px] opacity-25 lg:right-[2%] lg:top-[6%] lg:w-[46vw] lg:opacity-80" />
       <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-5 py-12 lg:min-h-[calc(100svh-8rem)] lg:grid-cols-[1fr_minmax(0,480px)] lg:px-8 lg:py-16">
         <div className="animate-fade-up">
           <p className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-white/5 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[.3em] text-gold-light backdrop-blur"><ShieldIcon width={14} height={14} /> Acceso seguro</p>

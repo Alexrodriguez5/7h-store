@@ -116,3 +116,9 @@ body { margin:0; background:var(--color-ivory); color:var(--color-ink); font-fam
 .aura-particle { animation: aura-rise linear infinite; filter: blur(.4px); box-shadow: 0 0 8px rgb(216 184 102 / .8); }
 @media (prefers-reduced-motion: reduce) { .aura-particle { animation: none; opacity: 0 !important; } }
 @media (max-width: 639px) { .aura-particle:nth-child(n+9) { display: none; } }
+/* Línea de tiempo del pedido: el tramo completado se "llena" al cargar */
+@keyframes timeline-fill-y { from { transform: scaleY(0); } to { transform: none; } }
+@keyframes timeline-fill-x { from { transform: scaleX(0); } to { transform: none; } }
+.timeline-fill { transform-origin: top; animation: timeline-fill-y .7s cubic-bezier(.22,1,.36,1) both; }
+@media (min-width: 768px) { .timeline-fill { transform-origin: left; animation-name: timeline-fill-x; } }
+@media (prefers-reduced-motion: reduce) { .timeline-fill { animation: none; } }
