@@ -1,3 +1,4 @@
+import { MANUAL_BADGE_KEYS, type ManualBadge } from "@/lib/badges";
 import { z } from "zod";
 import { isAllowedImageUrl } from "@/lib/images";
 import { isValidSize } from "@/lib/sizes";
@@ -12,6 +13,21 @@ export const slugify = (text: string) =>
   text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 100);
 
 const stockInt = z.number({ error: "Stock inválido" }).int("El stock debe ser entero").min(0, "El stock no puede ser negativo").max(100_000);
+
+/** Texto opcional: vacío se guarda como null. */
+const optText = (max: number) => z.string().trim().max(max).nullable().optional().transform((v) => (v ? v : null));
+
+/** Solo videos de YouTube, Vimeo o MP4 por https (se muestran con carga diferida). */
+export function isAllowedVideoUrl(url: string) {
+  try {
+    const u = new URL(url);
+    if (u.protocol !== "https:") return false;
+    const host = u.hostname.replace(/^www\./, "");
+    return ["youtube.com", "youtu.be", "m.youtube.com", "vimeo.com", "player.vimeo.com"].includes(host) || /\.mp4$/i.test(u.pathname);
+  } catch {
+    return false;
+  }
+}
 
 export const variantInput = z.object({
   size: z.string().trim().min(1, "Talla requerida").max(10).transform((s) => s.toUpperCase()),
@@ -52,6 +68,17 @@ export const productInput = z
     lengthCm: z.number().int().min(1).max(300).nullable().optional(),
     widthCm: z.number().int().min(1).max(300).nullable().optional(),
     heightCm: z.number().int().min(1).max(300).nullable().optional(),
+    /** Ficha de información (opcional). Solo datos confirmados: lo vacío no se muestra. */
+    model: optText(80),
+    material: optText(80),
+    color: optText(60),
+    origin: optText(60),
+    condition: optText(80),
+    warranty: optText(300),
+    features: z.array(z.string().trim().min(1).max(120)).max(12).default([]),
+    /** Etiquetas que el administrador confirma. */
+    badges: z.array(z.enum(MANUAL_BADGE_KEYS as [ManualBadge, ...ManualBadge[]])).max(MANUAL_BADGE_KEYS.length).default([]),
+    videoUrl: z.string().trim().max(500).refine(isAllowedVideoUrl, "Video no válido: usa un enlace https de YouTube, Vimeo o un archivo .mp4").nullable().optional().or(z.literal("").transform(() => null)),
   })
   .superRefine((v, ctx) => {
     if (v.compareAtPriceCOP != null && v.compareAtPriceCOP <= v.priceCOP) {

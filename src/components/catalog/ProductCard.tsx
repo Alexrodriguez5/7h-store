@@ -8,6 +8,7 @@ import { formatCOP } from "@/lib/format";
 import { useCartStore } from "@/store/cart-store";
 import { isSizeAvailable } from "@/lib/sizes";
 import type { Product } from "@/types";
+import { BADGE_TONE_CLS, productBadges } from "@/lib/badges";
 
 function ProductCardBase({ product, priority = false }: { product: Product; priority?: boolean }) {
   const addItem = useCartStore((s) => s.addItem);
@@ -26,6 +27,8 @@ function ProductCardBase({ product, priority = false }: { product: Product; prio
       ? Math.round((1 - product.priceCOP / product.compareAtPriceCOP) * 100)
       : 0;
   const href = `/producto/${product.slug}`;
+  // En la tarjeta solo caben 2 etiquetas; el resto se ve en la ficha.
+  const badges = productBadges(product).filter((b) => b.key !== "ULTIMAS").slice(0, 2);
 
   return (
     <article className="group isolate flex h-full flex-col">
@@ -60,15 +63,11 @@ function ProductCardBase({ product, priority = false }: { product: Product; prio
           />
         )}
         <div className="pointer-events-none absolute left-3 top-3 flex flex-col items-start gap-1.5">
-          {soldOut ? (
-            <span className="rounded-full bg-ink/85 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-ivory backdrop-blur">
-              Agotado
+          {badges.map((b) => (
+            <span key={b.key} className={`rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wide shadow-soft ${BADGE_TONE_CLS[b.tone]}`}>
+              {b.label}
             </span>
-          ) : discount > 0 ? (
-            <span className="rounded-full bg-gold px-2.5 py-1 text-[10px] font-semibold text-ink">
-              -{discount}%
-            </span>
-          ) : null}
+          ))}
         </div>
         {/* Llamado al pasar el cursor (solo computador) */}
         <span aria-hidden="true" className="glass pointer-events-none absolute inset-x-3 bottom-3 hidden translate-y-3 rounded-full py-2 text-center text-xs font-semibold text-ink opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 sm:block">

@@ -3,13 +3,27 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { sortSizes, totalStock } from "@/lib/sizes";
 import { CATALOG_TTL_SECONDS, TAG_CATEGORIES, TAG_PRODUCTS } from "@/lib/cache";
-import type { Category, Gender, Product } from "@/types";
+import type { Category, Gender, Product, ProductInfo } from "@/types";
 
 type Row = {
   id: string; slug: string; name: string; brand: string; description: string; priceCOP: number; compareAtPriceCOP: number | null; gender: string;
   isAccessory: boolean; images: string[]; sizes: string[]; stock: number; tags: string[]; featured: boolean; category: { slug: string };
   variants: { id: string; size: string; stock: number }[]; weightGrams?: number | null;
+  createdAt?: Date | string; badges?: string[]; videoUrl?: string | null;
+  model?: string | null; material?: string | null; color?: string | null; origin?: string | null; condition?: string | null; warranty?: string | null; features?: string[];
 };
+
+/** Ficha de información sin campos vacíos (lo que no está registrado no se muestra). */
+function infoOf(p: Row): ProductInfo | undefined {
+  const info: ProductInfo = {};
+  for (const k of ["model", "material", "color", "origin", "condition", "warranty"] as const) {
+    const v = p[k]?.trim();
+    if (v) info[k] = v;
+  }
+  const features = (p.features ?? []).map((f) => f.trim()).filter(Boolean);
+  if (features.length) info.features = features;
+  return Object.keys(info).length ? info : undefined;
+}
 
 /** Con variantes, el stock y las tallas salen de ellas (las agotadas se envían con stock 0 para mostrarlas deshabilitadas). */
 export function mapProduct(p: Row): Product {
@@ -21,6 +35,7 @@ export function mapProduct(p: Row): Product {
     isAccessory: p.isAccessory, images: p.images, sizes: sizes.length ? sizes : undefined,
     variants: hasVariants ? sizes.map((s) => { const v = p.variants.find((x) => x.size === s)!; return { id: v.id, size: v.size, stock: v.stock }; }) : undefined,
     stock: totalStock(p.variants, p.stock), tags: p.tags, featured: p.featured, weightGrams: p.weightGrams ?? null,
+    createdAt: p.createdAt ? new Date(p.createdAt).toISOString() : undefined, badges: p.badges ?? [], info: infoOf(p), videoUrl: p.videoUrl ?? undefined,
   };
 }
 
@@ -28,6 +43,7 @@ export function mapProduct(p: Row): Product {
 const select = {
   id: true, slug: true, name: true, brand: true, description: true, priceCOP: true, compareAtPriceCOP: true, gender: true, isAccessory: true,
   images: true, sizes: true, stock: true, tags: true, featured: true, category: { select: { slug: true } }, variants: { select: { id: true, size: true, stock: true } }, weightGrams: true,
+  createdAt: true, badges: true, videoUrl: true, model: true, material: true, color: true, origin: true, condition: true, warranty: true, features: true,
 } satisfies Prisma.ProductSelect;
 
 /** Visible en la tienda: producto activo dentro de una categoría activa. */

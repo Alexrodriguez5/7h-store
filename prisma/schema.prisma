@@ -82,6 +82,21 @@ model Product {
   lengthCm          Int?
   widthCm           Int?
   heightCm          Int?
+  /// Ficha de información (todo opcional: lo que esté vacío no se muestra en la tienda).
+  model             String?
+  material          String?
+  color             String?
+  /// Origen CONFIRMADO por el administrador (p. ej. "Estados Unidos"). Vacío = no se afirma nada.
+  origin            String?
+  /// Estado del producto (p. ej. "Nuevo, con etiquetas").
+  condition         String?
+  /// Garantía y condiciones específicas del producto (además de la garantía legal).
+  warranty          String?
+  features          String[]         @default([])
+  /// Etiquetas que el administrador CONFIRMA (ORIGINAL, IMPORTADO_USA, GARANTIA_FABRICANTE, EDICION_LIMITADA).
+  badges            String[]         @default([])
+  /// Video demostrativo opcional (YouTube, Vimeo o MP4 por https).
+  videoUrl          String?
   createdAt         DateTime         @default(now())
   orderItems        OrderItem[]
   variants          ProductVariant[]
