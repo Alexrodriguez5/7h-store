@@ -46,7 +46,7 @@ export function FilterBar({
     }`;
 
   return (
-    <section aria-label="Filtros del catálogo" className="glass relative z-10 rounded-[24px] px-4 sm:px-5">
+    <section aria-label="Filtros del catálogo" className="surface relative rounded-[24px] px-4 sm:px-5">
       {categories.length > 0 && (
         <nav
           aria-label="Categorías"

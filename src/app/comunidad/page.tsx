@@ -31,18 +31,18 @@ export default async function CommunityPage({ searchParams }: { searchParams: Pr
       <PageHero eyebrow="Comunidad 7H" title="Recomienda, pregunta," accent="propón." lead="Un espacio sencillo para conversar con otros clientes y con el equipo de 7H STORE.">
         <Link href="/comunidad/nueva" className="inline-flex rounded-full bg-gold px-6 py-3 text-sm font-semibold text-ink transition-colors hover:bg-gold-light">Crear publicación</Link>
       </PageHero>
-      <PageBody className="max-w-5xl">
-        <div className="surface flex flex-col gap-3 rounded-[24px] p-3 sm:flex-row sm:items-center">
-          <nav aria-label="Temas" className="no-scrollbar flex flex-1 gap-1.5 overflow-x-auto">
-            <Link href="/comunidad" className={`shrink-0 rounded-full px-3.5 py-2 text-xs ${!category ? "bg-ink font-semibold text-gold-light" : "hover:bg-ink/[.05]"}`}>Todo</Link>
+      <PageBody className="max-w-6xl">
+        <div className="surface flex flex-col gap-3 rounded-[24px] p-3 sm:p-4">
+          <nav aria-label="Temas" className="no-scrollbar -mx-1 flex flex-1 gap-1.5 overflow-x-auto px-1 lg:flex-wrap lg:overflow-visible">
+            <Link href="/comunidad" className={`shrink-0 whitespace-nowrap rounded-full px-3.5 py-2.5 text-xs ${!category ? "bg-ink font-semibold text-gold-light" : "hover:bg-ink/[.05]"}`}>Todo</Link>
             {Object.entries(CATEGORIES).map(([k, label]) => (
-              <Link key={k} href={`/comunidad?tema=${CATEGORY_SLUG[k as keyof typeof CATEGORY_SLUG]}`} className={`shrink-0 rounded-full px-3.5 py-2 text-xs ${category === k ? "bg-ink font-semibold text-gold-light" : "hover:bg-ink/[.05]"}`}>{label}</Link>
+              <Link key={k} href={`/comunidad?tema=${CATEGORY_SLUG[k as keyof typeof CATEGORY_SLUG]}`} className={`shrink-0 whitespace-nowrap rounded-full px-3.5 py-2.5 text-xs ${category === k ? "bg-ink font-semibold text-gold-light" : "hover:bg-ink/[.05]"}`}>{label}</Link>
             ))}
           </nav>
-          <form action="/comunidad" className="flex gap-2">
+          <form action="/comunidad" className="flex w-full gap-2 sm:max-w-sm">
             {sp.tema && <input type="hidden" name="tema" value={sp.tema} />}
             <label className="sr-only" htmlFor="cq">Buscar en la comunidad</label>
-            <input id="cq" name="q" defaultValue={q} placeholder="Buscar" className="w-full rounded-full border border-ink/15 bg-white px-4 py-2 text-sm outline-none focus:border-gold sm:w-48" />
+            <input id="cq" name="q" defaultValue={q} placeholder="Buscar" className="h-11 w-full rounded-full border border-ink/15 bg-white px-4 text-base outline-none focus:border-gold sm:text-sm" />
           </form>
         </div>
 
