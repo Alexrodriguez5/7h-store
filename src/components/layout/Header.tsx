@@ -118,16 +118,16 @@ export function Header({ categories }: { categories: Category[] }) {
             <label htmlFor="header-search" className="sr-only">
               Buscar productos
             </label>
-            <div className="group flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 transition-colors focus-within:border-gold/70 focus-within:bg-white/10">
+            <div className="group flex h-9 items-center gap-2 rounded-full border border-gold/35 bg-transparent pl-3.5 pr-1 transition-colors hover:border-gold/55 focus-within:border-gold-light">
               <SearchIcon width={16} height={16} className="shrink-0 text-ivory/50 group-focus-within:text-gold-light" />
               <input
                 id="header-search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Buscar productos"
-                className="w-full bg-transparent py-2 text-xs outline-none placeholder:text-ivory/45"
+                className="h-full w-full min-w-0 rounded-none border-0 bg-transparent p-0 text-xs text-ivory shadow-none outline-none ring-0 placeholder:text-ivory/45 focus:outline-none focus-visible:outline-none"
               />
-              <button type="submit" className="text-xs font-medium text-gold-light hover:text-gold">
+              <button type="submit" className="h-7 shrink-0 rounded-full px-3 text-xs font-medium text-gold-light outline-none transition-colors hover:bg-gold/10 focus-visible:bg-gold/15">
                 Buscar
               </button>
             </div>
@@ -187,7 +187,7 @@ export function Header({ categories }: { categories: Category[] }) {
 
           <form
             onSubmit={search}
-            className="mt-8 flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 focus-within:border-gold/70"
+            className="mt-8 flex h-12 items-center gap-2 rounded-full border border-gold/35 bg-transparent pl-4 pr-1.5 transition-colors focus-within:border-gold-light"
             role="search"
           >
             <label htmlFor="mobile-search" className="sr-only">
@@ -199,9 +199,9 @@ export function Header({ categories }: { categories: Category[] }) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar productos"
-              className="w-full bg-transparent py-3 text-sm outline-none placeholder:text-ivory/45"
+              className="h-full w-full min-w-0 rounded-none border-0 bg-transparent p-0 text-base text-ivory shadow-none outline-none ring-0 placeholder:text-ivory/45 focus:outline-none focus-visible:outline-none"
             />
-            <button type="submit" className="text-sm font-medium text-gold-light">
+            <button type="submit" className="h-9 shrink-0 rounded-full px-4 text-sm font-medium text-gold-light outline-none hover:bg-gold/10 focus-visible:bg-gold/15">
               Buscar
             </button>
           </form>

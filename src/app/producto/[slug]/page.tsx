@@ -89,25 +89,26 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     ],
   };
   return (
-    <main id="contenido" className="relative">
-      {/* Franja de aura de la marca (continuidad con portada y catálogo); la foto del producto queda encima como protagonista */}
-      <div aria-hidden="true" className="aura-bg grain pointer-events-none absolute inset-x-0 top-0 -z-10 h-[240px] overflow-hidden rounded-b-[36px] lg:h-[300px]" />
-      <div aria-hidden="true" className="ivory-aura pointer-events-none absolute inset-x-0 top-[240px] -z-20 h-[600px]" />
-      <div className="mx-auto max-w-7xl px-5 py-10 lg:px-8 lg:py-14">
+    <main id="contenido">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbLd) }} />
-      <nav aria-label="Ruta de navegación" className="mb-8 text-xs text-ivory/60">
-        <ol className="flex flex-wrap items-center gap-1.5">
-          <li><Link href="/" className="hover:text-gold-light">Inicio</Link></li>
-          <li aria-hidden="true">/</li>
-          <li><Link href={`/catalogo?categoria=${encodeURIComponent(p.category)}`} className="hover:text-gold-light">{categoryLabel}</Link></li>
-          <li aria-hidden="true">/</li>
-          <li aria-current="page" className="truncate text-ivory">{p.name}</li>
-        </ol>
-      </nav>
+      {/* Sección negra compacta (ruta). El contenido del producto empieza DEBAJO, en la sección marfil: nada cruza el límite. */}
+      <section className="hero-light text-ivory">
+        <nav aria-label="Ruta de navegación" className="mx-auto max-w-7xl px-5 py-5 text-xs text-ivory/60 lg:px-8">
+          <ol className="flex flex-wrap items-center gap-1.5">
+            <li><Link href="/" className="hover:text-gold-light">Inicio</Link></li>
+            <li aria-hidden="true">/</li>
+            <li><Link href={`/catalogo?categoria=${encodeURIComponent(p.category)}`} className="hover:text-gold-light">{categoryLabel}</Link></li>
+            <li aria-hidden="true">/</li>
+            <li aria-current="page" className="truncate text-ivory">{p.name}</li>
+          </ol>
+        </nav>
+      </section>
+      <div className="bg-ivory">
+      <div className="mx-auto max-w-7xl px-5 py-10 lg:px-8 lg:py-14">
       <div className="grid gap-12 lg:grid-cols-2">
         <ProductGallery images={p.images} name={p.name} />
-        <div className="glass h-fit rounded-[32px] p-6 sm:p-8 lg:sticky lg:top-28">
+        <div className="surface h-fit rounded-[32px] p-6 sm:p-8 lg:sticky lg:top-28">
           <p className="text-[11px] font-bold uppercase tracking-[.22em] text-gold">{p.brand}</p>
           {badges.length > 0 && (
             <ul aria-label="Etiquetas del producto" className="mt-3 flex flex-wrap gap-1.5">
@@ -204,6 +205,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
         </section>
       )}
+      </div>
       </div>
     </main>
   );

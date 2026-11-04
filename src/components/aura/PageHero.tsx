@@ -56,11 +56,14 @@ export function PageHero({
   );
 }
 
-/** Contenedor de página interna: marfil con halo dorado, que se monta un poco sobre el encabezado. */
+/**
+ * Contenedor de página interna: sección marfil sólida, separada del encabezado negro.
+ * Nada cruza el límite entre las dos secciones (sin márgenes negativos ni transparencias).
+ */
 export function PageBody({ children, className = "max-w-7xl" }: { children: ReactNode; className?: string }) {
   return (
-    <div className="ivory-aura">
-      <div className={`relative z-10 mx-auto -mt-8 px-5 pb-8 lg:px-8 ${className}`}>{children}</div>
+    <div className="bg-ivory">
+      <div className={`mx-auto px-5 pb-16 pt-10 sm:pt-12 lg:px-8 lg:pt-14 ${className}`}>{children}</div>
     </div>
   );
 }
