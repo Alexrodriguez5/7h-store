@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { ArrowRightIcon, CardIcon, ShieldIcon, TruckIcon } from "@/components/ui/Icons";
 import { Parallax, Rail, Reveal, Tilt } from "@/components/home/Motion";
 import { AuraParticles, AuraVisual } from "@/components/aura/AuraVisual";
+import { BRAND_STORY } from "@/components/brand/BrandStory";
 
 /**
  * Fotografía de campaña (Unsplash License, uso comercial permitido, sin marcas visibles):
@@ -265,6 +266,23 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* SOBRE 7H STORE: presentación institucional de la marca */}
+      <section className="px-5 pt-20 lg:px-8 lg:pt-28">
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_1.2fr] lg:items-center">
+          <Reveal>
+            <p className="text-[10px] font-semibold uppercase tracking-[.3em] text-gold">Sobre 7H STORE</p>
+            <h2 className="mt-3 font-display text-4xl leading-[.95] sm:text-6xl">Comprar bien, <span className="italic text-gold">sin complicaciones.</span></h2>
+            <Link href="/nosotros" className="group mt-8 inline-flex items-center gap-2 text-sm font-semibold hover:text-gold">
+              Conoce la marca <ArrowRightIcon width={16} height={16} className="transition-transform group-hover:translate-x-1" />
+            </Link>
+          </Reveal>
+          <Reveal delay={120} className="surface rounded-[28px] p-7 sm:p-10">
+            <p className="font-display text-2xl leading-snug sm:text-3xl">{BRAND_STORY[0]}</p>
+            <p className="mt-5 text-sm leading-7 text-ink-soft sm:text-base sm:leading-8">{BRAND_STORY[2]}</p>
+          </Reveal>
+        </div>
+      </section>
+
       {/* F. BENEFICIOS */}
       <section className="mx-auto grid max-w-7xl gap-4 px-5 py-20 md:grid-cols-3 lg:px-8">
         {[
@@ -272,7 +290,7 @@ export default async function HomePage() {
           { Icon: ShieldIcon, title: "Originales de EE.UU.", text: "Productos originales, precios transparentes y garantía legal." },
           { Icon: CardIcon, title: "Paga como prefieras", text: "Tarjeta, PSE, transferencia o consignación." },
         ].map(({ Icon, title, text }, i) => (
-          <Reveal key={title} delay={i * 100} className="group rounded-3xl border border-ink/[.07] bg-white/60 p-7 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-lift">
+          <Reveal key={title} delay={i * 100} className="surface surface-hover group rounded-[24px] p-7">
             <span className="grid size-12 place-items-center rounded-full bg-ink text-gold-light transition-colors group-hover:bg-gold group-hover:text-ink">
               <Icon width={22} height={22} />
             </span>

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { Category } from "@/types";
-import { BUSINESS } from "@/lib/business";
 
 export function Footer({ categories }: { categories: Category[] }) {
   return (
@@ -10,8 +9,8 @@ export function Footer({ categories }: { categories: Category[] }) {
           <p className="flex items-baseline gap-2"><span className="font-display text-5xl italic text-aura">7H</span><span className="text-xs font-bold tracking-[.42em] text-ivory/85">STORE</span></p>
           <p className="mt-2 font-display text-xl">Calidad. Estilo. Confianza.</p>
           <p className="mt-3 max-w-md text-xs leading-6 text-ivory/60">
-            Productos importados de EE.UU. con precios en COP, impuestos incluidos y seguimiento de
-            cada pedido.
+            Productos seleccionados, precios claros en pesos colombianos, pagos seguros y seguimiento
+            de cada pedido. Comprar no debería ser complicado.
           </p>
         </div>
         <div>
@@ -39,8 +38,10 @@ export function Footer({ categories }: { categories: Category[] }) {
             <Link href="/envios">Envíos</Link>
             <Link href="/devoluciones">Devoluciones</Link>
             <Link href="/como-comprar">Cómo comprar</Link>
+            <Link href="/preguntas-frecuentes">Preguntas frecuentes</Link>
             <Link href="/pedidos">Rastrear pedido</Link>
             <Link href="/contacto">Contacto</Link>
+            <Link href="/nosotros">Sobre 7H STORE</Link>
             <Link href="/terminos">Términos y condiciones</Link>
             <Link href="/privacidad">Política de privacidad</Link>
           </div>
@@ -49,9 +50,8 @@ export function Footer({ categories }: { categories: Category[] }) {
       <div className="border-t border-white/10 px-5 py-5 text-center text-[10px] tracking-wider text-ivory/60">
         <p>Pagos: tarjeta · PSE · transferencia · consignación · © {new Date().getFullYear()} 7H STORE</p>
         <p className="mt-2">
-          {/* Los datos del vendedor que exige la ley están en Términos y condiciones, no en cada página. */}
-          {BUSINESS.city && `${BUSINESS.city} · `}
-          <Link href="/terminos" className="underline underline-offset-2 hover:text-gold-light">Información del vendedor</Link>
+          {/* Solo la marca. Los datos del proveedor que exige la ley (art. 50, Ley 1480) están en Términos. */}
+          <Link href="/terminos#vendedor" className="underline underline-offset-2 hover:text-gold-light">Información legal</Link>
           {" · "}
           <a href="https://www.sic.gov.co" target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-gold-light">
             Superintendencia de Industria y Comercio

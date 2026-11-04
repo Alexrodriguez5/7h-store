@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Tilt } from "@/components/home/Motion";
 import Link from "next/link";
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { formatCOP } from "@/lib/format";
 import { useCartStore } from "@/store/cart-store";
 import { isSizeAvailable } from "@/lib/sizes";
@@ -12,6 +12,12 @@ import type { Product } from "@/types";
 function ProductCardBase({ product, priority = false }: { product: Product; priority?: boolean }) {
   const addItem = useCartStore((s) => s.addItem);
   const [size, setSize] = useState<string | undefined>();
+  const [added, setAdded] = useState(false);
+  useEffect(() => {
+    if (!added) return;
+    const t = setTimeout(() => setAdded(false), 1600);
+    return () => clearTimeout(t);
+  }, [added]);
 
   const needsSize = !!product.sizes?.length;
   const soldOut = product.stock === 0;
@@ -22,12 +28,13 @@ function ProductCardBase({ product, priority = false }: { product: Product; prio
   const href = `/producto/${product.slug}`;
 
   return (
-    <article className="group flex h-full flex-col">
+    <article className="group isolate flex h-full flex-col">
       {/* IMAGEN (inclinación 3D al pasar el cursor) */}
-      <Tilt className="rounded-[24px]">
+      {/* Profundidad: sombra ambiental dorada debajo, inclinación con brillo y un reflejo que cruza la foto */}
+      <Tilt className="ambient rounded-[24px]">
       <Link
         href={href}
-        className="relative block aspect-4/5 overflow-hidden rounded-[24px] bg-gradient-to-b from-white to-ivory-200 shadow-soft ring-1 ring-ink/[.05] transition-shadow duration-300 group-hover:shadow-lift"
+        className="sheen relative block aspect-4/5 overflow-hidden rounded-[24px] bg-gradient-to-b from-white to-ivory-200 shadow-soft ring-1 ring-ink/[.05] transition-[box-shadow,transform] duration-300 group-hover:shadow-lift active:scale-[.985] sm:active:scale-100"
         aria-label={`Ver ${product.name}`}
       >
         {product.images[0] && (
@@ -64,7 +71,7 @@ function ProductCardBase({ product, priority = false }: { product: Product; prio
           ) : null}
         </div>
         {/* Llamado al pasar el cursor (solo computador) */}
-        <span aria-hidden="true" className="pointer-events-none absolute inset-x-3 bottom-3 hidden translate-y-3 rounded-full bg-ivory/95 py-2 text-center text-xs font-semibold text-ink opacity-0 shadow-soft backdrop-blur transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 sm:block">
+        <span aria-hidden="true" className="glass pointer-events-none absolute inset-x-3 bottom-3 hidden translate-y-3 rounded-full py-2 text-center text-xs font-semibold text-ink opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 sm:block">
           Ver producto
         </span>
       </Link>
@@ -116,12 +123,12 @@ function ProductCardBase({ product, priority = false }: { product: Product; prio
                     disabled={!available}
                     title={available ? undefined : "Talla agotada"}
                     onClick={() => setSize(s)}
-                    className={`h-8 min-w-8 shrink-0 rounded-full border px-2.5 text-xs transition-colors ${
+                    className={`h-9 min-w-9 shrink-0 rounded-full border px-2.5 text-xs transition-all duration-200 ${
                       !available
                         ? "cursor-not-allowed border-ink/10 text-ink/30 line-through"
                         : isSelected
-                          ? "border-gold bg-ink font-semibold text-gold-light shadow-[0_0_0_3px_rgb(201_164_76_/_.22)]"
-                          : "border-ink/15 text-ink hover:border-gold"
+                          ? "otp-pop border-gold bg-ink font-semibold text-gold-light shadow-[0_0_0_3px_rgb(201_164_76_/_.22)]"
+                          : "border-ink/15 bg-white/60 text-ink hover:-translate-y-px hover:border-gold"
                     }`}
                   >
                     {s}
@@ -137,18 +144,27 @@ function ProductCardBase({ product, priority = false }: { product: Product; prio
           <button
             type="button"
             disabled={soldOut || (needsSize && !size)}
-            onClick={() => addItem(product, size)}
+            onClick={() => { addItem(product, size); setAdded(true); }}
             className={`w-full rounded-full py-2.5 text-sm font-medium transition-all duration-200 ${
               soldOut || (needsSize && !size)
                 ? "cursor-not-allowed bg-ink/[.06] text-ink/45"
-                : "bg-ink text-ivory hover:bg-gold hover:text-ink active:scale-[.98]"
+                : added
+                  ? "bg-gold text-ink"
+                  : "btn-shine bg-ink text-ivory shadow-soft hover:bg-gold hover:text-ink hover:shadow-lift active:scale-[.98]"
             }`}
           >
-            {soldOut
-              ? "Agotado"
-              : needsSize && !size
-                ? "Elige una talla"
-                : "Agregar al carrito"}
+            {soldOut ? (
+              "Agotado"
+            ) : needsSize && !size ? (
+              "Elige una talla"
+            ) : added ? (
+              <span key="ok" className="added-in inline-flex items-center gap-1.5">
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path className="draw-check" d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+                Agregado
+              </span>
+            ) : (
+              "Agregar al carrito"
+            )}
           </button>
         </div>
       </div>

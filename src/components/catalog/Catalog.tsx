@@ -7,6 +7,7 @@ import { FilterBar } from "./FilterBar";
 import { ProductCard } from "./ProductCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
+import { Reveal } from "@/components/home/Motion";
 
 export function Catalog({ products, categories }: { products: Product[]; categories: Category[] }) {
   const slugs = useMemo(() => categories.map((c) => c.slug), [categories]);
@@ -34,7 +35,16 @@ export function Catalog({ products, categories }: { products: Product[]; categor
           aria-label="Productos del catálogo"
         >
           {visible.map((product, i) => (
-            <ProductCard key={product.id} product={product} priority={i < 4} />
+            // La primera fila se pinta de inmediato (es lo primero que se ve); el resto aparece al desplazarse.
+            i < 4 ? (
+              <div key={product.id} className="h-full">
+                <ProductCard product={product} priority />
+              </div>
+            ) : (
+              <Reveal key={product.id} delay={(i % 4) * 70} className="h-full">
+                <ProductCard product={product} />
+              </Reveal>
+            )
           ))}
         </div>
       )}

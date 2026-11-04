@@ -1,3 +1,4 @@
+import { PageBody, PageHero } from "@/components/aura/PageHero";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -63,14 +64,16 @@ export default async function OrderPage({
   const deadline = new Intl.DateTimeFormat("es-CO", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Bogota" }).format(order.expiresAt);
 
   return (
-    <main id="contenido" className="mx-auto max-w-3xl px-5 py-12 lg:px-8 lg:py-16">
-      <p className="text-[10px] font-semibold uppercase tracking-widest text-gold">Pedido</p>
-      <h1 className="mt-2 break-all font-display text-4xl sm:text-5xl">{order.publicCode}</h1>
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        <span className="rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold">{ORDER_STATUS_LABEL[order.status]}</span>
-        <p className="text-sm text-ink-soft">{STATUS_MESSAGE[order.status]}</p>
-      </div>
-      <p className="mt-3 text-xs text-ink-soft">Guarda este número: lo necesitas, junto con tu correo, para rastrear el pedido.</p>
+    <main id="contenido">
+      <PageHero quiet eyebrow="Pedido" title={<span className="break-all">{order.publicCode}</span>}>
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="glass-dark rounded-full px-3 py-1 text-xs font-semibold text-gold-light">{ORDER_STATUS_LABEL[order.status]}</span>
+          <p className="text-sm text-ivory/75">{STATUS_MESSAGE[order.status]}</p>
+        </div>
+        <p className="mt-3 text-xs text-ivory/55">Guarda este número: lo necesitas, junto con tu correo, para rastrear el pedido.</p>
+      </PageHero>
+      <PageBody className="max-w-3xl">
+      <div className="surface rounded-[28px] p-6 sm:p-8">
 
       {returnedFromGateway && (
         <div role="status" className="mt-8 rounded-2xl border border-gold/40 bg-gold/5 p-5 text-sm leading-6">
@@ -133,6 +136,8 @@ export default async function OrderPage({
         <Button href={`/pedidos?codigo=${order.publicCode}`}>Rastrear pedido</Button>
         <Button href="/catalogo" variant="secondary">Seguir comprando</Button>
       </div>
+      </div>
+      </PageBody>
     </main>
   );
 }
