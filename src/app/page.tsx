@@ -7,7 +7,8 @@ import { FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
 import { ProductCard } from "@/components/catalog/ProductCard";
 import { Button } from "@/components/ui/Button";
 import { ArrowRightIcon, CardIcon, ShieldIcon, TruckIcon } from "@/components/ui/Icons";
-import { Parallax, Rail, Reveal, Tilt } from "@/components/home/Motion";
+import { Rail, Reveal } from "@/components/home/Motion";
+import { Section, SectionHeader } from "@/components/home/Section";
 import { HeroOrb } from "@/components/aura/HeroOrb";
 import { BRAND_STORY } from "@/components/brand/BrandStory";
 import { GalleryGrid } from "@/components/gallery/GalleryGrid";
@@ -16,11 +17,9 @@ import { getPublicMedia } from "@/lib/services/gallery";
 /**
  * Fotografía de campaña (Unsplash License, uso comercial permitido, sin marcas visibles):
  * - Hero: arquitectura urbana de concreto bajo un viaducto (lesha tuman, unsplash.com/photos/y9-wngBehYU).
- * - Editorial: retrato urbano en la calle (Camilla Carvalho, unsplash.com/photos/0Ek6kBewgs4).
  * Para usar fotos propias de la marca basta con cambiar estas dos URL (o subirlas a Supabase Storage).
  */
 const HERO_IMAGE = "https://images.unsplash.com/photo-1780764337454-d222bec28c5c?auto=format&fit=crop&w=2400&q=80";
-const EDITORIAL_IMAGE = "https://images.unsplash.com/photo-1511474274885-186ea2ca6b24?auto=format&fit=crop&w=1600&q=80";
 
 /**
  * Fotos editoriales por categoría (Unsplash License, sin logos de marcas visibles). Si la categoría tiene
@@ -40,29 +39,31 @@ const CATEGORY_EDITORIAL: Record<string, { src: string; alt: string; kicker: str
 
 const STRIP = ["Originales de EE.UU.", "Precios en COP con impuestos", "Envío a toda Colombia", "Pagos seguros con Wompi", "Seguimiento desde tu cuenta", "Garantía legal"];
 
-export const metadata: Metadata = { alternates: { canonical: "/" } };
+/**
+ * Cómo trabajamos: SOLO datos ya publicados en el sitio (Términos, Envíos, checkout).
+ * No se usa "Revisado": no hay un procedimiento de inspección documentado que lo respalde.
+ */
+const STEPS = [
+  { n: "01", title: "Lo eliges con el precio final", text: "Productos originales de Estados Unidos con su precio en pesos colombianos, impuestos incluidos. El costo del envío lo ves antes de pagar.", fact: "COP · impuestos incluidos" },
+  { n: "02", title: "Pagas por un canal seguro", text: "Tarjeta o PSE a través de Wompi; 7H STORE no guarda los datos de tu tarjeta. También puedes pagar por transferencia o consignación. Tu pedido se confirma cuando el pago queda aprobado.", fact: "Wompi · tarjeta · PSE" },
+  { n: "03", title: "Lo sigues hasta tu puerta", text: `Despachamos con transportadora y número de guía, que ves en Mi cuenta. Envío gratis desde ${formatCOP(FREE_SHIPPING_THRESHOLD)}; en compras menores, la tarifa según tu ciudad aparece antes de pagar.`, fact: `Guía · gratis desde ${formatCOP(FREE_SHIPPING_THRESHOLD)}` },
+];
 
-function SectionHead({ kicker, title, href, cta }: { kicker: string; title: string; href?: string; cta?: string }) {
-  return (
-    <Reveal className="flex items-end justify-between gap-5 pb-2">
-      <div>
-        <p className="text-[10px] font-semibold uppercase tracking-[.3em] text-gold">{kicker}</p>
-        <h2 className="mt-3 type-h2">{title}</h2>
-      </div>
-      {href && cta && (
-        <Link href={href} className="group hidden items-center gap-2 text-sm font-medium transition-colors hover:text-gold sm:mr-28 sm:inline-flex">
-          {cta} <ArrowRightIcon width={16} height={16} className="transition-transform group-hover:translate-x-1" />
-        </Link>
-      )}
-    </Reveal>
-  );
-}
+const BENEFITS = [
+  { Icon: TruckIcon, title: "Envío a todo el país", text: "Transportadora con número de guía y seguimiento desde tu cuenta." },
+  { Icon: ShieldIcon, title: "Originales de EE.UU.", text: "Productos originales, precios transparentes y garantía legal." },
+  { Icon: CardIcon, title: "Paga como prefieras", text: "Tarjeta, PSE, transferencia o consignación." },
+];
+
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 export default async function HomePage() {
   const [featured, categories, all, media] = await Promise.all([getFeaturedProducts(), getActiveCategories(), getProducts(), getPublicMedia({ featuredOnly: true, take: 8 }).catch(() => [])]);
   // Novedades: los más recientes (getProducts ya viene ordenado por fecha) que no están en Destacados.
   const featuredIds = new Set(featured.map((p) => p.id));
   const newest = all.filter((p) => !featuredIds.has(p.id)).slice(0, 8);
+  // Lookbook "Hecho para la ciudad": productos que el equipo etiqueta "ciudad" en el panel (no se inventa una colección).
+  const cityPicks = all.filter((p) => p.stock > 0 && p.tags.some((t) => t.trim().toLowerCase() === "ciudad")).slice(0, 4);
 
   return (
     <main id="contenido">
@@ -102,249 +103,223 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Franja en movimiento (se detiene con el cursor y con movimiento reducido) */}
-      <div className="marquee-wrap overflow-hidden border-y border-ink/10 bg-gold py-3 text-ink" aria-label="Beneficios de comprar en 7H STORE">
-        <ul className="marquee flex w-max gap-10 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[.25em]">
-          {[...STRIP, ...STRIP].map((t, i) => (
-            <li key={i} aria-hidden={i >= STRIP.length} className="flex items-center gap-10">{t}<span aria-hidden="true">✦</span></li>
+      {/* Franja de beneficios: quieta (sin animación permanente), sobre el mismo negro del hero. */}
+      <div className="border-y border-gold/15 bg-ink text-ivory/75" aria-label="Beneficios de comprar en 7H STORE">
+        <ul className="no-scrollbar mx-auto flex max-w-7xl items-center gap-x-8 overflow-x-auto px-5 py-4 text-[10px] font-semibold uppercase tracking-[.24em] lg:justify-between lg:px-8">
+          {STRIP.map((t, i) => (
+            <li key={t} className="flex shrink-0 items-center gap-8">
+              {i > 0 && <span aria-hidden="true" className="size-1 rounded-full bg-gold/70" />}
+              {t}
+            </li>
           ))}
         </ul>
       </div>
 
-      {/* B. DESTACADOS EN CARRUSEL */}
+      {/* 01 · DESTACADOS (marfil): la selección que el equipo marca en el panel */}
       {featured.length > 0 && (
-        <section className="mx-auto max-w-7xl px-5 py-20 lg:px-8 lg:py-28">
-          <SectionHead kicker="Selección 7H" title="Destacados" href="/catalogo" cta="Ver todo" />
-          <div className="mt-10">
+        <Section tone="ivory" label="Destacados">
+          <SectionHeader index="01" eyebrow="Selección 7H" title="Destacados" lead="Lo que el equipo pone al frente. Precio final en pesos, sin sorpresas al pagar." href="/catalogo" cta="Ver todo" railArrows />
+          <div className="mt-12">
             <Rail label="Productos destacados">
               {featured.map((p, i) => (
-                <Reveal key={p.id} delay={Math.min(i, 4) * 80} className="w-[68%] shrink-0 snap-start sm:w-[40%] lg:w-[23%]">
+                <Reveal key={p.id} delay={Math.min(i, 4) * 80} className="w-[72%] shrink-0 snap-start sm:w-[42%] lg:w-[23.5%]">
                   <ProductCard product={p} priority={i < 2} />
                 </Reveal>
               ))}
             </Rail>
           </div>
-        </section>
+        </Section>
       )}
 
-      {/* B2. CAMPAÑA URBANA: banda cinematográfica a todo el ancho con parallax */}
-      <section className="relative isolate h-[70svh] min-h-[420px] overflow-hidden bg-ink text-ivory">
-        <Parallax className="absolute inset-0 -z-10 h-[125%] -top-[12%]" strength={0.12}>
-          <Image src={HERO_IMAGE} alt="Campaña urbana 7H STORE: persona con ropa urbana bajo un viaducto de concreto" fill sizes="100vw" className="object-cover object-[50%_35%]" />
-        </Parallax>
-        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-r from-ink/85 via-ink/40 to-transparent" />
-        <div className="mx-auto flex h-full max-w-7xl items-end px-5 pb-14 lg:px-8">
-          <Reveal className="glass-dark max-w-md rounded-[28px] p-7">
-            <p className="text-[10px] font-semibold uppercase tracking-[.3em] text-gold-light">Campaña 7H</p>
-            <h2 className="mt-3 type-h2">Hecho para <span className="text-gold-light">la ciudad.</span></h2>
-            <p className="mt-3 text-sm leading-6 text-ivory/70">Piezas originales que viajan desde Estados Unidos hasta tu puerta, listas para tu día a día.</p>
-            <Link href="/catalogo" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-gold-light hover:text-ivory">Ver colección <ArrowRightIcon width={16} height={16} /></Link>
+      {/* 02 · HECHO PARA LA CIUDAD (negro): doble página editorial, foto quieta y nítida */}
+      <Section tone="ink" label="Hecho para la ciudad">
+        <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-14">
+          <Reveal className="lg:col-span-6">
+            <figure>
+              <div className="relative aspect-[4/5] overflow-hidden rounded-[22px] sm:aspect-[16/11] lg:aspect-[4/5]">
+                <Image src={HERO_IMAGE} alt="Campaña urbana 7H STORE: persona con ropa urbana bajo un viaducto de concreto" fill sizes="(min-width:1024px) 48vw, 100vw" className="object-cover object-[50%_35%]" />
+              </div>
+              <figcaption className="mt-3 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[.24em] text-ivory/45">
+                <span aria-hidden="true" className="h-px w-6 bg-gold/60" /> Campaña 7H · Ciudad
+              </figcaption>
+            </figure>
           </Reveal>
-        </div>
-      </section>
-
-      {/* C. CATEGORÍAS EN COMPOSICIÓN ASIMÉTRICA */}
-      {categories.length > 0 && (
-        <section className="bg-ink py-20 text-ivory lg:py-28">
-          <div className="mx-auto max-w-7xl px-5 lg:px-8">
-            <Reveal>
-              <p className="text-[10px] font-semibold uppercase tracking-[.3em] text-gold">Explora</p>
-              <h2 className="mt-3 type-h2">Compra por categoría.</h2>
-            </Reveal>
-            <div className="mt-10 grid auto-rows-[220px] grid-cols-2 gap-3 sm:auto-rows-[260px] lg:grid-cols-4 lg:gap-4">
-              {categories.map((c, i) => {
-                const image = c.imageUrl || CATEGORY_EDITORIAL[c.slug]?.src || all.find((p) => p.category === c.slug && p.images[0])?.images[0];
-                const big = i === 0;
-                return (
-                  <Reveal key={c.slug} delay={i * 90} className={big ? "col-span-2 row-span-2" : i === 3 ? "col-span-2 lg:col-span-1" : ""}>
-                    <Tilt className="h-full rounded-2xl" max={5}>
-                    <Link href={`/catalogo?categoria=${c.slug}`} className="group relative block h-full overflow-hidden rounded-2xl bg-ink-soft">
-                      {image ? (
-                        <Image src={image} alt="" fill sizes={big ? "(min-width:1024px) 50vw, 100vw" : "(min-width:1024px) 25vw, 50vw"} className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.07]" />
-                      ) : (
-                        <div aria-hidden="true" className="flex h-full items-center justify-center"><span className="font-display text-6xl text-gold-light">{c.label.charAt(0)}</span></div>
-                      )}
-                      <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/15 to-transparent transition-opacity duration-500 group-hover:opacity-90" />
-                      <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-5 lg:p-6">
-                        <h3 className={`font-display leading-none ${big ? "text-5xl lg:text-7xl" : "text-3xl lg:text-4xl"}`}>{c.label}</h3>
-                        <span className="grid size-10 shrink-0 place-items-center rounded-full border border-ivory/30 transition-all duration-300 group-hover:rotate-[-45deg] group-hover:border-gold group-hover:bg-gold group-hover:text-ink">
-                          <ArrowRightIcon width={16} height={16} />
+          <div className="lg:col-span-6 lg:pl-6">
+            <SectionHeader index="02" eyebrow="Campaña 7H" tone="ink" title={<>Hecho para <span className="text-gold-light">la ciudad.</span></>} lead="Piezas originales que viajan desde Estados Unidos hasta tu puerta, listas para tu día a día." />
+            {cityPicks.length >= 3 && (
+              <Reveal delay={120} className="mt-10">
+                <p className="type-eyebrow text-ivory/50">Para armar el look</p>
+                <ol className="mt-4 divide-y divide-ivory/10 border-y border-ivory/10">
+                  {cityPicks.map((p, i) => (
+                    <li key={p.id}>
+                      <Link href={`/producto/${p.slug}`} className="group flex items-center gap-4 py-3.5">
+                        <span className="w-6 font-display text-sm text-gold-light">{String(i + 1).padStart(2, "0")}</span>
+                        <span className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-ivory">
+                          {p.images[0] && <Image src={p.images[0]} alt="" fill sizes="56px" className="object-cover transition-transform duration-500 group-hover:scale-105" />}
                         </span>
-                      </div>
-                    </Link>
-                    </Tilt>
-                  </Reveal>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* C2. LA EDICIÓN 7H: carrusel editorial a pantalla ancha */}
-      {categories.some((c) => CATEGORY_EDITORIAL[c.slug]) && (
-        <section className="overflow-hidden bg-ivory py-20 lg:py-28">
-          <div className="mx-auto max-w-7xl px-5 lg:px-8">
-            <SectionHead kicker="La edición 7H" title="Viste la ciudad." />
-            <div className="mt-10">
-              <Rail label="La edición 7H">
-                {categories.filter((c) => CATEGORY_EDITORIAL[c.slug]).map((c, i) => {
-                  const ed = CATEGORY_EDITORIAL[c.slug];
-                  return (
-                    <Reveal key={c.slug} delay={i * 100} className="w-[82%] shrink-0 snap-start sm:w-[58%] lg:w-[40%]">
-                      <Link href={`/catalogo?categoria=${c.slug}`} className="group relative block aspect-[4/5] overflow-hidden rounded-[28px] bg-ink">
-                        <Image src={ed.src} alt={ed.alt} fill sizes="(min-width:1024px) 40vw, 82vw" className="reveal-clip object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-[1.06]" />
-                        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/10 to-transparent" />
-                        <div className="absolute inset-x-0 bottom-0 p-6 text-ivory lg:p-8">
-                          <p className="text-[10px] font-semibold uppercase tracking-[.3em] text-gold-light">{ed.kicker}</p>
-                          <h3 className="mt-2 font-sans text-4xl font-semibold uppercase leading-none tracking-tight lg:text-5xl">{c.label}</h3>
-                          <span className="mt-5 inline-flex items-center gap-2 rounded-full bg-ivory px-5 py-2.5 text-xs font-semibold text-ink transition-colors group-hover:bg-gold">
-                            Explorar <ArrowRightIcon width={14} height={14} />
-                          </span>
-                        </div>
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-[10px] font-semibold uppercase tracking-[.18em] text-ivory/50">{p.brand}</span>
+                          <span className="block truncate text-sm text-ivory transition-colors group-hover:text-gold-light">{p.name}</span>
+                        </span>
+                        <span className="type-price text-sm text-ivory/80">{formatCOP(p.priceCOP)}</span>
                       </Link>
-                    </Reveal>
-                  );
-                })}
-              </Rail>
-            </div>
+                    </li>
+                  ))}
+                </ol>
+              </Reveal>
+            )}
+            <Reveal delay={160} className="mt-8">
+              <Link href="/catalogo" className="group inline-flex items-center gap-2 text-sm font-semibold text-gold-light hover:text-ivory">
+                Ver colección <ArrowRightIcon width={16} height={16} className="transition-transform duration-300 group-hover:translate-x-1" />
+              </Link>
+            </Reveal>
           </div>
-        </section>
+        </div>
+      </Section>
+
+      {/* 03 · CATEGORÍAS (marfil profundo): mosaico de fotos, sin efectos 3D */}
+      {categories.length > 0 && (
+        <Section tone="sand" label="Categorías">
+          <SectionHeader index="03" eyebrow="Explora" title="Compra por categoría." />
+          <div className="mt-12 grid auto-rows-[180px] grid-cols-2 gap-3 sm:auto-rows-[240px] lg:grid-cols-4 lg:gap-4">
+            {categories.map((c, i) => {
+              const image = c.imageUrl || CATEGORY_EDITORIAL[c.slug]?.src || all.find((p) => p.category === c.slug && p.images[0])?.images[0];
+              const big = i === 0;
+              return (
+                <Reveal key={c.slug} delay={i * 80} className={big ? "col-span-2 row-span-2" : i === 3 ? "col-span-2 lg:col-span-1" : ""}>
+                  <Link href={`/catalogo?categoria=${c.slug}`} className="group relative block h-full overflow-hidden rounded-[22px] bg-ink">
+                    {image ? (
+                      <Image src={image} alt="" fill sizes={big ? "(min-width:1024px) 50vw, 100vw" : "(min-width:1024px) 25vw, 50vw"} className="object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.04]" />
+                    ) : (
+                      <div aria-hidden="true" className="flex h-full items-center justify-center"><span className="font-display text-6xl text-gold-light">{c.label.charAt(0)}</span></div>
+                    )}
+                    <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/10 to-transparent" />
+                    <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-5 text-ivory lg:p-6">
+                      <div>
+                        {CATEGORY_EDITORIAL[c.slug] && <p className="text-[10px] font-semibold uppercase tracking-[.22em] text-gold-light">{CATEGORY_EDITORIAL[c.slug].kicker}</p>}
+                        <h3 className={`mt-1 font-display leading-none ${big ? "text-5xl lg:text-6xl" : "text-3xl"}`}>{c.label}</h3>
+                      </div>
+                      <span className="grid size-10 shrink-0 place-items-center rounded-full border border-ivory/30 transition-colors duration-300 group-hover:border-gold group-hover:bg-gold group-hover:text-ink">
+                        <ArrowRightIcon width={16} height={16} />
+                      </span>
+                    </div>
+                  </Link>
+                </Reveal>
+              );
+            })}
+          </div>
+        </Section>
       )}
 
-      {/* D. NOVEDADES */}
+      {/* 04 · NOVEDADES (marfil): lo más reciente, en orden de publicación */}
       {newest.length > 0 && (
-        <section className="mx-auto max-w-7xl px-5 py-20 lg:px-8 lg:py-28">
-          <SectionHead kicker="Recién llegados" title="Novedades" href="/catalogo?orden=novedades" cta="Ver más" />
-          <div className="mt-10">
+        <Section tone="ivory" label="Novedades">
+          <SectionHeader index="04" eyebrow="Recién llegados" title="Novedades" lead="Lo último que publicamos, del más reciente al más antiguo." href="/catalogo?orden=novedades" cta="Ver más" railArrows />
+          <div className="mt-12">
             <Rail label="Novedades">
               {newest.map((p, i) => (
-                <Reveal key={p.id} delay={Math.min(i, 4) * 80} className="w-[68%] shrink-0 snap-start sm:w-[40%] lg:w-[23%]">
+                <Reveal key={p.id} delay={Math.min(i, 4) * 80} className="w-[72%] shrink-0 snap-start sm:w-[42%] lg:w-[23.5%]">
                   <ProductCard product={p} />
                 </Reveal>
               ))}
             </Rail>
           </div>
-        </section>
+        </Section>
       )}
 
-      {/* ASÍ SE VIVE 7H: solo contenido aprobado (de la tienda o de clientes con su autorización) */}
+      {/* ASÍ SE VIVE 7H (marfil profundo): solo contenido aprobado */}
       {media.length > 0 && (
-        <section className="mx-auto max-w-7xl px-5 py-20 lg:px-8 lg:py-28">
-          <SectionHead kicker="Así se vive 7H" title="Productos reales, en manos reales." href="/asi-se-vive-7h" cta="Ver la galería" />
-          <div className="mt-10"><GalleryGrid items={media} /></div>
-        </section>
+        <Section tone="sand" label="Así se vive 7H">
+          <SectionHeader eyebrow="Así se vive 7H" title="Productos reales, en manos reales." href="/asi-se-vive-7h" cta="Ver la galería" />
+          <div className="mt-12"><GalleryGrid items={media} /></div>
+        </Section>
       )}
 
-      {/* E/G. EDITORIAL: IMPORTACIÓN, AUTENTICIDAD Y ENVÍO */}
-      <section className="relative overflow-hidden bg-ivory-200/60">
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 py-20 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:py-28">
-          <Reveal className="relative aspect-[4/5] overflow-hidden rounded-[28px] shadow-lift sm:aspect-[5/4] lg:aspect-[4/5]">
-            <Image src={EDITORIAL_IMAGE} alt="Retrato urbano de campaña 7H STORE" fill sizes="(min-width:1024px) 50vw, 100vw" className="object-cover transition-transform duration-[1500ms] ease-out hover:scale-[1.04]" />
-            <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-ink/40 to-transparent" />
-            <p className="absolute bottom-5 left-5 rounded-full bg-ink/70 px-4 py-2 text-[10px] font-semibold uppercase tracking-[.25em] text-gold-light backdrop-blur">De EE.UU. a tu puerta</p>
-          </Reveal>
-          <div>
-            <Reveal>
-              <p className="text-[10px] font-semibold uppercase tracking-[.3em] text-gold">Cómo trabajamos</p>
-              <h2 className="mt-3 type-h2">Importado. Revisado. Entregado.</h2>
+      {/* 05 · CÓMO TRABAJAMOS (negro): el recorrido de la compra, con datos ya publicados */}
+      <Section tone="ink" label="Cómo trabajamos">
+        <SectionHeader index="05" eyebrow="Cómo trabajamos" tone="ink" title={<>De Estados Unidos <span className="text-gold-light">a tu puerta.</span></>} lead="Comprar algo que viene de otro país deja preguntas. Cada paso tiene una respuesta clara antes de que pagues." />
+        <ol className="relative mt-14 grid gap-10 md:grid-cols-3 md:gap-8">
+          <span aria-hidden="true" className="absolute left-[11px] top-3 bottom-3 w-px bg-gradient-to-b from-gold/60 via-gold/25 to-transparent md:left-0 md:right-0 md:top-[11px] md:bottom-auto md:h-px md:w-auto md:bg-gradient-to-r" />
+          {STEPS.map((s, i) => (
+            <Reveal as="li" key={s.n} delay={i * 140} className="relative pl-10 md:pl-0 md:pt-12">
+              <span aria-hidden="true" className="absolute left-0 top-0 grid size-[23px] place-items-center rounded-full border border-gold/60 bg-ink md:left-0">
+                <span className="size-1.5 rounded-full bg-gold-light" />
+              </span>
+              <p className="font-display text-5xl leading-none text-gold-light/90">{s.n}</p>
+              <h3 className="mt-4 text-base font-semibold text-ivory">{s.title}</h3>
+              <p className="mt-2 max-w-sm text-sm leading-6 text-ivory/65">{s.text}</p>
+              <p className="mt-4 inline-flex rounded-full border border-ivory/15 px-3 py-1 text-[11px] text-ivory/70">{s.fact}</p>
             </Reveal>
-            <ol className="mt-10 space-y-6">
-              {[
-                ["01", "Originales de Estados Unidos", "Traemos productos originales y publicamos su precio final en pesos colombianos, con impuestos incluidos."],
-                ["02", "Pago seguro", "Tarjeta y PSE con Wompi; 7H STORE no guarda los datos de tu tarjeta. El pedido se confirma cuando la pasarela aprueba el pago."],
-                ["03", "Envío con guía", `Despachamos con transportadora y número de guía. Envío gratis desde ${formatCOP(FREE_SHIPPING_THRESHOLD)}; en compras menores la tarifa se calcula según tu ciudad antes de pagar.`],
-              ].map(([n, t, d], i) => (
-                <Reveal as="li" key={n} delay={i * 120} className="flex gap-5 border-t border-ink/10 pt-6">
-                  <span className="font-display text-3xl text-gold">{n}</span>
-                  <div>
-                    <h3 className="text-base font-semibold">{t}</h3>
-                    <p className="mt-1 text-sm leading-6 text-ink-soft">{d}</p>
-                  </div>
-                </Reveal>
-              ))}
-            </ol>
-            <Reveal className="mt-8 flex flex-wrap gap-3">
-              <Button href="/como-comprar" variant="secondary">Cómo comprar</Button>
-              <Link href="/envios" className="inline-flex items-center gap-2 px-2 text-sm font-medium hover:text-gold">Condiciones de envío <ArrowRightIcon width={16} height={16} /></Link>
+          ))}
+        </ol>
+        <Reveal className="mt-12 flex flex-wrap items-center gap-3">
+          <Button href="/como-comprar" variant="secondary" className="border-ivory/25 text-ivory hover:border-gold hover:bg-white/[.06]">Cómo comprar</Button>
+          <Link href="/envios" className="group inline-flex items-center gap-2 px-2 text-sm font-medium text-ivory/80 hover:text-gold-light">Condiciones de envío <ArrowRightIcon width={16} height={16} className="transition-transform group-hover:translate-x-1" /></Link>
+        </Reveal>
+      </Section>
+
+      {/* 06 · SOBRE 7H STORE + lo que garantizamos (marfil): lectura, sin tarjetas */}
+      <Section tone="ivory" label="Sobre 7H STORE">
+        <div className="grid gap-10 lg:grid-cols-12 lg:gap-14">
+          <div className="lg:col-span-5">
+            <SectionHeader index="06" eyebrow="Sobre 7H STORE" title={<>Comprar bien, <span className="text-gold-deep">sin complicaciones.</span></>} />
+            <Reveal className="mt-8">
+              <Link href="/nosotros" className="group inline-flex items-center gap-2 text-sm font-semibold hover:text-gold-deep">
+                Conoce la marca <ArrowRightIcon width={16} height={16} className="transition-transform group-hover:translate-x-1" />
+              </Link>
             </Reveal>
           </div>
-        </div>
-      </section>
-
-      {/* SOBRE 7H STORE: presentación institucional de la marca */}
-      <section className="px-5 pt-20 lg:px-8 lg:pt-28">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_1.2fr] lg:items-center">
-          <Reveal>
-            <p className="text-[10px] font-semibold uppercase tracking-[.3em] text-gold">Sobre 7H STORE</p>
-            <h2 className="mt-3 type-h2">Comprar bien, <span className="text-gold">sin complicaciones.</span></h2>
-            <Link href="/nosotros" className="group mt-8 inline-flex items-center gap-2 text-sm font-semibold hover:text-gold">
-              Conoce la marca <ArrowRightIcon width={16} height={16} className="transition-transform group-hover:translate-x-1" />
-            </Link>
-          </Reveal>
-          <Reveal delay={120} className="surface rounded-[28px] p-7 sm:p-10">
-            <p className="font-display text-2xl leading-snug sm:text-3xl">{BRAND_STORY[0]}</p>
-            <p className="mt-5 text-sm leading-7 text-ink-soft sm:text-base sm:leading-8">{BRAND_STORY[2]}</p>
+          <Reveal delay={100} className="lg:col-span-7 lg:border-l lg:border-ink/10 lg:pl-14">
+            <p className="font-display text-2xl leading-snug sm:text-[28px]">{BRAND_STORY[0]}</p>
+            <p className="mt-5 text-[15px] leading-8 text-ink-soft">{BRAND_STORY[2]}</p>
           </Reveal>
         </div>
-      </section>
+        <ul className="mt-16 grid gap-8 border-t border-ink/10 pt-10 md:grid-cols-3 md:gap-10">
+          {BENEFITS.map(({ Icon, title, text }, i) => (
+            <Reveal as="li" key={title} delay={i * 100} className="flex gap-4">
+              <span className="grid size-10 shrink-0 place-items-center rounded-full border border-gold/50 text-gold-deep"><Icon width={18} height={18} /></span>
+              <div>
+                <h3 className="type-h3 !text-xl">{title}</h3>
+                <p className="mt-1.5 text-sm leading-6 text-ink-soft">{text}</p>
+              </div>
+            </Reveal>
+          ))}
+        </ul>
+      </Section>
 
-      {/* F. BENEFICIOS */}
-      <section className="mx-auto grid max-w-7xl gap-4 px-5 py-20 md:grid-cols-3 lg:px-8">
-        {[
-          { Icon: TruckIcon, title: "Envío a todo el país", text: "Transportadora con número de guía y seguimiento desde tu cuenta." },
-          { Icon: ShieldIcon, title: "Originales de EE.UU.", text: "Productos originales, precios transparentes y garantía legal." },
-          { Icon: CardIcon, title: "Paga como prefieras", text: "Tarjeta, PSE, transferencia o consignación." },
-        ].map(({ Icon, title, text }, i) => (
-          <Reveal key={title} delay={i * 100} className="surface surface-hover group rounded-[24px] p-7">
-            <span className="grid size-12 place-items-center rounded-full bg-ink text-gold-light transition-colors group-hover:bg-gold group-hover:text-ink">
-              <Icon width={22} height={22} />
-            </span>
-            <h3 className="mt-5 font-display text-2xl">{title}</h3>
-            <p className="mt-2 text-sm leading-6 text-ink-soft">{text}</p>
+      {/* 07 · TÚ LO BUSCAS + COMUNIDAD (marfil profundo): dos servicios, cada uno en su panel */}
+      <Section tone="sand" label="Servicios 7H">
+        <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr]">
+          <Reveal className="section-ink flex flex-col rounded-[22px] p-7 text-ivory sm:p-10">
+            <p className="type-eyebrow flex items-center gap-3 text-gold-light"><span className="font-display text-sm tracking-normal">07</span><span aria-hidden="true" className="h-px w-8 bg-gold/70" />Tú lo buscas</p>
+            <h2 className="type-h2 mt-4">Tú lo buscas. <span className="text-gold-light">Nosotros lo exploramos.</span></h2>
+            <p className="mt-4 max-w-lg flex-1 text-[15px] leading-7 text-ivory/65">Cuéntanos qué producto estás buscando. Déjanos tu solicitud y exploraremos las posibilidades de conseguirlo.</p>
+            <div className="mt-8"><Button href="/tu-lo-buscas" variant="gold">Hacer una solicitud <ArrowRightIcon width={16} height={16} /></Button></div>
           </Reveal>
-        ))}
-      </section>
-
-      {/* TÚ LO BUSCAS + COMUNIDAD */}
-      <section className="mx-auto grid max-w-7xl gap-4 px-5 pb-20 lg:grid-cols-[1.4fr_1fr] lg:px-8">
-        <Reveal className="hero-light relative overflow-hidden rounded-[28px] p-7 text-ivory sm:p-10">
-          <p className="type-eyebrow text-gold-light">Tú lo buscas</p>
-          <h2 className="type-h2 mt-3">Tú lo buscas. <span className="text-gold-light">Nosotros lo exploramos.</span></h2>
-          <p className="mt-4 max-w-lg text-sm leading-7 text-ivory/70">Cuéntanos qué producto estás buscando. Déjanos tu solicitud y exploraremos las posibilidades de conseguirlo.</p>
-          <div className="mt-7"><Button href="/tu-lo-buscas" variant="gold">Hacer una solicitud <ArrowRightIcon width={16} height={16} /></Button></div>
-        </Reveal>
-        <Reveal delay={100} className="surface flex flex-col rounded-[28px] p-7 sm:p-10">
-          <p className="type-eyebrow text-gold">Comunidad 7H</p>
-          <h2 className="type-h3 mt-3">Recomienda, pregunta y propón.</h2>
-          <p className="mt-3 flex-1 text-sm leading-7 text-ink-soft">Conversa con otros clientes y con el equipo. Un espacio sencillo y moderado.</p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Button href="/comunidad" variant="secondary">Entrar a la comunidad</Button>
-            <Link href="/habla-con-7h" className="inline-flex items-center gap-2 px-2 text-sm font-medium hover:text-gold">Habla con 7H <ArrowRightIcon width={16} height={16} /></Link>
-          </div>
-        </Reveal>
-      </section>
-
-      {/* H. CONFIANZA Y ATENCIÓN */}
-      <section className="px-5 pb-20 lg:px-8">
-        <Reveal className="relative mx-auto max-w-7xl overflow-hidden rounded-[32px] bg-ink px-6 py-14 text-ivory sm:px-12 lg:py-20">
-          <div aria-hidden="true" className="iso-grid absolute inset-0 opacity-60" />
-          <div aria-hidden="true" className="absolute -right-24 -top-24 size-80 rounded-full bg-gold/20 blur-3xl" />
-          <div className="relative grid gap-10 lg:grid-cols-[1.3fr_1fr] lg:items-end">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[.3em] text-gold">Posventa</p>
-              <h2 className="mt-3 type-h2">Tu compra no termina al pagar.</h2>
-              <p className="mt-5 max-w-lg text-sm leading-7 text-ivory/70">
-                Desde tu cuenta ves todos tus pedidos, su pago y su envío, y puedes solicitar garantía, cambio o devolución con un número de radicado. Una persona del equipo revisa cada caso.
-              </p>
+          <Reveal delay={100} className="surface flex flex-col rounded-[22px] p-7 sm:p-10">
+            <p className="type-eyebrow flex items-center gap-3 text-gold-deep"><span aria-hidden="true" className="h-px w-8 bg-gold" />Comunidad 7H</p>
+            <h2 className="type-h3 mt-4">Recomienda, pregunta y propón.</h2>
+            <p className="mt-3 flex-1 text-[15px] leading-7 text-ink-soft">Conversa con otros clientes y con el equipo. Un espacio sencillo y moderado.</p>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Button href="/comunidad" variant="secondary">Entrar a la comunidad</Button>
+              <Link href="/habla-con-7h" className="group inline-flex items-center gap-2 px-2 text-sm font-medium hover:text-gold-deep">Habla con 7H <ArrowRightIcon width={16} height={16} className="transition-transform group-hover:translate-x-1" /></Link>
             </div>
-            <div className="flex flex-wrap gap-3 lg:justify-end">
-              <Button href="/cuenta" variant="gold">Entrar a mi cuenta</Button>
-              <Button href="/devoluciones" variant="secondary" className="border-ivory/30 text-ivory hover:border-gold hover:bg-white/5">Garantías y devoluciones</Button>
-            </div>
+          </Reveal>
+        </div>
+      </Section>
+
+      {/* 08 · POSVENTA (marfil): cierre sereno antes del footer negro */}
+      <Section tone="ivory" label="Posventa">
+        <div className="grid gap-8 lg:grid-cols-12 lg:items-end">
+          <div className="lg:col-span-7">
+            <SectionHeader index="08" eyebrow="Posventa" title="Tu compra no termina al pagar." lead="Desde tu cuenta ves todos tus pedidos, su pago y su envío, y puedes solicitar garantía, cambio o devolución con un número de radicado. Una persona del equipo revisa cada caso." />
           </div>
-        </Reveal>
-      </section>
+          <Reveal delay={100} className="flex flex-wrap gap-3 lg:col-span-5 lg:justify-end">
+            <Button href="/cuenta">Entrar a mi cuenta</Button>
+            <Button href="/devoluciones" variant="secondary">Garantías y devoluciones</Button>
+          </Reveal>
+        </div>
+      </Section>
     </main>
   );
 }

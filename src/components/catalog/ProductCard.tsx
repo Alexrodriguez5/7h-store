@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { Tilt } from "@/components/home/Motion";
 import Link from "next/link";
 import { memo, useEffect, useState } from "react";
 import { formatCOP } from "@/lib/format";
@@ -33,11 +32,11 @@ function ProductCardBase({ product, priority = false }: { product: Product; prio
   return (
     <article className="group isolate flex h-full flex-col">
       {/* IMAGEN (inclinación 3D al pasar el cursor) */}
-      {/* Profundidad: sombra ambiental dorada debajo, inclinación con brillo y un reflejo que cruza la foto */}
-      <Tilt className="ambient rounded-[24px]">
+      {/* Foto protagonista: zoom suave y segunda foto al pasar el cursor; sin inclinación 3D ni brillos. */}
+      <div className="rounded-[22px]">
       <Link
         href={href}
-        className="sheen relative block aspect-4/5 overflow-hidden rounded-[24px] bg-gradient-to-b from-white to-ivory-200 shadow-soft ring-1 ring-ink/[.05] transition-[box-shadow,transform] duration-300 group-hover:shadow-lift active:scale-[.985] sm:active:scale-100"
+        className="relative block aspect-4/5 overflow-hidden rounded-[22px] bg-ivory-200 ring-1 ring-ink/[.06] transition-transform duration-300 active:scale-[.985] sm:active:scale-100"
         aria-label={`Ver ${product.name}`}
       >
         {product.images[0] && (
@@ -47,7 +46,7 @@ function ProductCardBase({ product, priority = false }: { product: Product; prio
             fill
             priority={priority}
             sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-            className={`object-cover transition-[transform,opacity] duration-700 ease-out group-hover:scale-[1.06] ${product.images[1] ? "sm:group-hover:opacity-0" : ""} ${soldOut ? "opacity-60 grayscale-[.4]" : ""}`}
+            className={`object-cover transition-[transform,opacity] duration-700 ease-out group-hover:scale-[1.03] ${product.images[1] ? "sm:group-hover:opacity-0" : ""} ${soldOut ? "opacity-60 grayscale-[.4]" : ""}`}
           />
         )}
         {/* Segunda foto al pasar el cursor (solo con mouse; en celular se mantiene la principal). */}
@@ -74,7 +73,7 @@ function ProductCardBase({ product, priority = false }: { product: Product; prio
           Ver producto
         </span>
       </Link>
-      </Tilt>
+      </div>
 
       {/* INFORMACIÓN */}
       <div className="mt-4 flex flex-1 flex-col px-0.5">
