@@ -4,7 +4,7 @@ import type { Category } from "@/types";
 
 export function Footer({ categories }: { categories: Category[] }) {
   return (
-    <footer className="aura-bg grain relative isolate mt-20 overflow-hidden rounded-t-[36px] text-ivory">
+    <footer className="section-ink relative isolate overflow-hidden border-t border-gold/15 text-ivory">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
         <div className="sm:col-span-2">
           <Logo size="lg" />

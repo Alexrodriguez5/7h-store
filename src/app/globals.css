@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@theme { --color-ink:#0a0a0a; --color-ink-soft:#242424; --color-gold:#c9a44c; --color-gold-light:#d8b866; --color-ivory:#f5f1e8; --color-ivory-200:#e9e3d3; --color-success:#2f6b3f; --color-error:#9b2c2c; --color-warning:#8a6a1f; --font-display:var(--font-newsreader),Georgia,serif; --font-sans:var(--font-manrope),system-ui,sans-serif; --shadow-soft:0 1px 2px rgb(10 10 10 / .04),0 8px 24px -12px rgb(10 10 10 / .18); --shadow-lift:0 2px 4px rgb(10 10 10 / .05),0 20px 40px -18px rgb(10 10 10 / .30); --animate-fade-up:fade-up .5s cubic-bezier(.22,1,.36,1) both; }
+@theme { --color-ink:#0a0a0a; --color-ink-soft:#242424; --color-gold:#c9a44c; --color-gold-light:#d8b866; --color-ivory:#f5f1e8; --color-ivory-200:#e9e3d3; --color-gold-deep:#7d5f1a; --color-success:#2f6b3f; --color-error:#9b2c2c; --color-warning:#8a6a1f; --font-display:var(--font-newsreader),Georgia,serif; --font-sans:var(--font-manrope),system-ui,sans-serif; --shadow-soft:0 1px 2px rgb(10 10 10 / .04),0 8px 24px -12px rgb(10 10 10 / .18); --shadow-lift:0 2px 4px rgb(10 10 10 / .05),0 20px 40px -18px rgb(10 10 10 / .30); --animate-fade-up:fade-up .5s cubic-bezier(.22,1,.36,1) both; }
 
 @keyframes fade-up { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
 
@@ -170,3 +170,6 @@ body { margin:0; background:var(--color-ivory); color:var(--color-ink); font-fam
 @keyframes rise { from { transform: translateY(10px); } to { transform: none; } }
 .rise { animation: rise .6s cubic-bezier(.22,1,.36,1) both; }
 @media (prefers-reduced-motion: reduce) { .rise { animation: none; } }
+
+/* Sección negra de la portada: el mismo negro con la luz cálida del hero, muy contenida. */
+.section-ink { background: radial-gradient(60% 50% at 85% 0%, rgb(201 164 76 / .10), transparent 65%), #0a0a0a; }
