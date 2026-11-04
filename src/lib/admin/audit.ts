@@ -39,6 +39,14 @@ export const AUDIT_LABEL: Record<string, string> = {
   "order.status_changed": "Estado de pedido cambiado",
   "order.manual_payment_confirmed": "Pago manual confirmado",
   "upload.image": "Imagen subida",
+  "review.moderated": "Reseña moderada",
+  "review.deleted": "Reseña eliminada",
+  "product_request.updated": "Solicitud de producto actualizada",
+  "inquiry.replied": "Consulta respondida",
+  "inquiry.status_changed": "Estado de consulta cambiado",
+  "media.created": "Contenido de galería agregado",
+  "media.moderated": "Contenido de galería moderado",
+  "community.moderated": "Comunidad moderada",
 };
 
 /** Nunca interrumpe la acción principal: si el registro falla, solo lo deja en el log del servidor. */

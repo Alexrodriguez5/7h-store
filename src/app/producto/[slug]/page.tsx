@@ -13,6 +13,10 @@ import { BADGE_TONE_CLS, discountPercent, productBadges } from "@/lib/badges";
 import { BUSINESS } from "@/lib/business";
 import { ProductSpecs } from "@/components/product/ProductSpecs";
 import { ProductVideo } from "@/components/product/ProductVideo";
+import { ReviewsSection } from "@/components/product/ReviewsSection";
+import { getProductReviews, isVerifiedBuyer } from "@/lib/services/reviews";
+import { getCurrentCustomer } from "@/lib/customer/auth";
+import { prisma } from "@/lib/prisma";
 export async function generateMetadata({
   params,
 }: {
@@ -46,6 +50,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const discount = discountPercent(p);
   const badges = productBadges(p);
   const confirmed = new Set(p.badges ?? []);
+  const [rv, customer] = await Promise.all([getProductReviews(p.id), getCurrentCustomer()]);
+  const own = customer ? await prisma.review.findUnique({ where: { productId_customerId: { productId: p.id, customerId: customer.id } }, select: { status: true } }) : null;
+  const viewer = {
+    loggedIn: !!customer,
+    verifiedEmail: !!customer?.emailVerifiedAt,
+    verifiedBuyer: customer ? await isVerifiedBuyer(customer, p.id) : false,
+    ownStatus: own?.status ?? null,
+  };
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -56,6 +68,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     brand: { "@type": "Brand", name: p.brand },
     description: p.description,
     image: p.images,
+    // Solo con reseñas reales aprobadas.
+    ...(rv.count > 0 ? { aggregateRating: { "@type": "AggregateRating", ratingValue: Number(rv.average.toFixed(1)), reviewCount: rv.count } } : {}),
     offers: {
       "@type": "Offer",
       url,
@@ -175,6 +189,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <div className="mt-16 grid gap-8">
         {p.videoUrl && <ProductVideo url={p.videoUrl} name={p.name} />}
         <ProductSpecs product={p} categoryLabel={categoryLabel} eta={BUSINESS.shippingTime ?? DEFAULT_ETA} />
+        <ReviewsSection productId={p.id} productSlug={p.slug} reviews={rv.reviews} average={rv.average} histogram={rv.histogram} viewer={viewer} />
       </div>
       {related.length > 0 && (
         <section className="mt-24">
