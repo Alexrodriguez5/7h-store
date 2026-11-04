@@ -6,9 +6,10 @@ import { AuraFallback } from "./AuraOrb";
 /** Carga diferida del Aura 3D: mientras llega (o sin JS) se ve la versión estática, sin saltos de diseño. */
 const AuraOrb = dynamic(() => import("./AuraOrb"), { ssr: false, loading: () => <AuraFallback className="size-full" /> });
 
-export function AuraVisual({ className = "" }: { className?: string }) {
+export function AuraVisual({ className = "relative" }: { className?: string }) {
+  // Quien lo usa define el posicionamiento (relative o absolute) en className.
   return (
-    <div className={`relative ${className}`}>
+    <div className={className}>
       {/* Halo dorado detrás de la esfera */}
       <div aria-hidden="true" className="absolute inset-[12%] rounded-full bg-gold/25 blur-3xl" />
       <AuraOrb className="relative size-full" />
