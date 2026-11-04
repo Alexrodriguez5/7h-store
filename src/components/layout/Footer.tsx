@@ -4,10 +4,10 @@ import { BUSINESS } from "@/lib/business";
 
 export function Footer({ categories }: { categories: Category[] }) {
   return (
-    <footer className="mt-20 rounded-t-[28px] bg-ink text-ivory">
+    <footer className="aura-bg grain relative isolate mt-20 overflow-hidden rounded-t-[36px] text-ivory">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
         <div className="sm:col-span-2">
-          <p className="font-display text-3xl tracking-[.18em] text-gold-light">7H STORE</p>
+          <p className="flex items-baseline gap-2"><span className="font-display text-5xl italic text-aura">7H</span><span className="text-xs font-bold tracking-[.42em] text-ivory/85">STORE</span></p>
           <p className="mt-2 font-display text-xl">Calidad. Estilo. Confianza.</p>
           <p className="mt-3 max-w-md text-xs leading-6 text-ivory/60">
             Productos importados de EE.UU. con precios en COP, impuestos incluidos y seguimiento de
@@ -49,11 +49,9 @@ export function Footer({ categories }: { categories: Category[] }) {
       <div className="border-t border-white/10 px-5 py-5 text-center text-[10px] tracking-wider text-ivory/60">
         <p>Pagos: tarjeta · PSE · transferencia · consignación · © {new Date().getFullYear()} 7H STORE</p>
         <p className="mt-2">
-          {BUSINESS.legalName ?? "7H STORE"}
-          {BUSINESS.taxId && ` · ${BUSINESS.taxId}`}
-          {BUSINESS.address && ` · ${BUSINESS.address}`}
-          {BUSINESS.city && `, ${BUSINESS.city}`}
-          {BUSINESS.email && ` · ${BUSINESS.email}`}
+          {/* Los datos del vendedor que exige la ley están en Términos y condiciones, no en cada página. */}
+          {BUSINESS.city && `${BUSINESS.city} · `}
+          <Link href="/terminos" className="underline underline-offset-2 hover:text-gold-light">Información del vendedor</Link>
           {" · "}
           <a href="https://www.sic.gov.co" target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-gold-light">
             Superintendencia de Industria y Comercio

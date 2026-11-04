@@ -73,7 +73,7 @@ export function Header({ categories }: { categories: Category[] }) {
         )}
       </div>
 
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-ink/90 text-ivory backdrop-blur-md supports-[backdrop-filter]:bg-ink/80">
+      <header className="sticky top-0 z-40 border-b border-white/[.07] bg-ink/75 text-ivory shadow-[inset_0_-1px_0_rgb(216_184_102_/_.12)] backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-ink/65">
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-5 py-3.5 lg:gap-6 lg:px-8">
           <button
             className="-ml-2 grid size-10 place-items-center rounded-full transition-colors hover:bg-white/10 lg:hidden"
@@ -87,10 +87,11 @@ export function Header({ categories }: { categories: Category[] }) {
 
           <Link
             href="/"
-            className="shrink-0 font-display text-[28px] font-semibold tracking-[.18em] text-gold-light transition-opacity hover:opacity-85"
+            className="group flex shrink-0 items-baseline gap-1.5 transition-opacity hover:opacity-90"
             aria-label="7H STORE inicio"
           >
-            7H STORE
+            <span className="font-display text-[32px] italic leading-none text-aura">7H</span>
+            <span className="text-[11px] font-bold tracking-[.42em] text-ivory/85 transition-colors group-hover:text-gold-light">STORE</span>
           </Link>
 
           <nav

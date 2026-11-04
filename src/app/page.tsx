@@ -8,6 +8,7 @@ import { ProductCard } from "@/components/catalog/ProductCard";
 import { Button } from "@/components/ui/Button";
 import { ArrowRightIcon, CardIcon, ShieldIcon, TruckIcon } from "@/components/ui/Icons";
 import { Parallax, Rail, Reveal, Tilt } from "@/components/home/Motion";
+import { AuraParticles, AuraVisual } from "@/components/aura/AuraVisual";
 
 /**
  * Fotografía de campaña (Unsplash License, uso comercial permitido, sin marcas visibles):
@@ -62,39 +63,41 @@ export default async function HomePage() {
 
   return (
     <main id="contenido">
-      {/* A. HERO DE CAMPAÑA */}
-      <section className="relative isolate flex min-h-[88svh] items-end overflow-hidden bg-ink text-ivory lg:min-h-[94svh]">
-        <Parallax className="absolute inset-0 -z-10 h-[115%]">
-          <Image src={HERO_IMAGE} alt="Campaña urbana 7H STORE: persona con ropa urbana bajo un viaducto de concreto" fill priority sizes="100vw" className="hero-zoom object-cover object-[50%_35%]" />
-        </Parallax>
-        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-t from-ink via-ink/45 to-ink/10" />
-        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-r from-ink/70 via-transparent to-transparent" />
-
-        <div className="mx-auto w-full max-w-7xl px-5 pb-14 pt-32 lg:px-8 lg:pb-20">
-          <p className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-gold/40 bg-ink/40 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[.3em] text-gold-light backdrop-blur">
-            Importados de EE.UU. · Colombia
-          </p>
-          <h1 className="mt-6 max-w-5xl font-sans text-[44px] font-semibold uppercase leading-[.9] tracking-[-.03em] sm:text-7xl lg:text-[112px]">
-            <span className="line-mask"><span>Original.</span></span>
-            <span className="line-mask"><span style={{ animationDelay: "110ms" }}>Urbano.</span></span>
-            <span className="line-mask"><span style={{ animationDelay: "220ms" }} className="text-gold-light">Sin fronteras.</span></span>
-          </h1>
-          <div className="mt-8 flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
-            <p className="animate-fade-up max-w-md text-sm leading-7 text-ivory/80 [animation-delay:350ms]">
-              Productos originales de Estados Unidos con precios en pesos, impuestos incluidos y seguimiento de cada pedido desde tu cuenta.
+      {/* A. HERO 7H AURA: escena oscura con la esfera de vidrio líquido, halo dorado y partículas */}
+      <section className="aura-bg grain relative isolate overflow-hidden text-ivory">
+        <AuraParticles />
+        <div className="relative mx-auto grid min-h-[86svh] max-w-7xl items-center gap-6 px-5 pb-14 pt-10 lg:min-h-[90svh] lg:grid-cols-[1.08fr_.92fr] lg:px-8 lg:pb-16">
+          <div className="relative z-10 order-2 lg:order-1">
+            <p className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-gold/30 bg-white/5 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[.32em] text-gold-light backdrop-blur">
+              <span className="size-1.5 rounded-full bg-gold-light shadow-[0_0_10px_#d8b866]" /> Calidad. Estilo. Confianza.
             </p>
-            <div className="animate-fade-up flex flex-wrap gap-3 [animation-delay:450ms]">
+            <h1 className="mt-6 font-display text-[54px] leading-[.92] sm:text-8xl lg:text-[112px]">
+              <span className="line-mask"><span>Estilo que llega</span></span>
+              <span className="line-mask"><span style={{ animationDelay: "120ms" }} className="text-aura italic">sin fronteras.</span></span>
+            </h1>
+            <p className="animate-fade-up mt-6 max-w-md text-base leading-7 text-ivory/75 [animation-delay:320ms]">
+              Productos originales de Estados Unidos. Una experiencia de compra diferente: precios en pesos, impuestos incluidos y seguimiento desde tu cuenta.
+            </p>
+            <div className="animate-fade-up mt-8 flex flex-wrap gap-3 [animation-delay:420ms]">
               <Button href="/catalogo" variant="gold" className="transition-transform hover:-translate-y-0.5">
-                Comprar ahora <ArrowRightIcon width={16} height={16} />
+                Explorar la tienda <ArrowRightIcon width={16} height={16} />
               </Button>
-              <Button href="/pedidos" variant="secondary" className="border-ivory/30 text-ivory backdrop-blur hover:border-gold hover:bg-white/5">
+              <Button href="/pedidos" variant="secondary" className="border-ivory/25 bg-white/5 text-ivory backdrop-blur hover:border-gold hover:bg-white/10">
                 Mis pedidos
               </Button>
             </div>
+            <ul className="animate-fade-up mt-10 grid max-w-lg grid-cols-3 gap-2 [animation-delay:520ms]">
+              {[["100%", "Originales de EE.UU."], ["COP", "Impuestos incluidos"], ["24/7", "Pedidos en tu cuenta"]].map(([k, v]) => (
+                <li key={v} className="glass-dark rounded-2xl px-3 py-3">
+                  <p className="font-display text-2xl leading-none text-gold-light">{k}</p>
+                  <p className="mt-1 text-[10px] leading-4 text-ivory/60">{v}</p>
+                </li>
+              ))}
+            </ul>
           </div>
+          <AuraVisual className="relative order-1 mx-auto aspect-square w-[64%] max-w-[560px] sm:w-[70%] lg:order-2 lg:w-full" />
         </div>
-        {/* Indicador de desplazamiento */}
-        <div aria-hidden="true" className="absolute bottom-5 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 text-[9px] uppercase tracking-[.4em] text-ivory/50 lg:flex">
+        <div aria-hidden="true" className="absolute bottom-5 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 text-[9px] uppercase tracking-[.4em] text-ivory/45 lg:flex">
           Desliza
           <span className="scroll-cue block h-10 w-px bg-ivory/40" />
         </div>
@@ -124,6 +127,22 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
+      {/* B2. CAMPAÑA URBANA: banda cinematográfica a todo el ancho con parallax */}
+      <section className="relative isolate h-[70svh] min-h-[420px] overflow-hidden bg-ink text-ivory">
+        <Parallax className="absolute inset-0 -z-10 h-[125%] -top-[12%]" strength={0.12}>
+          <Image src={HERO_IMAGE} alt="Campaña urbana 7H STORE: persona con ropa urbana bajo un viaducto de concreto" fill sizes="100vw" className="object-cover object-[50%_35%]" />
+        </Parallax>
+        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-r from-ink/85 via-ink/40 to-transparent" />
+        <div className="mx-auto flex h-full max-w-7xl items-end px-5 pb-14 lg:px-8">
+          <Reveal className="glass-dark max-w-md rounded-[28px] p-7">
+            <p className="text-[10px] font-semibold uppercase tracking-[.3em] text-gold-light">Campaña 7H</p>
+            <h2 className="mt-3 font-display text-4xl leading-[.95] sm:text-5xl">Hecho para <span className="italic text-gold-light">la ciudad.</span></h2>
+            <p className="mt-3 text-sm leading-6 text-ivory/70">Piezas originales que viajan desde Estados Unidos hasta tu puerta, listas para tu día a día.</p>
+            <Link href="/catalogo" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-gold-light hover:text-ivory">Ver colección <ArrowRightIcon width={16} height={16} /></Link>
+          </Reveal>
+        </div>
+      </section>
 
       {/* C. CATEGORÍAS EN COMPOSICIÓN ASIMÉTRICA */}
       {categories.length > 0 && (

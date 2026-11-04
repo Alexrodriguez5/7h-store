@@ -19,8 +19,10 @@ export function OrderTimeline({ status }: { status: string }) {
             {i < TRACKING_STEPS.length - 1 && (
               <span
                 aria-hidden="true"
-                className={`absolute left-[17px] top-9 h-[calc(100%-2.25rem)] w-0.5 md:left-[calc(50%+22px)] md:top-[17px] md:h-0.5 md:w-[calc(100%-44px+0.5rem)] ${i < done ? "bg-gold" : "bg-ink/10"}`}
-              />
+                className="absolute left-[17px] top-9 h-[calc(100%-2.25rem)] w-0.5 overflow-hidden bg-ink/10 md:left-[calc(50%+22px)] md:top-[17px] md:h-0.5 md:w-[calc(100%-44px+0.5rem)]"
+              >
+                {i < done && <span className="timeline-fill absolute inset-0 bg-gradient-to-b from-gold to-gold-light md:bg-gradient-to-r" style={{ animationDelay: `${i * 180}ms` }} />}
+              </span>
             )}
             <span
               className={`relative z-10 grid size-9 shrink-0 place-items-center rounded-full border-2 text-xs font-semibold transition-colors ${
