@@ -32,7 +32,7 @@ const PRESETS: Record<string, string[]> = { calzado: ["36", "37", "38", "39", "4
 
 export interface CategoryOption { slug: string; label: string; active: boolean }
 
-export function ProductForm({ initial = EMPTY_PRODUCT, productId, categories }: { initial?: ProductFormValues; productId?: string; categories: CategoryOption[] }) {
+export function ProductForm({ initial = EMPTY_PRODUCT, productId, categories, fromRequestId }: { initial?: ProductFormValues; productId?: string; categories: CategoryOption[]; fromRequestId?: string }) {
   const router = useRouter();
   const [v, setV] = useState<ProductFormValues>(() => ({ ...initial, category: initial.category || categories.find((c) => c.active)?.slug || "" }));
   const [slugTouched, setSlugTouched] = useState(!!productId);
@@ -95,6 +95,11 @@ export function ProductForm({ initial = EMPTY_PRODUCT, productId, categories }: 
     if (!r.ok) {
       setSaving(false);
       return setError(r.error);
+    }
+    // Si nació de una solicitud de "Tú lo buscas", se enlaza y se marca como disponible para ofrecer.
+    const created = r.data as { id?: string };
+    if (fromRequestId && !productId && created.id) {
+      await adminFetch(`/api/admin/tu-lo-buscas/${fromRequestId}`, "PATCH", { productId: created.id, status: "DISPONIBLE" });
     }
     // La lista de productos es dinámica: al navegar se cargan datos frescos (sin un refresh extra).
     router.push(`/admin/productos?guardado=${encodeURIComponent(v.name.trim())}`);
