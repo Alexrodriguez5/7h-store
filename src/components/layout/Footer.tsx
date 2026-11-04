@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Logo } from "@/components/brand/Logo";
 import type { Category } from "@/types";
 
 export function Footer({ categories }: { categories: Category[] }) {
@@ -6,8 +7,8 @@ export function Footer({ categories }: { categories: Category[] }) {
     <footer className="aura-bg grain relative isolate mt-20 overflow-hidden rounded-t-[36px] text-ivory">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
         <div className="sm:col-span-2">
-          <p className="flex items-baseline gap-2"><span className="font-display text-5xl italic text-aura">7H</span><span className="text-xs font-bold tracking-[.42em] text-ivory/85">STORE</span></p>
-          <p className="mt-2 font-display text-xl">Calidad. Estilo. Confianza.</p>
+          <Logo size="lg" />
+          <p className="mt-5 font-display text-2xl tracking-tight">Calidad. Estilo. Confianza.</p>
           <p className="mt-3 max-w-md text-xs leading-6 text-ivory/60">
             Productos seleccionados, precios claros en pesos colombianos, pagos seguros y seguimiento
             de cada pedido. Comprar no debería ser complicado.

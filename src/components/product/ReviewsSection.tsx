@@ -53,7 +53,7 @@ export function ReviewsSection({ productId, productSlug, reviews, average, histo
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[.3em] text-gold">Opiniones de clientes</p>
-          <h2 id="opiniones-titulo" className="mt-2 font-display text-4xl sm:text-5xl">Lo que dicen <span className="italic text-gold">quienes lo tienen.</span></h2>
+          <h2 id="opiniones-titulo" className="mt-2 type-h2">Lo que dicen <span className="text-gold">quienes lo tienen.</span></h2>
         </div>
         {!open && (
           viewer.loggedIn ? (

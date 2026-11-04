@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Logo } from "@/components/brand/Logo";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import { selectCount, selectSubtotal, useCartStore } from "@/store/cart-store";
@@ -87,11 +88,10 @@ export function Header({ categories }: { categories: Category[] }) {
 
           <Link
             href="/"
-            className="group flex shrink-0 items-baseline gap-1.5 transition-opacity hover:opacity-90"
+            className="flex shrink-0 items-center transition-opacity hover:opacity-85"
             aria-label="7H STORE inicio"
           >
-            <span className="font-display text-[32px] italic leading-none text-aura">7H</span>
-            <span className="text-[11px] font-bold tracking-[.42em] text-ivory/85 transition-colors group-hover:text-gold-light">STORE</span>
+            <Logo />
           </Link>
 
           <nav

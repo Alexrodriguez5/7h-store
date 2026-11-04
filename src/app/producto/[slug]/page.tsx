@@ -116,7 +116,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               ))}
             </ul>
           )}
-          <h1 className="mt-2 font-display text-4xl leading-[.95] sm:text-6xl">{p.name}</h1>
+          <h1 className="mt-2 type-h2">{p.name}</h1>
           <div className="mt-5 flex flex-wrap items-end gap-3">
             <span className="text-3xl font-extrabold tabular-nums tracking-tight sm:text-4xl">{formatCOP(p.priceCOP)}</span>
             {discount > 0 && p.compareAtPriceCOP && (
@@ -196,7 +196,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       </div>
       {related.length > 0 && (
         <section className="mt-24">
-          <h2 className="font-display text-4xl sm:text-5xl">También te puede <span className="italic text-gold">gustar</span></h2>
+          <h2 className="type-h2">También te puede <span className="text-gold">gustar</span></h2>
           <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-4 lg:gap-x-6">
             {related.map((x) => (
               <ProductCard key={x.id} product={x} />

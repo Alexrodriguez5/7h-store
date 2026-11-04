@@ -52,7 +52,7 @@ export default async function MyOrdersPage({ searchParams }: { searchParams: Pro
   return (
     <>
       <div>
-        <h1 className="font-display text-4xl sm:text-5xl">Mis pedidos</h1>
+        <h1 className="type-h2">Mis pedidos</h1>
         <p className="mt-2 text-sm text-ink-soft">Todas las compras hechas con {c.email}, incluso como invitado.</p>
       </div>
       {sp.bienvenida && <Notice tone="success">¡Listo! Tu correo quedó confirmado.</Notice>}
