@@ -41,12 +41,12 @@ export function FilterBar({
   const chip = (active: boolean) =>
     `rounded-full border px-4 py-2 text-xs font-medium transition-all duration-200 ${
       active
-        ? "border-ink bg-ink text-ivory shadow-soft"
+        ? "border-ink bg-ink text-gold-light shadow-soft"
         : "border-ink/15 bg-white/40 hover:border-gold hover:bg-white/70 hover:text-ink"
     }`;
 
   return (
-    <section aria-label="Filtros del catálogo" className="rounded-2xl border border-ink/10 bg-white/50 px-4 shadow-soft backdrop-blur-sm sm:px-5">
+    <section aria-label="Filtros del catálogo" className="glass relative z-10 rounded-[24px] px-4 sm:px-5">
       {categories.length > 0 && (
         <nav
           aria-label="Categorías"

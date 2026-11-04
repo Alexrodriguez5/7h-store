@@ -70,7 +70,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     ],
   };
   return (
-    <main id="contenido" className="mx-auto max-w-7xl px-5 py-12 lg:px-8 lg:py-16">
+    <main id="contenido" className="relative">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[680px] bg-[radial-gradient(60%_60%_at_25%_20%,rgb(201_164_76_/_.14),transparent_70%)]" />
+      <div className="mx-auto max-w-7xl px-5 py-10 lg:px-8 lg:py-14">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbLd) }} />
       <nav aria-label="Ruta de navegación" className="mb-8 text-xs text-ink-soft">
@@ -84,16 +86,16 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       </nav>
       <div className="grid gap-12 lg:grid-cols-2">
         <ProductGallery images={p.images} name={p.name} />
-        <div className="lg:pt-6">
-          <p className="text-[11px] font-medium uppercase tracking-[.16em] text-ink-soft/70">{p.brand}</p>
-          <h1 className="mt-2 font-display text-4xl leading-none sm:text-6xl">{p.name}</h1>
-          <div className="mt-5 flex items-end gap-3">
-            <span className="font-display text-3xl">{formatCOP(p.priceCOP)}</span>
+        <div className="glass h-fit rounded-[32px] p-6 sm:p-8 lg:sticky lg:top-28">
+          <p className="text-[11px] font-bold uppercase tracking-[.22em] text-gold">{p.brand}</p>
+          <h1 className="mt-2 font-display text-4xl leading-[.95] sm:text-6xl">{p.name}</h1>
+          <div className="mt-5 flex flex-wrap items-end gap-3">
+            <span className="text-3xl font-extrabold tabular-nums tracking-tight sm:text-4xl">{formatCOP(p.priceCOP)}</span>
             {p.compareAtPriceCOP && (
               <del className="text-sm text-ink-soft/60">{formatCOP(p.compareAtPriceCOP)}</del>
             )}
             {discount > 0 && (
-              <span className="rounded-full bg-gold px-2.5 py-1 text-[10px] font-semibold text-ink">-{discount}%</span>
+              <span className="rounded-full bg-ink px-2.5 py-1 text-[11px] font-bold text-gold-light">Ahorras {discount}%</span>
             )}
           </div>
           <p className="mt-2 text-xs text-ink-soft">Impuestos incluidos</p>
@@ -115,10 +117,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <AddToCart product={p} />
           </div>
           <div className="mt-6 grid grid-cols-2 gap-3 text-xs text-ink-soft">
-            <div className="flex items-center gap-2 rounded-xl bg-ivory-200/60 px-3 py-3">
+            <div className="flex items-center gap-2 rounded-2xl border border-ink/[.06] bg-white/60 px-3 py-3">
               <TruckIcon width={18} height={18} className="shrink-0 text-ink" /> Envío a toda Colombia
             </div>
-            <div className="flex items-center gap-2 rounded-xl bg-ivory-200/60 px-3 py-3">
+            <div className="flex items-center gap-2 rounded-2xl border border-ink/[.06] bg-white/60 px-3 py-3">
               <ShieldIcon width={18} height={18} className="shrink-0 text-ink" /> Producto original
             </div>
           </div>
@@ -151,7 +153,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       </div>
       {related.length > 0 && (
         <section className="mt-24">
-          <h2 className="font-display text-4xl">También te puede gustar</h2>
+          <h2 className="font-display text-4xl sm:text-5xl">También te puede <span className="italic text-gold">gustar</span></h2>
           <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-4 lg:gap-x-6">
             {related.map((x) => (
               <ProductCard key={x.id} product={x} />
@@ -159,6 +161,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
         </section>
       )}
+      </div>
     </main>
   );
 }

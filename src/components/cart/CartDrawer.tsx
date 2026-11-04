@@ -35,7 +35,7 @@ export function CartDrawer() {
   return (
     <>
       <div
-        className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px] transition-opacity duration-300 ${isOpen ? "opacity-100" : "pointer-events-none opacity-0"}`}
+        className={`fixed inset-0 z-40 bg-black/45 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? "opacity-100" : "pointer-events-none opacity-0"}`}
         onClick={() => setOpen(false)}
         aria-hidden="true"
       />
@@ -43,7 +43,7 @@ export function CartDrawer() {
         aria-label="Carrito de compras"
         aria-hidden={!isOpen}
         inert={!isOpen}
-        className={`fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col bg-ivory shadow-2xl transition-transform duration-300 ease-out ${isOpen ? "translate-x-0" : "translate-x-full"}`}
+        className={`fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col bg-ivory/95 shadow-2xl ring-1 ring-white/60 backdrop-blur-2xl transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)] sm:rounded-l-[32px] ${isOpen ? "translate-x-0" : "translate-x-full"}`}
       >
         <header className="flex items-center justify-between border-b border-ink/10 px-5 py-4">
           <h2 className="flex items-center gap-2 font-display text-2xl">
@@ -135,7 +135,7 @@ export function CartDrawer() {
 
         {/* Con el carrito vacío no se muestra envío ni total: no hay nada que cobrar. */}
         {items.length > 0 && (
-          <footer className="space-y-3 border-t border-ink/10 bg-white/40 p-5">
+          <footer className="glass space-y-3 rounded-t-[28px] border-t-0 p-5 sm:rounded-bl-[32px]">
             <div>
               <div className="text-xs text-ink-soft">
                 {missing > 0 ? `Te faltan ${formatCOP(missing)} para envío gratis.` : "¡Tienes envío gratis!"}

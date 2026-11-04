@@ -24,10 +24,10 @@ function ProductCardBase({ product, priority = false }: { product: Product; prio
   return (
     <article className="group flex h-full flex-col">
       {/* IMAGEN (inclinación 3D al pasar el cursor) */}
-      <Tilt className="rounded-2xl">
+      <Tilt className="rounded-[24px]">
       <Link
         href={href}
-        className="relative block aspect-4/5 overflow-hidden rounded-2xl bg-ivory-200 shadow-soft transition-shadow duration-300 group-hover:shadow-lift"
+        className="relative block aspect-4/5 overflow-hidden rounded-[24px] bg-gradient-to-b from-white to-ivory-200 shadow-soft ring-1 ring-ink/[.05] transition-shadow duration-300 group-hover:shadow-lift"
         aria-label={`Ver ${product.name}`}
       >
         {product.images[0] && (
@@ -76,11 +76,16 @@ function ProductCardBase({ product, priority = false }: { product: Product; prio
           {product.brand}
         </p>
 
-        <h3 className="mt-1 line-clamp-2 min-h-13 font-display text-xl leading-snug">
+        <h3 className="mt-1 line-clamp-2 min-h-13 font-display text-[22px] leading-[1.1]">
           <Link href={href} className="transition-colors hover:text-gold">
             {product.name}
           </Link>
         </h3>
+
+        <p className="mt-1.5 flex items-center gap-1.5 text-[11px] font-medium text-ink-soft">
+          <span aria-hidden="true" className={`size-1.5 rounded-full ${soldOut ? "bg-error" : product.stock <= 3 ? "bg-warning" : "bg-success"}`} />
+          {soldOut ? "Agotado" : product.stock <= 3 ? `Últimas ${product.stock} unidades` : "Disponible"}
+        </p>
 
         <p className="mt-1 flex items-baseline gap-2">
           <span className="text-base font-semibold tabular-nums">{formatCOP(product.priceCOP)}</span>
@@ -115,7 +120,7 @@ function ProductCardBase({ product, priority = false }: { product: Product; prio
                       !available
                         ? "cursor-not-allowed border-ink/10 text-ink/30 line-through"
                         : isSelected
-                          ? "border-ink bg-ink font-semibold text-ivory"
+                          ? "border-gold bg-ink font-semibold text-gold-light shadow-[0_0_0_3px_rgb(201_164_76_/_.22)]"
                           : "border-ink/15 text-ink hover:border-gold"
                     }`}
                   >
