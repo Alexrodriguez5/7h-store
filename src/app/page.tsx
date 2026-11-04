@@ -8,7 +8,7 @@ import { ProductCard } from "@/components/catalog/ProductCard";
 import { Button } from "@/components/ui/Button";
 import { ArrowRightIcon, CardIcon, ShieldIcon, TruckIcon } from "@/components/ui/Icons";
 import { Parallax, Rail, Reveal, Tilt } from "@/components/home/Motion";
-import { HeroShowcase, pickShowcase } from "@/components/home/HeroShowcase";
+import { HeroOrb } from "@/components/aura/HeroOrb";
 import { BRAND_STORY } from "@/components/brand/BrandStory";
 import { GalleryGrid } from "@/components/gallery/GalleryGrid";
 import { getPublicMedia } from "@/lib/services/gallery";
@@ -63,8 +63,6 @@ export default async function HomePage() {
   // Novedades: los más recientes (getProducts ya viene ordenado por fecha) que no están en Destacados.
   const featuredIds = new Set(featured.map((p) => p.id));
   const newest = all.filter((p) => !featuredIds.has(p.id)).slice(0, 8);
-  const showcase = pickShowcase(featured, all);
-  const catLabels = Object.fromEntries(categories.map((c) => [c.slug, c.label]));
 
   return (
     <main id="contenido">
@@ -99,9 +97,8 @@ export default async function HomePage() {
               ))}
             </dl>
           </div>
-          <div className="rise [animation-delay:120ms]">
-            <HeroShowcase products={showcase} labels={catLabels} />
-          </div>
+          {/* Esfera 7H: obsidiana con filamentos de oro (WebGL2). Ocupa un cuadro fijo: no mueve el diseño al cargar. */}
+          <HeroOrb className="order-first -mb-4 mx-auto aspect-square w-[min(74vw,340px)] sm:w-[min(62vw,460px)] lg:order-none lg:mb-0 lg:w-full lg:max-w-[620px]" />
         </div>
       </section>
 

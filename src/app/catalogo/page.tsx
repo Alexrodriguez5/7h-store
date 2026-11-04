@@ -40,8 +40,8 @@ export default async function CatalogPage({ searchParams }: { searchParams: SP }
     <main id="contenido">
       <PageHero
         eyebrow="7H STORE · Colección"
-        title={category ? category.label : "Todo lo"}
-        accent={category ? "seleccionado." : "original."}
+        title={category ? `${category.label},` : "Todo lo"}
+        accent={category ? "con criterio." : "original."}
         lead="Productos originales de EE.UU., precios en COP e impuestos incluidos. Elige tu talla y agrégalo al carrito sin salir del catálogo."
         crumbs={category ? [{ href: "/", label: "Inicio" }, { href: "/catalogo", label: "Catálogo" }] : undefined}
       />

@@ -84,15 +84,18 @@ export function FilterBar({
               </button>
             ))}
 
-            <label className="flex cursor-pointer items-center gap-2 rounded-full border border-ink/15 bg-white/40 px-4 py-2 text-xs font-medium transition-colors hover:border-gold">
-              <input
-                type="checkbox"
-                checked={filters.onlyAccessories}
-                onChange={(e) => onChange("onlyAccessories", e.target.checked)}
-                className="accent-gold"
-              />
-              Solo accesorios
-            </label>
+            {/* "Solo accesorios" solo tiene sentido viendo todo el catálogo (dentro de una categoría confunde). */}
+            {(filters.category === "todo" || filters.onlyAccessories) && (
+              <label className="flex cursor-pointer items-center gap-2 rounded-full border border-ink/15 bg-white/40 px-4 py-2 text-xs font-medium transition-colors hover:border-gold">
+                <input
+                  type="checkbox"
+                  checked={filters.onlyAccessories}
+                  onChange={(e) => onChange("onlyAccessories", e.target.checked)}
+                  className="accent-gold"
+                />
+                Solo accesorios
+              </label>
+            )}
           </div>
         </div>
 

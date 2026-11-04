@@ -15,6 +15,15 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
   return (
     <>
       <PageHeader title="Productos" subtitle={`${products.length} producto(s) en total.`} action={<Link href="/admin/productos/nuevo" className={btnPrimary}>+ Nuevo producto</Link>} />
+      {(() => {
+        const flagged = products.filter((p) => p.active && p.issues.some((i) => i.level === "alta"));
+        return flagged.length > 0 ? (
+          <div role="status" className="mb-5 rounded-2xl border border-warning/40 bg-warning/5 p-4 text-sm">
+            <p className="font-semibold">{flagged.length} producto(s) activos necesitan revisión antes de vender</p>
+            <p className="mt-1 text-xs text-ink-soft">Descripciones genéricas, descuentos muy altos o precios fuera de lo normal en su categoría. Nada se cambió solo: revisa y corrige con la información real del proveedor.</p>
+          </div>
+        ) : null;
+      })()}
       {guardado && <p role="status" className="mb-5 border border-success/40 bg-white p-3 text-sm text-success">«{guardado.slice(0, 120)}» se guardó. Los cambios ya se ven en la tienda.</p>}
       <div className="overflow-x-auto rounded-2xl border border-ink/[.07] bg-white shadow-soft">
         <table className="w-full min-w-[960px]">
@@ -28,7 +37,14 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
                   <td className={tdCls}>
                     <div className="flex items-center gap-3">
                       <div className="relative h-14 w-11 shrink-0 overflow-hidden bg-ivory-200">{p.images[0] && <Image src={p.images[0]} alt="" fill sizes="44px" className="object-cover" />}</div>
-                      <div><p className="font-semibold">{p.name}</p><p className="text-[11px] text-ink-soft">{p.brand}{p.featured && " · Destacado"}</p></div>
+                      <div>
+                        <p className="font-semibold">{p.name}</p><p className="text-[11px] text-ink-soft">{p.brand}{p.featured && " · Destacado"}</p>
+                        {p.issues.length > 0 && (
+                          <ul className="mt-1 max-w-sm space-y-0.5">
+                            {p.issues.map((i) => <li key={i.text} className={`text-[11px] leading-4 ${i.level === "alta" ? "text-error" : "text-warning"}`}>⚠ {i.text}</li>)}
+                          </ul>
+                        )}
+                      </div>
                     </div>
                   </td>
                   <td className={tdCls}>{p.category.label}</td>
