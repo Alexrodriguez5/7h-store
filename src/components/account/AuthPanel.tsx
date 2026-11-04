@@ -127,7 +127,7 @@ export function AuthPanel({ next = "/cuenta/pedidos", aviso, register = false, g
         <div className="relative space-y-6">
           <div key={`${tab}-${mode}-${codeSent}`} className="panel-in">
             <p className="text-[10px] font-semibold uppercase tracking-[.32em] text-gold-light">Mi cuenta 7H</p>
-            <h2 className="mt-2 font-display text-4xl leading-none sm:text-5xl">{title}</h2>
+            <h2 className="mt-2 type-h2">{title}</h2>
             <p className="mt-2 text-sm leading-6 text-ivory/60">{subtitle}</p>
           </div>
 

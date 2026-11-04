@@ -18,7 +18,7 @@ export default async function MyRequestsPage() {
     <>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl sm:text-5xl">Solicitudes y garantías</h1>
+          <h1 className="type-h2">Solicitudes y garantías</h1>
           <p className="mt-2 text-sm text-ink-soft">Devoluciones, retracto, garantías, reclamos y cualquier requerimiento, con número de radicado.</p>
         </div>
         <Link href="/cuenta/solicitudes/nueva" className="rounded-full bg-gold px-5 py-3 text-sm font-semibold text-ink shadow-soft hover:bg-gold-light">Nueva solicitud</Link>
