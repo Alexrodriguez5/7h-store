@@ -8,7 +8,7 @@ import { ProductCard } from "@/components/catalog/ProductCard";
 import { Button } from "@/components/ui/Button";
 import { ArrowRightIcon, CardIcon, ShieldIcon, TruckIcon } from "@/components/ui/Icons";
 import { Parallax, Rail, Reveal, Tilt } from "@/components/home/Motion";
-import { AuraParticles, AuraVisual } from "@/components/aura/AuraVisual";
+import { HeroShowcase, pickShowcase } from "@/components/home/HeroShowcase";
 import { BRAND_STORY } from "@/components/brand/BrandStory";
 
 /**
@@ -45,7 +45,7 @@ function SectionHead({ kicker, title, href, cta }: { kicker: string; title: stri
     <Reveal className="flex items-end justify-between gap-5 pb-2">
       <div>
         <p className="text-[10px] font-semibold uppercase tracking-[.3em] text-gold">{kicker}</p>
-        <h2 className="mt-3 font-display text-4xl leading-none sm:text-6xl">{title}</h2>
+        <h2 className="mt-3 type-h2">{title}</h2>
       </div>
       {href && cta && (
         <Link href={href} className="group hidden items-center gap-2 text-sm font-medium transition-colors hover:text-gold sm:mr-28 sm:inline-flex">
@@ -61,46 +61,45 @@ export default async function HomePage() {
   // Novedades: los más recientes (getProducts ya viene ordenado por fecha) que no están en Destacados.
   const featuredIds = new Set(featured.map((p) => p.id));
   const newest = all.filter((p) => !featuredIds.has(p.id)).slice(0, 8);
+  const showcase = pickShowcase(featured, all);
+  const catLabels = Object.fromEntries(categories.map((c) => [c.slug, c.label]));
 
   return (
     <main id="contenido">
-      {/* A. HERO 7H AURA: escena oscura con la esfera de vidrio líquido, halo dorado y partículas */}
-      <section className="aura-bg grain relative isolate overflow-hidden text-ivory">
-        <AuraParticles />
-        <div className="relative mx-auto grid min-h-[86svh] max-w-7xl items-center gap-6 px-5 pb-14 pt-10 lg:min-h-[90svh] lg:grid-cols-[1.08fr_.92fr] lg:px-8 lg:pb-16">
-          <div className="relative z-10 order-2 lg:order-1">
-            <p className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-gold/30 bg-white/5 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[.32em] text-gold-light backdrop-blur">
-              <span className="size-1.5 rounded-full bg-gold-light shadow-[0_0_10px_#d8b866]" /> Calidad. Estilo. Confianza.
+      {/* A. HERO: composición editorial con productos reales del catálogo (sin esfera ni partículas). */}
+      <section className="hero-light relative isolate overflow-hidden bg-ink text-ivory">
+        <div className="relative mx-auto grid max-w-7xl gap-10 px-5 pb-12 pt-10 sm:pt-14 lg:min-h-[min(86svh,820px)] lg:grid-cols-[1fr_1.08fr] lg:items-center lg:gap-14 lg:px-8 lg:pb-16">
+          <div className="relative z-10">
+            <p className="rise flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[.28em] text-gold-light">
+              <span aria-hidden="true" className="h-px w-8 bg-gold" /> Calidad · Estilo · Confianza
             </p>
-            <h1 className="mt-6 font-display text-[54px] leading-[.92] sm:text-8xl lg:text-[112px]">
+            <h1 className="type-hero mt-6">
               <span className="line-mask"><span>Estilo que llega</span></span>
-              <span className="line-mask"><span style={{ animationDelay: "120ms" }} className="text-aura italic">sin fronteras.</span></span>
+              <span className="line-mask"><span style={{ animationDelay: "90ms" }} className="text-gold-light">sin fronteras.</span></span>
             </h1>
-            <p className="animate-fade-up mt-6 max-w-md text-base leading-7 text-ivory/75 [animation-delay:320ms]">
-              Productos originales de Estados Unidos. Una experiencia de compra diferente: precios en pesos, impuestos incluidos y seguimiento desde tu cuenta.
+            <p className="rise mt-6 max-w-[34ch] text-[15px] leading-7 text-ivory/70 [animation-delay:200ms] sm:text-base">
+              Moda, accesorios y tecnología originales de Estados Unidos. Precios finales en pesos, impuestos incluidos y seguimiento de cada pedido.
             </p>
-            <div className="animate-fade-up mt-8 flex flex-wrap gap-3 [animation-delay:420ms]">
-              <Button href="/catalogo" variant="gold" className="transition-transform hover:-translate-y-0.5">
+            <div className="rise mt-8 grid grid-cols-[1.4fr_1fr] gap-2.5 [animation-delay:260ms] sm:flex sm:flex-wrap sm:gap-3">
+              <Button href="/catalogo" variant="gold" className="!px-4 sm:!px-6">
                 Explorar la tienda <ArrowRightIcon width={16} height={16} />
               </Button>
-              <Button href="/pedidos" variant="secondary" className="border-ivory/25 bg-white/5 text-ivory backdrop-blur hover:border-gold hover:bg-white/10">
+              <Button href="/pedidos" variant="secondary" className="!px-4 border-ivory/25 text-ivory hover:border-gold hover:bg-white/[.06] sm:!px-6">
                 Mis pedidos
               </Button>
             </div>
-            <ul className="animate-fade-up mt-10 grid max-w-lg grid-cols-3 gap-2 [animation-delay:520ms]">
-              {[["100%", "Originales de EE.UU."], ["COP", "Impuestos incluidos"], ["24/7", "Pedidos en tu cuenta"]].map(([k, v]) => (
-                <li key={v} className="glass-dark rounded-2xl px-3 py-3">
-                  <p className="font-display text-2xl leading-none text-gold-light">{k}</p>
-                  <p className="mt-1 text-[10px] leading-4 text-ivory/60">{v}</p>
-                </li>
+            <dl className="rise mt-10 grid max-w-md grid-cols-3 divide-x divide-ivory/10 border-y border-ivory/10 [animation-delay:320ms]">
+              {[["Originales", "de EE.UU."], ["Precios", "en COP con impuestos"], ["Envío", "a toda Colombia"]].map(([k, v]) => (
+                <div key={k} className="px-3 py-3.5 first:pl-0">
+                  <dt className="font-display text-lg leading-none">{k}</dt>
+                  <dd className="mt-1.5 text-[11px] leading-4 text-ivory/55">{v}</dd>
+                </div>
               ))}
-            </ul>
+            </dl>
           </div>
-          <AuraVisual className="relative order-1 mx-auto aspect-square w-[64%] max-w-[560px] sm:w-[70%] lg:order-2 lg:w-full" />
-        </div>
-        <div aria-hidden="true" className="absolute bottom-5 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 text-[9px] uppercase tracking-[.4em] text-ivory/45 lg:flex">
-          Desliza
-          <span className="scroll-cue block h-10 w-px bg-ivory/40" />
+          <div className="rise [animation-delay:120ms]">
+            <HeroShowcase products={showcase} labels={catLabels} />
+          </div>
         </div>
       </section>
 
@@ -138,7 +137,7 @@ export default async function HomePage() {
         <div className="mx-auto flex h-full max-w-7xl items-end px-5 pb-14 lg:px-8">
           <Reveal className="glass-dark max-w-md rounded-[28px] p-7">
             <p className="text-[10px] font-semibold uppercase tracking-[.3em] text-gold-light">Campaña 7H</p>
-            <h2 className="mt-3 font-display text-4xl leading-[.95] sm:text-5xl">Hecho para <span className="italic text-gold-light">la ciudad.</span></h2>
+            <h2 className="mt-3 type-h2">Hecho para <span className="text-gold-light">la ciudad.</span></h2>
             <p className="mt-3 text-sm leading-6 text-ivory/70">Piezas originales que viajan desde Estados Unidos hasta tu puerta, listas para tu día a día.</p>
             <Link href="/catalogo" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-gold-light hover:text-ivory">Ver colección <ArrowRightIcon width={16} height={16} /></Link>
           </Reveal>
@@ -151,7 +150,7 @@ export default async function HomePage() {
           <div className="mx-auto max-w-7xl px-5 lg:px-8">
             <Reveal>
               <p className="text-[10px] font-semibold uppercase tracking-[.3em] text-gold">Explora</p>
-              <h2 className="mt-3 font-display text-4xl leading-none sm:text-6xl">Compra por categoría.</h2>
+              <h2 className="mt-3 type-h2">Compra por categoría.</h2>
             </Reveal>
             <div className="mt-10 grid auto-rows-[220px] grid-cols-2 gap-3 sm:auto-rows-[260px] lg:grid-cols-4 lg:gap-4">
               {categories.map((c, i) => {
@@ -241,7 +240,7 @@ export default async function HomePage() {
           <div>
             <Reveal>
               <p className="text-[10px] font-semibold uppercase tracking-[.3em] text-gold">Cómo trabajamos</p>
-              <h2 className="mt-3 font-display text-4xl leading-[.95] sm:text-6xl">Importado. Revisado. Entregado.</h2>
+              <h2 className="mt-3 type-h2">Importado. Revisado. Entregado.</h2>
             </Reveal>
             <ol className="mt-10 space-y-6">
               {[
@@ -271,7 +270,7 @@ export default async function HomePage() {
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_1.2fr] lg:items-center">
           <Reveal>
             <p className="text-[10px] font-semibold uppercase tracking-[.3em] text-gold">Sobre 7H STORE</p>
-            <h2 className="mt-3 font-display text-4xl leading-[.95] sm:text-6xl">Comprar bien, <span className="italic text-gold">sin complicaciones.</span></h2>
+            <h2 className="mt-3 type-h2">Comprar bien, <span className="text-gold">sin complicaciones.</span></h2>
             <Link href="/nosotros" className="group mt-8 inline-flex items-center gap-2 text-sm font-semibold hover:text-gold">
               Conoce la marca <ArrowRightIcon width={16} height={16} className="transition-transform group-hover:translate-x-1" />
             </Link>
@@ -308,7 +307,7 @@ export default async function HomePage() {
           <div className="relative grid gap-10 lg:grid-cols-[1.3fr_1fr] lg:items-end">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[.3em] text-gold">Posventa</p>
-              <h2 className="mt-3 font-display text-4xl leading-[.95] sm:text-6xl">Tu compra no termina al pagar.</h2>
+              <h2 className="mt-3 type-h2">Tu compra no termina al pagar.</h2>
               <p className="mt-5 max-w-lg text-sm leading-7 text-ivory/70">
                 Desde tu cuenta ves todos tus pedidos, su pago y su envío, y puedes solicitar garantía, cambio o devolución con un número de radicado. Una persona del equipo revisa cada caso.
               </p>

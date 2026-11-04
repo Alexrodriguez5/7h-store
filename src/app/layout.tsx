@@ -20,18 +20,13 @@ import "./globals.css";
  */
 export const dynamic = "force-dynamic";
 /**
- * Sistema tipográfico 7H AURA (alojado en la tienda, licencia OFL; no depende de Google en el build):
- * - Instrument Serif: títulos y mensajes de marca (personalidad editorial).
- * - Manrope: navegación, textos, formularios y botones (muy legible, variable 300 a 800).
+ * Sistema tipográfico 7H (alojado en la tienda, licencia OFL; no depende de Google en el build):
+ * - Newsreader (variable 200 a 800): titulares y frases editoriales. Serifa de lectura con carácter
+ *   de revista, sin cursivas decorativas ni degradados.
+ * - Manrope (variable 300 a 800): navegación, precios, botones y formularios.
+ * Solo se descargan 2 archivos woff2 (~58 kB + ~50 kB) y se precargan.
  */
-const display = localFont({
-  src: [
-    { path: "./fonts/instrument-normal-400.woff2", weight: "400", style: "normal" },
-    { path: "./fonts/instrument-italic-400.woff2", weight: "400", style: "italic" },
-  ],
-  variable: "--font-instrument",
-  display: "swap",
-});
+const display = localFont({ src: "./fonts/newsreader-normal-200-800.woff2", weight: "200 800", variable: "--font-newsreader", display: "swap", adjustFontFallback: "Times New Roman" });
 const sans = localFont({ src: "./fonts/manrope-normal-300-800.woff2", weight: "300 800", variable: "--font-manrope", display: "swap" });
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),

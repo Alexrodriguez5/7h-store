@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { getCurrentCustomer } from "@/lib/customer/auth";
 import { AccountNav } from "@/components/account/AccountNav";
-import { AuraParticles } from "@/components/aura/AuraVisual";
 import { prisma } from "@/lib/prisma";
 import { customerOrdersWhere } from "@/lib/services/support";
 
@@ -28,8 +27,7 @@ export default async function PrivateAccountLayout({ children }: { children: Rea
   return (
     <main id="contenido" className="ivory-aura relative overflow-hidden">
       {/* Encabezado de la cuenta, con el estilo de la marca */}
-      <section className="aura-bg grain relative isolate overflow-hidden rounded-b-[36px] text-ivory">
-        <AuraParticles count={8} />
+      <section className="hero-light relative isolate overflow-hidden rounded-b-[32px] text-ivory">
         <div className="mx-auto flex max-w-6xl flex-col gap-8 px-5 py-10 lg:flex-row lg:items-end lg:justify-between lg:px-8 lg:py-14">
           <div className="flex items-center gap-5">
             {c.avatarUrl ? (
@@ -40,7 +38,7 @@ export default async function PrivateAccountLayout({ children }: { children: Rea
             )}
             <div className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-[.3em] text-gold-light">Mi cuenta 7H</p>
-              <p className="mt-1 truncate font-display text-4xl leading-none sm:text-6xl">Hola, <span className="italic text-aura">{first}</span></p>
+              <p className="mt-1 truncate type-h2">Hola, <span className="text-aura">{first}</span></p>
               <p className="mt-1 text-xs text-ivory/60">Cliente desde {since} · {c.email}</p>
             </div>
           </div>
