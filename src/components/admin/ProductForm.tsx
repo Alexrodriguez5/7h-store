@@ -7,6 +7,7 @@ import { uploadImage } from "./ImagePicker";
 import { btnGhost, btnPrimary, inputCls, labelCls } from "./ui";
 import { slugify } from "@/lib/schemas/admin";
 import { sortSizes } from "@/lib/sizes";
+import { MANUAL_BADGES, MANUAL_BADGE_KEYS } from "@/lib/badges";
 
 export interface ProductFormValues {
   name: string; slug: string; brand: string; description: string; priceCOP: string; compareAtPriceCOP: string;
@@ -18,6 +19,9 @@ export interface ProductFormValues {
   variants: { size: string; stock: string; expectedStock?: number }[];
   /** Stock al abrir el formulario (producto sin tallas). */
   expectedStock?: number;
+  /** Ficha de información y etiquetas confirmadas (opcionales). `features`: una por línea. */
+  model?: string; material?: string; color?: string; origin?: string; condition?: string; warranty?: string;
+  features?: string; badges?: string[]; videoUrl?: string;
 }
 export const EMPTY_PRODUCT: ProductFormValues = {
   name: "", slug: "", brand: "", description: "", priceCOP: "", compareAtPriceCOP: "", category: "", gender: "UNISEX",
@@ -28,7 +32,7 @@ const PRESETS: Record<string, string[]> = { calzado: ["36", "37", "38", "39", "4
 
 export interface CategoryOption { slug: string; label: string; active: boolean }
 
-export function ProductForm({ initial = EMPTY_PRODUCT, productId, categories }: { initial?: ProductFormValues; productId?: string; categories: CategoryOption[] }) {
+export function ProductForm({ initial = EMPTY_PRODUCT, productId, categories, fromRequestId }: { initial?: ProductFormValues; productId?: string; categories: CategoryOption[]; fromRequestId?: string }) {
   const router = useRouter();
   const [v, setV] = useState<ProductFormValues>(() => ({ ...initial, category: initial.category || categories.find((c) => c.active)?.slug || "" }));
   const [slugTouched, setSlugTouched] = useState(!!productId);
@@ -77,6 +81,9 @@ export function ProductForm({ initial = EMPTY_PRODUCT, productId, categories }: 
       widthCm: v.widthCm?.trim() ? num(v.widthCm) : null,
       heightCm: v.heightCm?.trim() ? num(v.heightCm) : null,
       expectedStock: v.hasSizes ? undefined : v.expectedStock,
+      model: v.model ?? "", material: v.material ?? "", color: v.color ?? "", origin: v.origin ?? "", condition: v.condition ?? "", warranty: v.warranty ?? "",
+      features: (v.features ?? "").split("\n").map((f) => f.trim()).filter(Boolean),
+      badges: v.badges ?? [], videoUrl: v.videoUrl?.trim() || null,
       variants: v.hasSizes
         ? sortSizes(v.variants.map((x) => x.size.trim().toUpperCase())).map((size) => {
             const row = v.variants.find((x) => x.size.trim().toUpperCase() === size)!;
@@ -88,6 +95,11 @@ export function ProductForm({ initial = EMPTY_PRODUCT, productId, categories }: 
     if (!r.ok) {
       setSaving(false);
       return setError(r.error);
+    }
+    // Si nació de una solicitud de "Tú lo buscas", se enlaza y se marca como disponible para ofrecer.
+    const created = r.data as { id?: string };
+    if (fromRequestId && !productId && created.id) {
+      await adminFetch(`/api/admin/tu-lo-buscas/${fromRequestId}`, "PATCH", { productId: created.id, status: "DISPONIBLE" });
     }
     // La lista de productos es dinámica: al navegar se cargan datos frescos (sin un refresh extra).
     router.push(`/admin/productos?guardado=${encodeURIComponent(v.name.trim())}`);
@@ -137,6 +149,33 @@ export function ProductForm({ initial = EMPTY_PRODUCT, productId, categories }: 
               </div>
             </div>
           )}
+        </section>
+
+        <section className="space-y-4 rounded-2xl border border-ink/[.07] bg-white p-5 shadow-soft">
+          <div>
+            <h2 className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft">Ficha de información</h2>
+            <p className="mt-1 text-[11px] leading-5 text-ink-soft">Todo es opcional. Lo que dejes vacío no se muestra en la tienda. Escribe solo datos confirmados.</p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {([["model", "Modelo o referencia", "Ej.: 530 / MR530SG"], ["material", "Material", "Ej.: cuero y malla"], ["color", "Color", "Ej.: blanco con plateado"], ["origin", "Origen (solo si está confirmado)", "Ej.: Estados Unidos"], ["condition", "Estado", "Ej.: nuevo, con etiquetas"]] as const).map(([k, label, ph]) => (
+              <div key={k}><label htmlFor={k} className={labelCls}>{label}</label><input id={k} value={v[k] ?? ""} onChange={(e) => set(k, e.target.value)} className={inputCls} placeholder={ph} maxLength={80} /></div>
+            ))}
+          </div>
+          <div><label htmlFor="warranty" className={labelCls}>Garantía y condiciones del producto</label><input id="warranty" value={v.warranty ?? ""} onChange={(e) => set("warranty", e.target.value)} className={inputCls} placeholder="Ej.: 6 meses del fabricante (además de la garantía legal)" maxLength={300} /></div>
+          <div><label htmlFor="features" className={labelCls}>Características (una por línea, máx. 12)</label><textarea id="features" rows={4} value={v.features ?? ""} onChange={(e) => set("features", e.target.value)} className={inputCls} placeholder={"Suela de caucho\nPlantilla acolchada"} /></div>
+          <div><label htmlFor="videoUrl" className={labelCls}>Video (opcional)</label><input id="videoUrl" type="url" value={v.videoUrl ?? ""} onChange={(e) => set("videoUrl", e.target.value)} className={inputCls} placeholder="https://youtube.com/… · vimeo · .mp4" /></div>
+          <fieldset>
+            <legend className={labelCls}>Etiquetas que confirmas</legend>
+            <p className="mb-2 text-[11px] leading-5 text-ink-soft">Disponible, Últimas unidades, Agotado, Oferta y Nuevo se ponen solas según el inventario, el precio y la fecha.</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {MANUAL_BADGE_KEYS.map((k) => (
+                <label key={k} className="flex items-start gap-2 rounded-xl border border-ink/10 p-2.5 text-sm">
+                  <input type="checkbox" className="mt-0.5" checked={(v.badges ?? []).includes(k)} onChange={(e) => set("badges", e.target.checked ? [...(v.badges ?? []), k] : (v.badges ?? []).filter((b) => b !== k))} />
+                  <span><span className="font-medium">{MANUAL_BADGES[k].label}</span><span className="block text-[11px] text-ink-soft">{MANUAL_BADGES[k].hint}</span></span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
         </section>
       </div>
 

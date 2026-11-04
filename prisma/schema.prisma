@@ -82,9 +82,26 @@ model Product {
   lengthCm          Int?
   widthCm           Int?
   heightCm          Int?
+  /// Ficha de información (todo opcional: lo que esté vacío no se muestra en la tienda).
+  model             String?
+  material          String?
+  color             String?
+  /// Origen CONFIRMADO por el administrador (p. ej. "Estados Unidos"). Vacío = no se afirma nada.
+  origin            String?
+  /// Estado del producto (p. ej. "Nuevo, con etiquetas").
+  condition         String?
+  /// Garantía y condiciones específicas del producto (además de la garantía legal).
+  warranty          String?
+  features          String[]         @default([])
+  /// Etiquetas que el administrador CONFIRMA (ORIGINAL, IMPORTADO_USA, GARANTIA_FABRICANTE, EDICION_LIMITADA).
+  badges            String[]         @default([])
+  /// Video demostrativo opcional (YouTube, Vimeo o MP4 por https).
+  videoUrl          String?
   createdAt         DateTime         @default(now())
   orderItems        OrderItem[]
   variants          ProductVariant[]
+  reviews           Review[]
+  media             MediaItem[]
 
   @@index([categoryId])
   @@index([featured])
@@ -266,9 +283,9 @@ model ShippingZone {
 // La compra como invitado sigue igual: los pedidos se asocian al cliente por su correo VERIFICADO.
 
 model Customer {
-  id                  String             @id @default(cuid())
+  id                  String              @id @default(cuid())
   /// Correo normalizado (minúsculas, sin espacios). Único.
-  email               String             @unique
+  email               String              @unique
   emailVerifiedAt     DateTime?
   name                String
   phone               String?
@@ -278,12 +295,21 @@ model Customer {
   blockedAt           DateTime?
   /// Solicitud de supresión de datos (Ley 1581): la revisa el equipo; no borra pedidos (obligación contable).
   deletionRequestedAt DateTime?
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
   identities          CustomerIdentity[]
   sessions            CustomerSession[]
   addresses           CustomerAddress[]
   supportRequests     SupportRequest[]
+  reviews             Review[]
+  reviewVotes         ReviewVote[]
+  productRequests     ProductRequest[]
+  inquiries           Inquiry[]
+  mediaItems          MediaItem[]
+  communityPosts      CommunityPost[]
+  communityComments   CommunityComment[]
+  communityReactions  CommunityReaction[]
+  communityReports    CommunityReport[]
 }
 
 model CustomerIdentity {
@@ -472,4 +498,262 @@ model EmailLog {
 model Counter {
   key   String @id
   value Int    @default(0)
+}
+
+// ═════════════ 7H EXPERIENCE: contenido de clientes (todo nuevo; no modifica tablas existentes) ═════════════
+
+/// Estado de moderación de lo que publican los clientes. Las reseñas y la galería no se muestran hasta quedar APROBADA.
+enum ModerationStatus {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+  OCULTA
+}
+
+/// Reseña de un producto. `verified` lo calcula SOLO el servidor (pedido pagado del producto con el correo del cliente).
+model Review {
+  id             String           @id @default(cuid())
+  productId      String
+  product        Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customerId     String
+  customer       Customer         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  rating         Int
+  title          String?
+  body           String
+  /// Nombre público (alias o nombre de pila con inicial). Nunca el correo.
+  displayName    String
+  verified       Boolean          @default(false)
+  status         ModerationStatus @default(PENDIENTE)
+  moderationNote String?
+  helpfulCount   Int              @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  photos         ReviewPhoto[]
+  votes          ReviewVote[]
+
+  @@unique([productId, customerId])
+  @@index([productId, status])
+  @@index([status, createdAt])
+}
+
+/// Foto de una reseña, en el bucket PRIVADO de Supabase Storage. Se sirve por /media solo si la reseña está aprobada.
+model ReviewPhoto {
+  id        String   @id @default(cuid())
+  reviewId  String
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  path      String
+  mime      String
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([reviewId])
+}
+
+model ReviewVote {
+  reviewId   String
+  review     Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@id([reviewId, customerId])
+}
+
+enum ProductRequestStatus {
+  NUEVA
+  EN_REVISION
+  COTIZANDO
+  DISPONIBLE
+  NO_DISPONIBLE
+  FINALIZADA
+}
+
+/// "Tú lo buscas. Nosotros lo exploramos": producto que un cliente quiere que traigamos. No exige cuenta.
+model ProductRequest {
+  id          String               @id @default(cuid())
+  /// Radicado: BUS-AAAA-000001
+  code        String               @unique
+  customerId  String?
+  customer    Customer?            @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  name        String
+  email       String
+  productName String
+  brand       String?
+  model       String?
+  url         String?
+  imagePath   String?
+  imageMime   String?
+  budgetCOP   Int?
+  comments    String?
+  status      ProductRequestStatus @default(NUEVA)
+  adminReply  String?
+  repliedAt   DateTime?
+  /// Producto del catálogo creado a partir de esta solicitud (si se decidió traerlo).
+  productId   String?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@index([status, createdAt])
+  @@index([email])
+}
+
+enum InquiryTopic {
+  DISPONIBILIDAD
+  TALLAS
+  CARACTERISTICAS
+  SOLICITUD_ESPECIAL
+  ENVIOS
+  PEDIDOS
+  GARANTIAS
+  OTRO
+}
+
+enum InquiryStatus {
+  ABIERTA
+  RESPONDIDA
+  CERRADA
+}
+
+/// "Habla con 7H STORE": consulta persistente con respuestas de la tienda (no es un chat simulado).
+model Inquiry {
+  id          String           @id @default(cuid())
+  /// Radicado: CON-AAAA-000001
+  code        String           @unique
+  /// Hash del secreto del enlace con el que un invitado ve su conversación.
+  accessHash  String
+  customerId  String?
+  customer    Customer?        @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  name        String
+  email       String
+  topic       InquiryTopic
+  subject     String
+  productSlug String?
+  status      InquiryStatus    @default(ABIERTA)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  messages    InquiryMessage[]
+
+  @@index([status, updatedAt])
+  @@index([email])
+}
+
+model InquiryMessage {
+  id        String   @id @default(cuid())
+  inquiryId String
+  inquiry   Inquiry  @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  /// "customer" o "admin"
+  author    String
+  adminId   String?
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([inquiryId, createdAt])
+}
+
+enum MediaKind {
+  IMAGEN
+  VIDEO
+}
+
+/// "Así se vive 7H": fotos y videos de la tienda o de clientes. Los de clientes exigen autorización de uso público.
+model MediaItem {
+  id          String           @id @default(cuid())
+  kind        MediaKind        @default(IMAGEN)
+  /// "store" (subido por la tienda) o "customer"
+  source      String
+  customerId  String?
+  customer    Customer?        @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  productId   String?
+  product     Product?         @relation(fields: [productId], references: [id], onDelete: SetNull)
+  /// Ruta en el bucket privado (fotos de clientes) o URL https (contenido de la tienda o video).
+  path        String
+  mime        String?
+  caption     String?
+  displayName String?
+  /// Autorización expresa para publicar (obligatoria en contenido de clientes).
+  consentAt   DateTime?
+  status      ModerationStatus @default(PENDIENTE)
+  featured    Boolean          @default(false)
+  /// El cliente pidió retirarlo: deja de mostrarse de inmediato.
+  withdrawnAt DateTime?
+  createdAt   DateTime         @default(now())
+
+  @@index([status, createdAt])
+}
+
+enum CommunityCategory {
+  RECOMENDACIONES
+  TECNOLOGIA
+  MODA_ESTILO
+  PRODUCTOS_QUE_BUSCAMOS
+  NOVEDADES
+  PREGUNTAS
+}
+
+/// Comunidad 7H (versión básica): publicaciones de clientes con sesión, con reportes y moderación.
+model CommunityPost {
+  id          String              @id @default(cuid())
+  customerId  String
+  customer    Customer            @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  category    CommunityCategory
+  title       String
+  body        String
+  displayName String
+  imagePath   String?
+  imageMime   String?
+  status      ModerationStatus    @default(APROBADA)
+  pinned      Boolean             @default(false)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  comments    CommunityComment[]
+  reactions   CommunityReaction[]
+  reports     CommunityReport[]
+
+  @@index([status, createdAt])
+  @@index([category, status])
+}
+
+model CommunityComment {
+  id          String             @id @default(cuid())
+  postId      String
+  post        CommunityPost      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  customerId  String?
+  customer    Customer?          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  /// Respuesta oficial de 7H STORE (escrita desde el panel).
+  adminId     String?
+  parentId    String?
+  parent      CommunityComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies     CommunityComment[] @relation("CommentReplies")
+  displayName String
+  body        String
+  status      ModerationStatus   @default(APROBADA)
+  createdAt   DateTime           @default(now())
+  reports     CommunityReport[]
+
+  @@index([postId, createdAt])
+}
+
+model CommunityReaction {
+  postId     String
+  post       CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  createdAt  DateTime      @default(now())
+
+  @@id([postId, customerId])
+}
+
+model CommunityReport {
+  id         String            @id @default(cuid())
+  postId     String?
+  post       CommunityPost?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId  String?
+  comment    CommunityComment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  reason     String
+  resolvedAt DateTime?
+  createdAt  DateTime          @default(now())
+
+  @@index([resolvedAt])
 }

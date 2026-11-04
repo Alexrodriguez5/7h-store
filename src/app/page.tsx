@@ -10,6 +10,8 @@ import { ArrowRightIcon, CardIcon, ShieldIcon, TruckIcon } from "@/components/ui
 import { Parallax, Rail, Reveal, Tilt } from "@/components/home/Motion";
 import { HeroShowcase, pickShowcase } from "@/components/home/HeroShowcase";
 import { BRAND_STORY } from "@/components/brand/BrandStory";
+import { GalleryGrid } from "@/components/gallery/GalleryGrid";
+import { getPublicMedia } from "@/lib/services/gallery";
 
 /**
  * Fotografía de campaña (Unsplash License, uso comercial permitido, sin marcas visibles):
@@ -57,7 +59,7 @@ function SectionHead({ kicker, title, href, cta }: { kicker: string; title: stri
 }
 
 export default async function HomePage() {
-  const [featured, categories, all] = await Promise.all([getFeaturedProducts(), getActiveCategories(), getProducts()]);
+  const [featured, categories, all, media] = await Promise.all([getFeaturedProducts(), getActiveCategories(), getProducts(), getPublicMedia({ featuredOnly: true, take: 8 }).catch(() => [])]);
   // Novedades: los más recientes (getProducts ya viene ordenado por fecha) que no están en Destacados.
   const featuredIds = new Set(featured.map((p) => p.id));
   const newest = all.filter((p) => !featuredIds.has(p.id)).slice(0, 8);
@@ -229,6 +231,14 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* ASÍ SE VIVE 7H: solo contenido aprobado (de la tienda o de clientes con su autorización) */}
+      {media.length > 0 && (
+        <section className="mx-auto max-w-7xl px-5 py-20 lg:px-8 lg:py-28">
+          <SectionHead kicker="Así se vive 7H" title="Productos reales, en manos reales." href="/asi-se-vive-7h" cta="Ver la galería" />
+          <div className="mt-10"><GalleryGrid items={media} /></div>
+        </section>
+      )}
+
       {/* E/G. EDITORIAL: IMPORTACIÓN, AUTENTICIDAD Y ENVÍO */}
       <section className="relative overflow-hidden bg-ivory-200/60">
         <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 py-20 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:py-28">
@@ -297,6 +307,25 @@ export default async function HomePage() {
             <p className="mt-2 text-sm leading-6 text-ink-soft">{text}</p>
           </Reveal>
         ))}
+      </section>
+
+      {/* TÚ LO BUSCAS + COMUNIDAD */}
+      <section className="mx-auto grid max-w-7xl gap-4 px-5 pb-20 lg:grid-cols-[1.4fr_1fr] lg:px-8">
+        <Reveal className="hero-light relative overflow-hidden rounded-[28px] p-7 text-ivory sm:p-10">
+          <p className="type-eyebrow text-gold-light">Tú lo buscas</p>
+          <h2 className="type-h2 mt-3">Tú lo buscas. <span className="text-gold-light">Nosotros lo exploramos.</span></h2>
+          <p className="mt-4 max-w-lg text-sm leading-7 text-ivory/70">Cuéntanos qué producto estás buscando. Déjanos tu solicitud y exploraremos las posibilidades de conseguirlo.</p>
+          <div className="mt-7"><Button href="/tu-lo-buscas" variant="gold">Hacer una solicitud <ArrowRightIcon width={16} height={16} /></Button></div>
+        </Reveal>
+        <Reveal delay={100} className="surface flex flex-col rounded-[28px] p-7 sm:p-10">
+          <p className="type-eyebrow text-gold">Comunidad 7H</p>
+          <h2 className="type-h3 mt-3">Recomienda, pregunta y propón.</h2>
+          <p className="mt-3 flex-1 text-sm leading-7 text-ink-soft">Conversa con otros clientes y con el equipo. Un espacio sencillo y moderado.</p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button href="/comunidad" variant="secondary">Entrar a la comunidad</Button>
+            <Link href="/habla-con-7h" className="inline-flex items-center gap-2 px-2 text-sm font-medium hover:text-gold">Habla con 7H <ArrowRightIcon width={16} height={16} /></Link>
+          </div>
+        </Reveal>
       </section>
 
       {/* H. CONFIANZA Y ATENCIÓN */}

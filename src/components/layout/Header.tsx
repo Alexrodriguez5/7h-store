@@ -134,6 +134,13 @@ export function Header({ categories }: { categories: Category[] }) {
           </form>
 
           <Link
+            href="/tu-lo-buscas"
+            className={`hidden shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition-colors xl:block ${isActive("/tu-lo-buscas") ? "border-gold text-gold-light" : "border-gold/40 text-gold-light hover:border-gold hover:bg-gold/10"}`}
+          >
+            Tú lo buscas
+          </Link>
+
+          <Link
             href="/cuenta"
             className="ml-auto hidden shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium text-ivory/80 transition-colors hover:bg-white/5 hover:text-gold-light sm:block md:ml-0"
           >
@@ -219,6 +226,13 @@ export function Header({ categories }: { categories: Category[] }) {
             >
               Mi cuenta
             </Link>
+          </nav>
+          <nav className="mt-6 grid grid-cols-2 gap-2 text-sm" aria-label="Más de 7H">
+            {[["/tu-lo-buscas", "Tú lo buscas"], ["/comunidad", "Comunidad 7H"], ["/asi-se-vive-7h", "Así se vive 7H"], ["/habla-con-7h", "Habla con 7H"]].map(([href, label]) => (
+              <Link key={href} href={href} onClick={() => setMobile(false)} className="rounded-2xl border border-white/10 px-4 py-3 text-ivory/85 transition-colors hover:border-gold/60 hover:text-gold-light">
+                {label}
+              </Link>
+            ))}
           </nav>
         </div>
       )}

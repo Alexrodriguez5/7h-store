@@ -41,6 +41,10 @@ export function Footer({ categories }: { categories: Category[] }) {
             <Link href="/como-comprar">Cómo comprar</Link>
             <Link href="/preguntas-frecuentes">Preguntas frecuentes</Link>
             <Link href="/pedidos">Rastrear pedido</Link>
+            <Link href="/habla-con-7h">Habla con 7H STORE</Link>
+            <Link href="/tu-lo-buscas">Tú lo buscas</Link>
+            <Link href="/comunidad">Comunidad 7H</Link>
+            <Link href="/asi-se-vive-7h">Así se vive 7H</Link>
             <Link href="/contacto">Contacto</Link>
             <Link href="/nosotros">Sobre 7H STORE</Link>
             <Link href="/terminos">Términos y condiciones</Link>

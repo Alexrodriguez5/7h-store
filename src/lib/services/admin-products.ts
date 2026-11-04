@@ -53,6 +53,15 @@ const baseData = (input: ProductInput) => ({
   lengthCm: input.lengthCm ?? null,
   widthCm: input.widthCm ?? null,
   heightCm: input.heightCm ?? null,
+  model: input.model ?? null,
+  material: input.material ?? null,
+  color: input.color ?? null,
+  origin: input.origin ?? null,
+  condition: input.condition ?? null,
+  warranty: input.warranty ?? null,
+  features: input.features,
+  badges: input.badges,
+  videoUrl: input.videoUrl ?? null,
 });
 
 /**

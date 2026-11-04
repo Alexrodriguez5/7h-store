@@ -8,7 +8,15 @@ import { ProductGallery } from "@/components/product/ProductGallery";
 import { AddToCart } from "@/components/product/AddToCart";
 import { ProductCard } from "@/components/catalog/ProductCard";
 import { CardIcon, ChevronDownIcon, ShieldIcon, TruckIcon } from "@/components/ui/Icons";
-import { FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
+import { DEFAULT_ETA, FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
+import { BADGE_TONE_CLS, discountPercent, productBadges } from "@/lib/badges";
+import { BUSINESS } from "@/lib/business";
+import { ProductSpecs } from "@/components/product/ProductSpecs";
+import { ProductVideo } from "@/components/product/ProductVideo";
+import { ReviewsSection } from "@/components/product/ReviewsSection";
+import { getProductReviews, isVerifiedBuyer } from "@/lib/services/reviews";
+import { getCurrentCustomer } from "@/lib/customer/auth";
+import { prisma } from "@/lib/prisma";
 export async function generateMetadata({
   params,
 }: {
@@ -39,9 +47,17 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const [related, categories] = await Promise.all([getProductsByCategory(p.category, p.id), getActiveCategories()]);
   const categoryLabel = categories.find((c) => c.slug === p.category)?.label ?? p.category;
   const url = `${siteUrl()}/producto/${p.slug}`;
-  const discount = p.compareAtPriceCOP
-    ? Math.round((1 - p.priceCOP / p.compareAtPriceCOP) * 100)
-    : 0;
+  const discount = discountPercent(p);
+  const badges = productBadges(p);
+  const confirmed = new Set(p.badges ?? []);
+  const [rv, customer] = await Promise.all([getProductReviews(p.id), getCurrentCustomer()]);
+  const own = customer ? await prisma.review.findUnique({ where: { productId_customerId: { productId: p.id, customerId: customer.id } }, select: { status: true } }) : null;
+  const viewer = {
+    loggedIn: !!customer,
+    verifiedEmail: !!customer?.emailVerifiedAt,
+    verifiedBuyer: customer ? await isVerifiedBuyer(customer, p.id) : false,
+    ownStatus: own?.status ?? null,
+  };
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -52,6 +68,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     brand: { "@type": "Brand", name: p.brand },
     description: p.description,
     image: p.images,
+    // Solo con reseñas reales aprobadas.
+    ...(rv.count > 0 ? { aggregateRating: { "@type": "AggregateRating", ratingValue: Number(rv.average.toFixed(1)), reviewCount: rv.count } } : {}),
     offers: {
       "@type": "Offer",
       url,
@@ -91,6 +109,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <ProductGallery images={p.images} name={p.name} />
         <div className="glass h-fit rounded-[32px] p-6 sm:p-8 lg:sticky lg:top-28">
           <p className="text-[11px] font-bold uppercase tracking-[.22em] text-gold">{p.brand}</p>
+          {badges.length > 0 && (
+            <ul aria-label="Etiquetas del producto" className="mt-3 flex flex-wrap gap-1.5">
+              {badges.map((b) => (
+                <li key={b.key} className={`rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wide ${BADGE_TONE_CLS[b.tone]}`}>{b.label}</li>
+              ))}
+            </ul>
+          )}
           <h1 className="mt-2 type-h2">{p.name}</h1>
           <div className="mt-5 flex flex-wrap items-end gap-3">
             <span className="text-3xl font-extrabold tabular-nums tracking-tight sm:text-4xl">{formatCOP(p.priceCOP)}</span>
@@ -121,11 +146,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <div className="mt-7">
             <AddToCart product={p} />
           </div>
+          <a href={`/habla-con-7h?tema=CARACTERISTICAS&producto=${encodeURIComponent(p.slug)}&asunto=${encodeURIComponent(p.name)}`} className="mt-3 inline-flex text-xs font-semibold underline-offset-4 hover:text-gold hover:underline">
+            ¿Tienes una pregunta sobre este producto? Habla con 7H STORE
+          </a>
           <ul className="mt-6 grid grid-cols-2 gap-3 text-xs text-ink-soft">
             {[
               { Icon: TruckIcon, text: `Envío gratis desde ${formatCOP(FREE_SHIPPING_THRESHOLD)}` },
               { Icon: CardIcon, text: "Pago seguro: tarjeta, PSE o transferencia" },
-              { Icon: ShieldIcon, text: "Producto original de EE.UU." },
+              { Icon: ShieldIcon, text: confirmed.has("ORIGINAL") ? "Producto original confirmado" : "Envío nacional con guía" },
               { Icon: ShieldIcon, text: "Retracto y garantía legal" },
             ].map(({ Icon, text }) => (
               <li key={text} className="flex items-center gap-2.5 rounded-2xl border border-ink/[.06] bg-white/60 px-3 py-3 leading-snug">
@@ -160,6 +188,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             ))}
           </div>
         </div>
+      </div>
+      <div className="mt-16 grid gap-8">
+        {p.videoUrl && <ProductVideo url={p.videoUrl} name={p.name} />}
+        <ProductSpecs product={p} categoryLabel={categoryLabel} eta={BUSINESS.shippingTime ?? DEFAULT_ETA} />
+        <ReviewsSection productId={p.id} productSlug={p.slug} reviews={rv.reviews} average={rv.average} histogram={rv.histogram} viewer={viewer} />
       </div>
       {related.length > 0 && (
         <section className="mt-24">

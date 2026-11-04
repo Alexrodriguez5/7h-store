@@ -26,8 +26,13 @@ export function Catalog({ products, categories }: { products: Product[]; categor
       {visible.length === 0 ? (
         <EmptyState
           title="No encontramos productos"
-          description="Prueba otra categoría, cambia los filtros o limpia la búsqueda."
-          action={<Button onClick={reset}>Limpiar filtros</Button>}
+          description={filters.search ? "No lo tenemos todavía, pero podemos buscarlo por ti: cuéntanos qué necesitas." : "Prueba otra categoría, cambia los filtros o limpia la búsqueda."}
+          action={
+            <div className="flex flex-wrap justify-center gap-3">
+              {filters.search && <Button href={`/tu-lo-buscas?q=${encodeURIComponent(filters.search)}`} variant="gold">Tú lo buscas, nosotros lo exploramos</Button>}
+              <Button onClick={reset} variant={filters.search ? "secondary" : "primary"}>Limpiar filtros</Button>
+            </div>
+          }
         />
       ) : (
         <div

@@ -6,7 +6,7 @@ import { siteUrl } from "@/lib/seo";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteUrl();
   const now = new Date();
-  const fixed = ["", "/catalogo", "/pedidos", "/envios", "/devoluciones", "/como-comprar", "/preguntas-frecuentes", "/nosotros", "/contacto", "/terminos", "/privacidad"].map((path) => ({
+  const fixed = ["", "/catalogo", "/pedidos", "/envios", "/devoluciones", "/como-comprar", "/preguntas-frecuentes", "/nosotros", "/tu-lo-buscas", "/habla-con-7h", "/comunidad", "/asi-se-vive-7h", "/contacto", "/terminos", "/privacidad"].map((path) => ({
     url: `${base}${path}`,
     lastModified: now,
   }));
