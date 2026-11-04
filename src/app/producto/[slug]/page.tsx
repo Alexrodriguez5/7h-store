@@ -7,7 +7,8 @@ import { formatCOP } from "@/lib/format";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { AddToCart } from "@/components/product/AddToCart";
 import { ProductCard } from "@/components/catalog/ProductCard";
-import { ChevronDownIcon, ShieldIcon, TruckIcon } from "@/components/ui/Icons";
+import { CardIcon, ChevronDownIcon, ShieldIcon, TruckIcon } from "@/components/ui/Icons";
+import { FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
 export async function generateMetadata({
   params,
 }: {
@@ -71,17 +72,19 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   };
   return (
     <main id="contenido" className="relative">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[680px] bg-[radial-gradient(60%_60%_at_25%_20%,rgb(201_164_76_/_.14),transparent_70%)]" />
+      {/* Franja de aura de la marca (continuidad con portada y catálogo); la foto del producto queda encima como protagonista */}
+      <div aria-hidden="true" className="aura-bg grain pointer-events-none absolute inset-x-0 top-0 -z-10 h-[240px] overflow-hidden rounded-b-[36px] lg:h-[300px]" />
+      <div aria-hidden="true" className="ivory-aura pointer-events-none absolute inset-x-0 top-[240px] -z-20 h-[600px]" />
       <div className="mx-auto max-w-7xl px-5 py-10 lg:px-8 lg:py-14">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbLd) }} />
-      <nav aria-label="Ruta de navegación" className="mb-8 text-xs text-ink-soft">
+      <nav aria-label="Ruta de navegación" className="mb-8 text-xs text-ivory/60">
         <ol className="flex flex-wrap items-center gap-1.5">
-          <li><Link href="/" className="hover:text-gold">Inicio</Link></li>
+          <li><Link href="/" className="hover:text-gold-light">Inicio</Link></li>
           <li aria-hidden="true">/</li>
-          <li><Link href={`/catalogo?categoria=${encodeURIComponent(p.category)}`} className="hover:text-gold">{categoryLabel}</Link></li>
+          <li><Link href={`/catalogo?categoria=${encodeURIComponent(p.category)}`} className="hover:text-gold-light">{categoryLabel}</Link></li>
           <li aria-hidden="true">/</li>
-          <li aria-current="page" className="truncate text-ink">{p.name}</li>
+          <li aria-current="page" className="truncate text-ivory">{p.name}</li>
         </ol>
       </nav>
       <div className="grid gap-12 lg:grid-cols-2">
@@ -91,11 +94,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <h1 className="mt-2 font-display text-4xl leading-[.95] sm:text-6xl">{p.name}</h1>
           <div className="mt-5 flex flex-wrap items-end gap-3">
             <span className="text-3xl font-extrabold tabular-nums tracking-tight sm:text-4xl">{formatCOP(p.priceCOP)}</span>
-            {p.compareAtPriceCOP && (
-              <del className="text-sm text-ink-soft/60">{formatCOP(p.compareAtPriceCOP)}</del>
-            )}
-            {discount > 0 && (
-              <span className="rounded-full bg-ink px-2.5 py-1 text-[11px] font-bold text-gold-light">Ahorras {discount}%</span>
+            {discount > 0 && p.compareAtPriceCOP && (
+              <>
+                <del className="text-sm text-ink-soft/60">{formatCOP(p.compareAtPriceCOP)}</del>
+                <span className="rounded-full bg-ink px-2.5 py-1 text-[11px] font-bold text-gold-light">
+                  Ahorras {formatCOP(p.compareAtPriceCOP - p.priceCOP)} · {discount}%
+                </span>
+              </>
             )}
           </div>
           <p className="mt-2 text-xs text-ink-soft">Impuestos incluidos</p>
@@ -116,24 +121,29 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <div className="mt-7">
             <AddToCart product={p} />
           </div>
-          <div className="mt-6 grid grid-cols-2 gap-3 text-xs text-ink-soft">
-            <div className="flex items-center gap-2 rounded-2xl border border-ink/[.06] bg-white/60 px-3 py-3">
-              <TruckIcon width={18} height={18} className="shrink-0 text-ink" /> Envío a toda Colombia
-            </div>
-            <div className="flex items-center gap-2 rounded-2xl border border-ink/[.06] bg-white/60 px-3 py-3">
-              <ShieldIcon width={18} height={18} className="shrink-0 text-ink" /> Producto original
-            </div>
-          </div>
+          <ul className="mt-6 grid grid-cols-2 gap-3 text-xs text-ink-soft">
+            {[
+              { Icon: TruckIcon, text: `Envío gratis desde ${formatCOP(FREE_SHIPPING_THRESHOLD)}` },
+              { Icon: CardIcon, text: "Pago seguro: tarjeta, PSE o transferencia" },
+              { Icon: ShieldIcon, text: "Producto original de EE.UU." },
+              { Icon: ShieldIcon, text: "Retracto y garantía legal" },
+            ].map(({ Icon, text }) => (
+              <li key={text} className="flex items-center gap-2.5 rounded-2xl border border-ink/[.06] bg-white/60 px-3 py-3 leading-snug">
+                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-ink text-gold-light"><Icon width={15} height={15} /></span>
+                {text}
+              </li>
+            ))}
+          </ul>
           <div className="mt-8 divide-y divide-ink/10 border-y border-ink/10">
             {[
               ["Descripción", p.description],
               [
                 "Envío y entrega",
-                "Envío a toda Colombia. El plazo depende de la ciudad de destino y se confirma en checkout.",
+                `Envío a toda Colombia con transportadora y número de guía. Gratis desde ${formatCOP(FREE_SHIPPING_THRESHOLD)}; en compras menores el costo según tu ciudad aparece en el checkout antes de pagar.`,
               ],
               [
                 "Devoluciones",
-                "Solicita una devolución según las condiciones publicadas por 7H STORE.",
+                "Tienes 5 días hábiles desde la entrega para retractarte (art. 47, Ley 1480; salvo excepciones legales) y garantía legal sobre el producto. Solicítalo desde Mi cuenta → Solicitudes y garantías.",
               ],
             ].map(([title, text]) => (
               <details key={title} className="clean group py-4">

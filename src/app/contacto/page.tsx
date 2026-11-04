@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import { BUSINESS, whatsappUrl } from "@/lib/business";
+import { PageBody, PageHero } from "@/components/aura/PageHero";
+import { Reveal } from "@/components/home/Motion";
+import { Button } from "@/components/ui/Button";
+import { ArrowRightIcon } from "@/components/ui/Icons";
 
 export const metadata: Metadata = {
   title: "Contacto",
@@ -17,28 +21,40 @@ export default function ContactoPage() {
   ].filter(Boolean) as { label: string; value: string; href: string; text: string }[];
 
   return (
-    <main id="contenido" className="mx-auto min-h-[60vh] max-w-5xl px-5 py-16 lg:px-8 lg:py-20">
-      <p className="text-[10px] font-semibold uppercase tracking-widest text-gold">Atención al cliente</p>
-      <h1 className="mt-2 font-display text-5xl leading-tight">Contacto</h1>
-      <p className="mt-5 max-w-2xl text-base leading-7 text-ink-soft">
-        Te ayudamos con disponibilidad, pedidos, envíos y garantías. Ten a mano tu número de pedido si ya compraste.
-      </p>
-
-      <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {channels.map((c) => (
-          <a
-            key={c.label}
-            href={c.href}
-            target={c.href.startsWith("http") ? "_blank" : undefined}
-            rel="noreferrer"
-            className="group block rounded-2xl border border-ink/10 bg-white/50 p-6 shadow-soft transition-all hover:-translate-y-0.5 hover:border-gold hover:shadow-lift"
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-gold">{c.label}</p>
-            <h2 className="mt-3 break-all font-display text-2xl">{c.value}</h2>
-            <p className="mt-3 text-sm text-ink-soft">{c.text}</p>
-          </a>
-        ))}
-      </div>
+    <main id="contenido">
+      <PageHero eyebrow="Atención al cliente" title="Hablemos," accent="estamos para ayudarte." lead="Disponibilidad, pedidos, envíos y garantías. Ten a mano tu número de pedido si ya compraste." />
+      <PageBody className="max-w-6xl">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {channels.map((c, i) => (
+            <Reveal key={c.label} delay={i * 90}>
+              <a
+                href={c.href}
+                target={c.href.startsWith("http") ? "_blank" : undefined}
+                rel="noreferrer"
+                className="surface surface-hover group flex h-full flex-col rounded-[24px] p-7"
+              >
+                <p className="text-[10px] font-semibold uppercase tracking-[.3em] text-gold">{c.label}</p>
+                <h2 className="mt-4 break-all font-display text-[28px] leading-tight">{c.value}</h2>
+                <p className="mt-3 flex-1 text-sm leading-6 text-ink-soft">{c.text}</p>
+                <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold">
+                  Escribir <ArrowRightIcon width={16} height={16} className="transition-transform group-hover:translate-x-1" />
+                </span>
+              </a>
+            </Reveal>
+          ))}
+        </div>
+        <Reveal className="aura-bg grain relative isolate mt-8 grid gap-6 overflow-hidden rounded-[28px] p-7 text-ivory sm:p-10 lg:grid-cols-[1.4fr_1fr] lg:items-center">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[.3em] text-gold-light">Peticiones, quejas y reclamos</p>
+            <p className="mt-3 font-display text-3xl leading-tight sm:text-4xl">¿Garantía, cambio o devolución?</p>
+            <p className="mt-3 max-w-lg text-sm leading-7 text-ivory/70">Radícalo desde tu cuenta: recibes un número de radicado y la respuesta por correo en máximo 15 días hábiles.</p>
+          </div>
+          <div className="flex flex-wrap gap-3 lg:justify-end">
+            <Button href="/cuenta/solicitudes" variant="gold">Crear solicitud</Button>
+            <Button href="/preguntas-frecuentes" variant="secondary" className="border-ivory/30 text-ivory hover:border-gold hover:bg-white/5">Preguntas frecuentes</Button>
+          </div>
+        </Reveal>
+      </PageBody>
     </main>
   );
 }

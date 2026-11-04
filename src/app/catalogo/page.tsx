@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Catalog } from "@/components/catalog/Catalog";
+import { PageBody, PageHero } from "@/components/aura/PageHero";
 import { getActiveCategories, getProducts } from "@/services/products";
 
 type SP = Promise<{ categoria?: string; q?: string }>;
@@ -36,17 +37,17 @@ export default async function CatalogPage({ searchParams }: { searchParams: SP }
   const category = categories.find((c) => c.slug === categoria);
 
   return (
-    <main id="contenido" className="relative mx-auto max-w-7xl px-5 py-10 lg:px-8 lg:py-14">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[420px] bg-[radial-gradient(50%_70%_at_80%_0%,rgb(201_164_76_/_.16),transparent_70%)]" />
-      <div className="mb-8 max-w-2xl">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-gold">7H STORE · Colección</p>
-        <h1 className="mt-2 font-display text-5xl leading-[.95] sm:text-7xl">{category ? category.label : <>Todo lo <span className="italic text-gold">original.</span></>}</h1>
-        <p className="mt-3 max-w-xl text-sm leading-6 text-ink-soft">
-          Productos originales de EE.UU., precios en COP e impuestos incluidos.
-        </p>
-      </div>
-
-      <Catalog products={products} categories={categories} />
+    <main id="contenido">
+      <PageHero
+        eyebrow="7H STORE · Colección"
+        title={category ? category.label : "Todo lo"}
+        accent={category ? "seleccionado." : "original."}
+        lead="Productos originales de EE.UU., precios en COP e impuestos incluidos. Elige tu talla y agrégalo al carrito sin salir del catálogo."
+        crumbs={category ? [{ href: "/", label: "Inicio" }, { href: "/catalogo", label: "Catálogo" }] : undefined}
+      />
+      <PageBody>
+        <Catalog products={products} categories={categories} />
+      </PageBody>
     </main>
   );
 }

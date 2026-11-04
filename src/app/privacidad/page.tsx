@@ -14,7 +14,7 @@ export const metadata: Metadata = {
  */
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Política de tratamiento de datos personales" updated={orPending(BUSINESS.legalUpdated, "fecha")}>
+    <LegalPage title="Tratamiento de datos" accent="personales." lead="Cómo recogemos, usamos y protegemos tu información, y cómo ejercer tus derechos (Ley 1581 de 2012)." current="/privacidad" updated={orPending(BUSINESS.legalUpdated, "fecha")}>
       <section>
         <h2>1. Responsable del tratamiento</h2>
         <p><strong>{orPending(BUSINESS.legalName, "razón social o nombre del titular")}</strong>, <strong>{orPending(BUSINESS.address, "dirección")}</strong>, <strong>{orPending(BUSINESS.city, "ciudad")}</strong>. Correo para asuntos de datos: <strong>{orPending(BUSINESS.email, "correo")}</strong>.</p>

@@ -17,11 +17,11 @@ const STEPS = [
 
 export default function HowToBuyPage() {
   return (
-    <LegalPage eyebrow="Ayuda" title="Cómo comprar">
-      <ol className="!space-y-4">
+    <LegalPage eyebrow="Ayuda" title="Comprar es" accent="así de simple." lead="Cuatro pasos, precios finales en pesos colombianos y seguimiento de tu pedido desde tu cuenta." current="/como-comprar">
+      <ol className="grid gap-4">
         {STEPS.map(([title, text], i) => (
-          <li key={title} className="!ml-0 flex !list-none gap-4 rounded-2xl border border-ink/10 bg-white/50 p-5">
-            <span className="grid size-9 shrink-0 place-items-center rounded-full bg-gold/20 font-semibold text-ink">{i + 1}</span>
+          <li key={title} className="flex gap-5 rounded-2xl border border-ink/[.07] bg-white/70 p-5 !pl-5 shadow-soft before:!hidden">
+            <span className="grid size-11 shrink-0 place-items-center rounded-full bg-ink font-display text-xl text-gold-light">{i + 1}</span>
             <div>
               <h2 className="!text-xl">{title}</h2>
               <p className="mt-1">{text}</p>

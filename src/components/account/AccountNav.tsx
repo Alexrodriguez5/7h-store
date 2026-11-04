@@ -24,16 +24,16 @@ export function AccountNav() {
   };
   return (
     <aside className="h-fit space-y-4 lg:sticky lg:top-28">
-      <nav aria-label="Mi cuenta" className="no-scrollbar flex gap-1 overflow-x-auto lg:flex-col">
+      <nav aria-label="Mi cuenta" className="surface no-scrollbar flex gap-1 overflow-x-auto rounded-[22px] p-1.5 lg:flex-col lg:p-2">
         {LINKS.map((l) => {
           const active = path.startsWith(l.href);
           return (
-            <Link key={l.href} href={l.href} aria-current={active ? "page" : undefined} className={`shrink-0 rounded-xl px-4 py-2.5 text-sm transition-colors ${active ? "bg-ink font-semibold text-ivory" : "text-ink-soft hover:bg-white/70 hover:text-ink"}`}>
+            <Link key={l.href} href={l.href} aria-current={active ? "page" : undefined} className={`shrink-0 rounded-full px-4 py-2.5 text-sm transition-colors ${active ? "bg-ink font-semibold text-gold-light" : "text-ink-soft hover:bg-white/70 hover:text-ink"}`}>
               {l.label}
             </Link>
           );
         })}
-        <button type="button" onClick={logout} disabled={leaving} className="shrink-0 rounded-xl px-4 py-2.5 text-left text-sm text-ink-soft transition-colors hover:bg-white/70 hover:text-error disabled:opacity-50">
+        <button type="button" onClick={logout} disabled={leaving} className="shrink-0 rounded-full px-4 py-2.5 text-left text-sm text-ink-soft transition-colors hover:bg-white/70 hover:text-error disabled:opacity-50">
           {leaving ? "Cerrando…" : "Cerrar sesión"}
         </button>
       </nav>

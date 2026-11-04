@@ -20,7 +20,7 @@ export default async function ShippingPage() {
   // Con tarifas reales de la transportadora activas, la tabla por zona solo es respaldo: se informa lo que de verdad se cobra.
   const live = enviaUsesCheckoutRates();
   return (
-    <LegalPage eyebrow="Ayuda" title="Envíos" updated={orPending(BUSINESS.legalUpdated, "fecha")}>
+    <LegalPage eyebrow="Ayuda" title="Envíos a toda" accent="Colombia." lead="Despachamos con transportadora y número de guía. Conoce costos, plazos y cómo seguir tu pedido." current="/envios" updated={orPending(BUSINESS.legalUpdated, "fecha")}>
       <section>
         <h2>Cobertura</h2>
         <p>Enviamos a todos los departamentos de Colombia. La dirección de entrega se indica en el checkout.</p>

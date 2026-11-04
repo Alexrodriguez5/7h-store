@@ -1,2 +1,15 @@
-import Link from "next/link";
-export default function NotFound(){return <main id="contenido" className="mx-auto max-w-xl px-5 py-24 text-center"><p className="text-xs uppercase tracking-widest text-gold">404</p><h1 className="mt-3 font-display text-5xl">Esta página no existe.</h1><p className="mt-3 text-sm text-ink-soft">Vuelve al catálogo para continuar.</p><Link href="/catalogo" className="mt-6 inline-block rounded-full bg-ink px-6 py-3 text-sm font-semibold text-ivory transition-colors hover:bg-gold hover:text-ink">Ver catálogo</Link></main>}
+import { PageHero } from "@/components/aura/PageHero";
+import { Button } from "@/components/ui/Button";
+
+export default function NotFound() {
+  return (
+    <main id="contenido">
+      <PageHero eyebrow="Error 404" title="Esta página" accent="no existe." lead="Puede que el enlace haya cambiado o que el producto ya no esté publicado.">
+        <div className="flex flex-wrap gap-3">
+          <Button href="/catalogo" variant="gold">Ver catálogo</Button>
+          <Button href="/" variant="secondary" className="border-ivory/30 text-ivory hover:border-gold hover:bg-white/5">Ir al inicio</Button>
+        </div>
+      </PageHero>
+    </main>
+  );
+}

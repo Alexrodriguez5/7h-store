@@ -16,9 +16,10 @@ export const metadata: Metadata = {
  */
 export default function TermsPage() {
   return (
-    <LegalPage title="Términos y condiciones" updated={orPending(BUSINESS.legalUpdated, "fecha")}>
-      <section>
-        <h2>1. Quiénes somos</h2>
+    <LegalPage title="Términos y" accent="condiciones." lead="Las reglas de compra en 7H STORE: precios, pagos, envíos, retracto, garantía y PQR." current="/terminos" updated={orPending(BUSINESS.legalUpdated, "fecha")}>
+      <section id="vendedor">
+        <h2>1. Información del proveedor</h2>
+        <p className="text-xs">Datos de identificación y contacto que la ley exige poner a disposición del consumidor en el comercio electrónico (art. 50 de la Ley 1480 de 2011). Por privacidad solo se publican aquí.</p>
         <p><strong>7H STORE</strong> es operada por <strong>{orPending(BUSINESS.legalName, "razón social o nombre del titular")}</strong>, identificado con <strong>{orPending(BUSINESS.taxId, "NIT o cédula")}</strong>, con domicilio en <strong>{orPending(BUSINESS.city, "ciudad")}, Colombia</strong>. Contacto: <strong>{orPending(BUSINESS.email, "correo")}</strong> · <strong>{orPending(BUSINESS.whatsapp, "WhatsApp")}</strong> · Instagram <strong>{BUSINESS.instagram.handle}</strong>.</p>
       </section>
       <section>
