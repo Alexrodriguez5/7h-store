@@ -146,6 +146,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <div className="mt-7">
             <AddToCart product={p} />
           </div>
+          <a href={`/habla-con-7h?tema=CARACTERISTICAS&producto=${encodeURIComponent(p.slug)}&asunto=${encodeURIComponent(p.name)}`} className="mt-3 inline-flex text-xs font-semibold underline-offset-4 hover:text-gold hover:underline">
+            ¿Tienes una pregunta sobre este producto? Habla con 7H STORE
+          </a>
           <ul className="mt-6 grid grid-cols-2 gap-3 text-xs text-ink-soft">
             {[
               { Icon: TruckIcon, text: `Envío gratis desde ${formatCOP(FREE_SHIPPING_THRESHOLD)}` },
