@@ -313,3 +313,10 @@ describe("modelo principal saturado: se recuerda 10 minutos", () => {
     expect(backup.seen).toHaveLength(1);
   });
 });
+
+describe("pausa ante 429 según lo que indica Google", () => {
+  it("lee retryDelay del error", () => {
+    const e = classify(new ApiError({ message: '{"error":{"code":429,"message":"quota","status":"RESOURCE_EXHAUSTED","details":[{"@type":"type.googleapis.com/google.rpc.RetryInfo","retryDelay":"37s"}]}}', status: 429 }));
+    expect(e).toMatchObject({ kind: "quota", retryAfterSec: 37 });
+  });
+});

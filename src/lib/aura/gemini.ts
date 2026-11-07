@@ -74,7 +74,11 @@ export function classify(e: unknown, signal?: AbortSignal): AiError {
   const msg = e instanceof Error ? e.message : "";
   // Solo el motivo del proveedor (sin contenido enviado); se borra cualquier cosa parecida a una clave.
   const detail = (msg.match(/"message":\s*"([^"]{0,200})/)?.[1] ?? msg.slice(0, 160)).replace(/AIza[0-9A-Za-z_-]{20,}|key=[^&\s]+/g, "[oculto]");
-  if (status === 429 || /RESOURCE_EXHAUSTED|quota|rate limit/i.test(msg)) return new AiError("quota", "Cuota gratuita agotada", 429, detail);
+  if (status === 429 || /RESOURCE_EXHAUSTED|quota|rate limit/i.test(msg)) {
+    // Google indica cuánto esperar (RetryInfo.retryDelay, p. ej. "37s"): el límite por minuto se libera pronto.
+    const retry = Number(msg.match(/"retryDelay":\s*"(\d+(?:\.\d+)?)s"/)?.[1] ?? NaN);
+    return new AiError("quota", "Cuota gratuita agotada", 429, detail, Number.isFinite(retry) ? Math.ceil(retry) : undefined);
+  }
   if (status === 500 || status === 502 || status === 503 || status === 504 || /UNAVAILABLE|overloaded/i.test(msg)) return new AiError("unavailable", "Servicio de IA no disponible", status, detail);
   if (status === 401 || status === 403) return new AiError("error", "Clave de Gemini no válida o sin permiso", status, detail);
   return new AiError("error", "Error del proveedor de IA", status, detail);

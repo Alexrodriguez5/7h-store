@@ -143,10 +143,11 @@ export async function handleChat(input: ChatInput, viewer: { ip: string; custome
   } catch (e) {
     const err = e instanceof AiError ? e : new AiError("error", "Error inesperado");
     // Se registra la categoría, nunca el contenido ni la clave.
-    console.error("[aura] fallo del proveedor:", err.kind, err.status ?? "", err.detail ?? "");
+    console.error("[aura] fallo del proveedor:", err.kind, err.status ?? "", err.retryAfterSec ? `reintentar en ${err.retryAfterSec}s` : "", err.detail ?? "");
     await saveUser({ errorKind: err.kind });
     if (err.kind === "quota") {
-      await registerHit(COOLDOWN_KEY, 15 * MIN);
+      // Pausa según lo que pide Google (entre 1 y 15 min); si no lo dice, 5 min.
+      await registerHit(COOLDOWN_KEY, Math.min(15 * MIN, Math.max(MIN, (err.retryAfterSec ?? 300) * 1000)));
       return sys("quota", "La asistencia inteligente está temporalmente limitada porque se alcanzó la cuota gratuita. Tu mensaje sigue escrito: inténtalo más tarde o usa el asistente guiado.", cid);
     }
     if (err.kind === "budget") return sys("quota", "AURA alcanzó su límite de uso de hoy. Puedes registrar tu búsqueda con el asistente guiado o escribirnos por WhatsApp.", cid);
