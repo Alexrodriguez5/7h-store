@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { HeroOrbFallback } from "./HeroOrbFallback";
 
 /**
@@ -15,6 +15,9 @@ import { HeroOrbFallback } from "./HeroOrbFallback";
  *   la resolución en pasos pequeños (nunca por debajo de 1 px de canvas por píxel CSS).
  * - Se pausa fuera de pantalla y con la pestaña oculta; con "reducir movimiento" dibuja un solo cuadro.
  * - Si no hay WebGL2 (o se pierde el contexto) se muestra la versión CSS, también vectorial.
+ *
+ * También la usa AURA en tamaño pequeño: `energy` (1 = la esfera del inicio, tal cual) acelera el giro y
+ * aviva el oro para los estados escuchando / pensando / respondiendo, sin otro shader ni librerías.
  */
 
 const VERT = `#version 300 es
@@ -31,6 +34,7 @@ uniform float uReveal;
 uniform float uDetail;   // 1.0 = alto, 0.0 = reducido
 uniform vec2 uTilt;      // inclinación por el cursor (-1..1)
 uniform float uAspect;
+uniform float uEnergy;  // 1.0 = normal; <1 atenuada; >1 más viva
 
 // ── Ruido de valor 3D (barato y suave) ──
 float hash(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
@@ -69,7 +73,8 @@ void main() {
   vec3 deep = vec3(0.788, 0.643, 0.298);
 
   // Halo exterior muy sutil (no se anima, no usa blur).
-  float halo = exp(-max(d - R, 0.0) * 9.0) * 0.20 * uReveal;
+  float boost = mix(0.45, 1.0, clamp(uEnergy, 0.0, 1.0)) + max(uEnergy - 1.0, 0.0) * 0.55;
+  float halo = exp(-max(d - R, 0.0) * 9.0) * 0.20 * uReveal * boost;
   if (d > R + aa) { outColor = halo < 0.004 ? vec4(0.0) : vec4(deep * halo, halo); return; }
 
   // Intersección rayo-esfera (cámara frontal): z exacta en cada píxel.
@@ -95,7 +100,7 @@ void main() {
   vec3 col = vec3(0.020, 0.018, 0.016) + vec3(0.06, 0.05, 0.04) * relief * relief;
   col += vec3(0.95, 0.88, 0.75) * spec * 0.14;
   // Oro: filamentos con más brillo hacia el borde (luz que viaja por dentro del vidrio).
-  float glow = 0.6 + 1.1 * fres;
+  float glow = (0.6 + 1.1 * fres) * boost;
   vec3 hot = vec3(1.0, 0.93, 0.74);
   col += mix(gold, hot, f1.x) * f1.x * glow * 1.35 * uReveal;
   col += deep * f1.y * 0.22 * glow * uReveal;
@@ -121,7 +126,17 @@ function shader(gl: WebGL2RenderingContext, type: number, src: string) {
 
 type IdleWindow = Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
 
-export default function HeroOrb3D({ className = "" }: { className?: string }) {
+export default function HeroOrb3D({ className = "", energy, maxFps, interactive = true, fallback }: {
+  className?: string;
+  /** Intensidad viva (se lee en cada cuadro, sin volver a montar): 1 = normal. */
+  energy?: RefObject<number>;
+  /** Tope de cuadros por segundo (la esfera pequeña de AURA no necesita 60). */
+  maxFps?: number;
+  /** false = no sigue el cursor (versión pequeña). */
+  interactive?: boolean;
+  /** Versión sin WebGL2 (por defecto, la de la esfera grande). */
+  fallback?: ReactNode;
+}) {
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [ready, setReady] = useState(false);
@@ -186,12 +201,12 @@ export default function HeroOrb3D({ className = "" }: { className?: string }) {
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       const u = (n: string) => gl.getUniformLocation(prog, n);
-      const uTime = u("uTime"), uReveal = u("uReveal"), uDetail = u("uDetail"), uTilt = u("uTilt"), uAspect = u("uAspect");
+      const uTime = u("uTime"), uReveal = u("uReveal"), uDetail = u("uDetail"), uTilt = u("uTilt"), uAspect = u("uAspect"), uEnergy = u("uEnergy");
 
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
       // En celulares y tabletas basta con 30 cuadros por segundo (movimiento lento): la mitad de trabajo de GPU.
-      const minFrame = fine ? 0 : 1000 / 31;
+      const minFrame = Math.max(fine ? 0 : 1000 / 31, maxFps ? 1000 / (maxFps + 1) : 0);
       // Resolución real de la pantalla (máx. 2). Baja en pasos si el equipo no sostiene la animación.
       const maxScale = Math.min(window.devicePixelRatio || 1, 2);
       const steps = [maxScale, Math.max(1, maxScale * 0.85), Math.max(1, maxScale * 0.72), 1].filter((v, i, a) => a.indexOf(v) === i);
@@ -214,7 +229,7 @@ export default function HeroOrb3D({ className = "" }: { className?: string }) {
       let tilt = [0, 0];
       let target = [0, 0];
       const onMove = (e: PointerEvent) => { target = [(e.clientX / window.innerWidth) * 2 - 1, (e.clientY / window.innerHeight) * 2 - 1]; };
-      if (fine && !reduced) window.addEventListener("pointermove", onMove, { passive: true });
+      if (fine && !reduced && interactive) window.addEventListener("pointermove", onMove, { passive: true });
 
       let raf = 0;
       let visible = true;
@@ -222,6 +237,10 @@ export default function HeroOrb3D({ className = "" }: { className?: string }) {
       let last = t0;
       let slow = 0;
       let frames = 0;
+      // Tiempo de la animación: avanza más rápido cuando AURA está "pensando" (energía alta).
+      let clock = 0;
+      let prevNow = t0;
+      let level_e = 1;
 
       const draw = (now: number) => {
         const t = (now - t0) / 1000;
@@ -230,7 +249,12 @@ export default function HeroOrb3D({ className = "" }: { className?: string }) {
         tilt = [tilt[0] + (target[0] - tilt[0]) * 0.04, tilt[1] + (target[1] - tilt[1]) * 0.04];
         gl.clearColor(0, 0, 0, 0);
         gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.uniform1f(uTime, reduced ? 6 : t + 6);
+        const target_e = energy?.current ?? 1;
+        level_e += (target_e - level_e) * 0.08;
+        clock += ((now - prevNow) / 1000) * (0.6 + 0.4 * level_e);
+        prevNow = now;
+        gl.uniform1f(uTime, reduced ? 6 : clock + 6);
+        gl.uniform1f(uEnergy, reduced ? Math.min(target_e, 1) : level_e);
         gl.uniform1f(uReveal, eased);
         gl.uniform1f(uDetail, detail);
         gl.uniform2f(uTilt, tilt[0], -tilt[1]);
@@ -258,7 +282,7 @@ export default function HeroOrb3D({ className = "" }: { className?: string }) {
         }
       };
 
-      const play = () => { cancelAnimationFrame(raf); last = performance.now(); raf = requestAnimationFrame(loop); };
+      const play = () => { cancelAnimationFrame(raf); last = performance.now(); prevNow = last; raf = requestAnimationFrame(loop); };
       const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible && !reduced) play(); }, { threshold: 0.01 });
       io.observe(box);
       const onVis = () => { if (!document.hidden && visible && !reduced) play(); };
@@ -286,12 +310,13 @@ export default function HeroOrb3D({ className = "" }: { className?: string }) {
       disposed = true;
       cleanups.forEach((fn) => fn());
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `energy` es una ref: se lee en cada cuadro
+  }, [maxFps, interactive]);
 
   return (
     <div ref={wrap} className={`relative ${className}`}>
       {/* La aparición la hace el propio shader (desde la oscuridad); la versión CSS solo si WebGL2 no está disponible. */}
-      {failed && <HeroOrbFallback className="absolute inset-0" />}
+      {failed && (fallback ?? <HeroOrbFallback className="absolute inset-0" />)}
       {!failed && <canvas ref={canvas} aria-hidden="true" data-ready={ready || undefined} className="absolute inset-0 size-full" />}
     </div>
   );

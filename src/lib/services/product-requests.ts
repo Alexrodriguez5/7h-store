@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import type { PrismaClient, ProductRequestStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
@@ -52,17 +53,36 @@ export const productRequestInput = z.object({
   links: z.array(httpsUrl).max(MAX_REQUEST_LINKS, `Máximo ${MAX_REQUEST_LINKS} enlaces`).default([]),
   budgetCOP: z.number().int().min(0).max(200_000_000).nullable().optional(),
   comments: optional(2000),
-  source: z.enum(["formulario", "asistente", "cuenta", "portada"]).default("formulario"),
+  source: z.enum(["formulario", "asistente", "cuenta", "portada", "aura"]).default("formulario"),
   /** Autorización para usar el correo solo para responder la solicitud (Ley 1581). */
   consent: z.literal(true, { error: "Debes autorizar el uso de tus datos para responderte." }),
   website: z.string().max(200).optional(),
 });
 export type ProductRequestInput = z.infer<typeof productRequestInput>;
 
-async function nextCode(db: PrismaClient, now = new Date()) {
-  const year = now.getFullYear();
-  const c = await db.counter.upsert({ where: { key: `busqueda:${year}` }, create: { key: `busqueda:${year}`, value: 1 }, update: { value: { increment: 1 } } });
-  return `BUS-${year}-${String(c.value).padStart(6, "0")}`;
+/** Alfabeto sin caracteres que se confunden al dictarlos o leerlos (0/O, 1/I/L). 31 símbolos. */
+export const CODE_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+
+/** 6 símbolos aleatorios con generador criptográfico y sin sesgo de módulo (rechazo de bytes ≥ 248). */
+export function randomRequestCode(rand: (n: number) => Uint8Array = (n) => randomBytes(n)) {
+  let out = "";
+  while (out.length < 6) {
+    for (const b of rand(12)) {
+      if (b >= 248) continue; // 248 = 31 × 8: así cada símbolo tiene la misma probabilidad
+      out += CODE_ALPHABET[b % 31];
+      if (out.length === 6) break;
+    }
+  }
+  return `BUS-${out}`;
+}
+
+/** Código público nuevo (BUS-A83K2F). Los históricos (BUS-AAAA-000001) se conservan tal cual. */
+async function nextCode(db: PrismaClient) {
+  for (let i = 0; i < 8; i++) {
+    const code = randomRequestCode();
+    if (!(await db.productRequest.findUnique({ where: { code }, select: { id: true } }))) return code;
+  }
+  throw new Error("REQUEST_CODE_EXHAUSTED");
 }
 
 /** Texto original del cliente, tal como lo envió (el equipo puede editar los campos, nunca esto). */
@@ -84,7 +104,10 @@ function originalTextOf(i: ProductRequestInput) {
  * Registra la solicitud (fotos en el bucket privado), evita duplicados recientes y avisa al equipo y al cliente.
  * Devuelve el radicado y, si no hay sesión, el enlace seguro para seguirla.
  */
-export async function createProductRequest(input: ProductRequestInput, photos: Uint8Array[], customerId: string | null, db: PrismaClient = prisma) {
+/** Datos que AURA agrega a una solicitud creada desde el chat (sin datos personales). */
+export interface AuraRequestExtra { summary: string; priority: "alta" | "normal" | "baja"; pending: string[]; conversationId: string }
+
+export async function createProductRequest(input: ProductRequestInput, photos: Uint8Array[], customerId: string | null, db: PrismaClient = prisma, aura?: AuraRequestExtra) {
   if (input.website) throw new UgcError(400, "No pudimos enviar tu solicitud.");
   for (const t of [input.productName, input.comments ?? "", input.brand ?? "", input.model ?? "", input.features ?? ""]) {
     const p = textProblem(t);
@@ -110,6 +133,7 @@ export async function createProductRequest(input: ProductRequestInput, photos: U
         color: input.color, size: input.size, features: input.features, referenceStore: input.referenceStore,
         url: links[0] ?? null, links, budgetCOP: input.budgetCOP ?? null, comments: input.comments, source: input.source,
         originalText: originalTextOf(input),
+        ...(aura ? { auraSummary: aura.summary, auraPriority: aura.priority, auraPending: aura.pending, auraConversationId: aura.conversationId } : {}),
         images: { create: uploaded.map((u, i) => ({ ...u, position: i })) },
         events: { create: { kind: "status", toStatus: "NUEVA", authorType: "customer", body: "Solicitud creada." } },
       },
@@ -126,7 +150,15 @@ export async function createProductRequest(input: ProductRequestInput, photos: U
     if (inbox) {
       deliverLater({
         to: inbox, kind: "product_request.staff", ref: r.code, subject: `[${r.code}] Nueva búsqueda: ${input.productName.slice(0, 60)}`, heading: "Nueva solicitud especial",
-        paragraphs: [`Producto: ${input.productName}`, `Marca/modelo: ${[input.brand, input.model].filter(Boolean).join(" · ") || "—"}`, `Cliente: ${input.name} <${input.email}>`, `Fotos: ${uploaded.length} · Enlaces: ${links.length}`],
+        // Aviso mínimo: sin correo, teléfono ni archivos (todo eso se ve en el panel, con sesión).
+        paragraphs: [
+          `Código: ${r.code}`,
+          `Producto: ${input.productName}`,
+          `Marca/modelo: ${[input.brand, input.model].filter(Boolean).join(" · ") || "Pendiente"}`,
+          ...(aura ? [`Resumen de AURA: ${aura.summary.slice(0, 400)}`, `Prioridad sugerida: ${aura.priority}`] : []),
+          `Cliente: ${input.name.split(" ")[0]} · Canal: ${input.source}`,
+          `Fotos: ${uploaded.length} · Enlaces: ${links.length}`,
+        ],
         cta: { label: "Abrir en el panel", path: `/admin/solicitudes-especiales/${r.code}` },
       });
     }
