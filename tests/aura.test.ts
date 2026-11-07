@@ -298,3 +298,18 @@ describe("respaldo gratuito cuando el modelo principal está saturado", () => {
     expect(auraConfig({ GEMINI_API_KEY: "k", AURA_FALLBACK_MODEL: "0" } as any).fallbackModel).toBeNull();
   });
 });
+
+describe("modelo principal saturado: se recuerda 10 minutos", () => {
+  it("después de un 503 o 504, los siguientes mensajes van directo al respaldo", async () => {
+    const { db } = fakeDb();
+    const ok = { text: "ok", tokensIn: 1, tokensOut: 1, calls: 1, toolsUsed: [] };
+    const main = provider(async () => { throw new AiError("unavailable", "x", 504, "Deadline expired"); });
+    const backup = provider(async () => ok);
+    const r1 = await handleChat({ message: "uno", attachments: 0 }, viewer, { db, config: cfg, provider: main, fallbackProvider: backup });
+    expect(r1.state).toBe("unavailable"); // el 504 ya agotó la espera de este mensaje
+    const r2 = await handleChat({ message: "dos", attachments: 0 }, viewer, { db, config: cfg, provider: main, fallbackProvider: backup });
+    expect(r2.state).toBe("ok");
+    expect(main.seen).toHaveLength(1);
+    expect(backup.seen).toHaveLength(1);
+  });
+});

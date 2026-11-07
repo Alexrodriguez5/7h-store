@@ -47,6 +47,8 @@ export const ipHash = (ip: string) => createHash("sha256").update(`aura:${ip}`).
 export const pacificDay = (now = new Date()) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Los_Angeles" }).format(now);
 
 const COOLDOWN_KEY = "aura:quota-cooldown";
+/** Mientras exista, el modelo principal se considera saturado y se va directo al respaldo gratuito. */
+const PRIMARY_BUSY_KEY = "aura:primary-busy";
 
 export interface ChatDeps { db?: PrismaClient; config?: AuraConfig; provider?: AiProvider | null; fallbackProvider?: AiProvider | null; now?: Date }
 
@@ -113,14 +115,21 @@ export async function handleChat(input: ChatInput, viewer: { ip: string; custome
       beforeCall: async () => (await consume(dayKey, cfg.dailyCalls, 26 * 60 * MIN)).allowed,
     };
     let r;
-    try {
-      r = await provider.run(runOpts);
-    } catch (e) {
-      // Solo ante "saturado / no disponible" (503, 500, 502) se intenta UNA vez el modelo de respaldo, también gratuito.
-      // Ante cuota agotada, límite diario o tiempo agotado no se insiste.
-      if (!(e instanceof AiError && e.kind === "unavailable" && e.status !== 504) || !backup || ctrl.signal.aborted) throw e;
-      console.warn("[aura] modelo principal saturado; usando el respaldo gratuito:", backup.id, e.detail ?? "");
+    // Si el principal estuvo saturado hace poco, se usa directamente el respaldo (no se gastan 20 s esperando).
+    if (backup && (await isBlocked(PRIMARY_BUSY_KEY, 1))) {
       r = await backup.run(runOpts);
+    } else {
+      try {
+        r = await provider.run(runOpts);
+      } catch (e) {
+        // Saturado o caído (5xx): se marca por 10 minutos. Ante cuota agotada o límite diario no se insiste.
+        const busy = e instanceof AiError && e.kind === "unavailable";
+        if (busy && backup) await registerHit(PRIMARY_BUSY_KEY, 10 * MIN);
+        // El respaldo se intenta UNA vez en este mensaje, solo si queda tiempo (un 504 ya agotó la espera).
+        if (!busy || !backup || ctrl.signal.aborted || (e as AiError).status === 504) throw e;
+        console.warn("[aura] modelo principal saturado; usando el respaldo gratuito:", backup.id, (e as AiError).detail ?? "");
+        r = await backup.run(runOpts);
+      }
     }
     // Salida también revisada (defensa en profundidad) y acotada.
     const out = scanPrivate(r.text || "").text.slice(0, 2000) || "No tengo una respuesta clara para eso. ¿Me cuentas un poco más?";
