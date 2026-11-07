@@ -313,6 +313,7 @@ model Customer {
   communityComments   CommunityComment[]
   communityReactions  CommunityReaction[]
   communityReports    CommunityReport[]
+  auraConversations   AuraConversation[]
 }
 
 model CustomerIdentity {
@@ -603,7 +604,7 @@ enum CustomOfferStatus {
 /// "Tú lo buscas. Nosotros lo exploramos": producto que un cliente quiere que traigamos. No exige cuenta.
 model ProductRequest {
   id          String               @id @default(cuid())
-  /// Radicado: BUS-AAAA-000001
+  /// Radicado: BUS-AAAA-000001 (históricos) o BUS-XXXXXX aleatorio (nuevos).
   code        String               @unique
   customerId  String?
   customer    Customer?            @relation(fields: [customerId], references: [id], onDelete: SetNull)
@@ -647,9 +648,63 @@ model ProductRequest {
   accessTokens    RequestAccessToken[]
   offers          CustomOffer[]
 
+  // ── AURA conversacional (Gemini) ──
+  /// Resumen que AURA preparó y el cliente confirmó (sin datos personales).
+  auraSummary        String?
+  /// Prioridad sugerida por AURA: "alta" | "normal" | "baja". El equipo decide.
+  auraPriority       String?
+  /// Datos que el cliente no supo o no dio (se muestran como "Pendiente").
+  auraPending        String[]          @default([])
+  auraConversationId String?           @unique
+  auraConversation   AuraConversation? @relation(fields: [auraConversationId], references: [id], onDelete: SetNull)
+
   @@index([status, createdAt])
   @@index([email])
   @@index([assignedAdminId])
+}
+
+/// Conversación con AURA. La identidad del cliente vive aquí (servidor); nunca se envía al modelo.
+model AuraConversation {
+  id           String          @id @default(cuid())
+  customerId   String?
+  customer     Customer?       @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  /// Hash de la IP (para límites); nunca la IP en claro.
+  ipHash       String
+  status       String          @default("abierta")
+  /// Borrador de solicitud que AURA preparó y espera la confirmación del cliente (JSON validado).
+  draft        Json?
+  messageCount Int             @default(0)
+  tokensIn     Int             @default(0)
+  tokensOut    Int             @default(0)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  messages     AuraMessage[]
+  request      ProductRequest?
+
+  @@index([createdAt])
+  @@index([customerId])
+}
+
+/// Mensaje de la conversación, ya filtrado (lo que se guarda es lo mismo que pudo ver el modelo).
+model AuraMessage {
+  id             String           @id @default(cuid())
+  conversationId String
+  conversation   AuraConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  /// "user" | "model" | "system" (respuesta fija del sistema, NO generada por IA)
+  role           String
+  text           String
+  /// Herramientas usadas en este turno (nombres) y si hubo datos privados filtrados.
+  tools          String[]         @default([])
+  redacted       Boolean          @default(false)
+  attachments    Int              @default(0)
+  tokensIn       Int              @default(0)
+  tokensOut      Int              @default(0)
+  /// Si falló la IA: "quota" | "error" | "timeout" | "unconfigured" | "privacy"
+  errorKind      String?
+  createdAt      DateTime         @default(now())
+
+  @@index([conversationId, createdAt])
+  @@index([createdAt])
 }
 
 /// Fotos o capturas de referencia de una solicitud (bucket privado; las ve el cliente dueño y el equipo).
