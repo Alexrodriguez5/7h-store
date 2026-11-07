@@ -4,6 +4,7 @@ import { expireOrder } from "@/lib/services/order-lifecycle";
 import { invalidateProducts } from "@/lib/cache";
 import { safeEqual } from "@/lib/admin/password";
 import { notifyCustomer } from "@/lib/order-emails";
+import { remindExpiringQuotes, syncOffers } from "@/lib/services/special-requests";
 
 /** Expira pedidos vencidos (libera su stock) y limpia contadores viejos de límites de intentos. */
 export async function GET(req: Request) {
@@ -28,5 +29,8 @@ export async function GET(req: Request) {
     .deleteMany({ where: { resetAt: { lt: new Date(Date.now() - 24 * 3600_000) } } })
     .then((r) => r.count)
     .catch(() => 0);
-  return NextResponse.json({ expired, purgedRateLimits: purged });
+  // Búsqueda personalizada: concilia ofertas con pedidos pagados/vencidos y avisa cotizaciones por vencer.
+  await syncOffers().catch((e) => console.error("[cron] ofertas:", e instanceof Error ? e.message : e));
+  const quoteReminders = await remindExpiringQuotes().catch(() => 0);
+  return NextResponse.json({ expired, purgedRateLimits: purged, quoteReminders });
 }

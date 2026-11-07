@@ -291,10 +291,10 @@ export default async function HomePage() {
       <Section tone="sand" label="Servicios 7H">
         <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr]">
           <Reveal className="section-ink flex flex-col rounded-[22px] p-7 text-ivory sm:p-10">
-            <p className="type-eyebrow flex items-center gap-3 text-gold-light"><span className="font-display text-sm tracking-normal">07</span><span aria-hidden="true" className="h-px w-8 bg-gold/70" />Tú lo buscas</p>
-            <h2 className="type-h2 mt-4">Tú lo buscas. <span className="text-gold-light">Nosotros lo exploramos.</span></h2>
-            <p className="mt-4 max-w-lg flex-1 text-[15px] leading-7 text-ivory/65">Cuéntanos qué producto estás buscando. Déjanos tu solicitud y exploraremos las posibilidades de conseguirlo.</p>
-            <div className="mt-8"><Button href="/tu-lo-buscas" variant="gold">Hacer una solicitud <ArrowRightIcon width={16} height={16} /></Button></div>
+            <p className="type-eyebrow flex items-center gap-3 text-gold-light"><span className="font-display text-sm tracking-normal">07</span><span aria-hidden="true" className="h-px w-8 bg-gold/70" />AURA · Búsqueda personalizada</p>
+            <h2 className="type-h2 mt-4">Tú lo necesitas. <span className="text-gold-light">Nosotros buscamos cómo conseguirlo.</span></h2>
+            <p className="mt-4 max-w-lg flex-1 text-[15px] leading-7 text-ivory/65">¿No está en la tienda? Cuéntanos qué buscas, con una foto o un enlace si lo tienes, y te prepararemos alternativas con precio y tiempos confirmados.</p>
+            <div className="mt-8"><Button href="/tu-lo-buscas" variant="gold">Iniciar búsqueda <ArrowRightIcon width={16} height={16} /></Button></div>
           </Reveal>
           <Reveal delay={100} className="surface flex flex-col rounded-[22px] p-7 sm:p-10">
             <p className="type-eyebrow flex items-center gap-3 text-gold-deep"><span aria-hidden="true" className="h-px w-8 bg-gold" />Comunidad 7H</p>

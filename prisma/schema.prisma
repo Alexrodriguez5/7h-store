@@ -97,11 +97,14 @@ model Product {
   badges            String[]         @default([])
   /// Video demostrativo opcional (YouTube, Vimeo o MP4 por https).
   videoUrl          String?
+  /// Producto creado para una oferta personalizada: no se lista en la tienda y solo lo compra ese cliente.
+  customOnly        Boolean          @default(false)
   createdAt         DateTime         @default(now())
   orderItems        OrderItem[]
   variants          ProductVariant[]
   reviews           Review[]
   media             MediaItem[]
+  customOffer       CustomOffer?
 
   @@index([categoryId])
   @@index([featured])
@@ -566,6 +569,35 @@ enum ProductRequestStatus {
   DISPONIBLE
   NO_DISPONIBLE
   FINALIZADA
+  BUSCANDO_PROVEEDORES
+  PROPUESTA_PREPARADA
+  PROPUESTA_ENVIADA
+  ESPERANDO_CLIENTE
+  ACEPTADA
+  RECHAZADA
+  CONVERTIDA
+  CERRADA
+}
+
+/// Tipo de precio de una alternativa: nunca se presenta una estimación como precio definitivo.
+enum AlternativePriceKind {
+  ESTIMADO
+  COTIZADO
+  FINAL
+}
+
+enum AlternativeStatus {
+  BORRADOR
+  ENVIADA
+  ACEPTADA
+  RECHAZADA
+}
+
+enum CustomOfferStatus {
+  ACTIVA
+  USADA
+  VENCIDA
+  REVOCADA
 }
 
 /// "Tú lo buscas. Nosotros lo exploramos": producto que un cliente quiere que traigamos. No exige cuenta.
@@ -593,8 +625,136 @@ model ProductRequest {
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
 
+  // ── AURA · Búsqueda personalizada (todo opcional: se admite información parcial) ──
+  phone           String?
+  color           String?
+  size            String?
+  features        String?
+  referenceStore  String?
+  /// Enlaces de referencia del cliente (se tratan como texto, el servidor nunca los visita).
+  links           String[]             @default([])
+  /// Lo que escribió el cliente, tal cual. El equipo edita los campos estructurados, nunca esto.
+  originalText    String?
+  /// Canal de origen: "formulario", "asistente", "cuenta", "portada".
+  source          String?
+  assignedAdminId String?
+  /// Motivo de cierre o de no disponibilidad (para la analítica).
+  closeReason     String?
+  firstResponseAt DateTime?
+  images          RequestImage[]
+  events          RequestEvent[]
+  alternatives    RequestAlternative[]
+  accessTokens    RequestAccessToken[]
+  offers          CustomOffer[]
+
   @@index([status, createdAt])
   @@index([email])
+  @@index([assignedAdminId])
+}
+
+/// Fotos o capturas de referencia de una solicitud (bucket privado; las ve el cliente dueño y el equipo).
+model RequestImage {
+  id        String         @id @default(cuid())
+  requestId String
+  request   ProductRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  path      String
+  mime      String
+  position  Int            @default(0)
+  createdAt DateTime       @default(now())
+
+  @@index([requestId])
+}
+
+/// Historial de la solicitud: cambios de estado, mensajes y notas INTERNAS (internal = nunca se muestran al cliente).
+model RequestEvent {
+  id         String                @id @default(cuid())
+  requestId  String
+  request    ProductRequest        @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  /// "status" | "message" | "note" | "proposal" | "acceptance" | "rejection" | "offer" | "edit" | "assign"
+  kind       String
+  fromStatus ProductRequestStatus?
+  toStatus   ProductRequestStatus?
+  body       String?
+  internal   Boolean               @default(false)
+  /// "customer" | "admin" | "system"
+  authorType String
+  adminId    String?
+  createdAt  DateTime              @default(now())
+
+  @@index([requestId, createdAt])
+}
+
+/// Alternativa preparada por el equipo para una solicitud (no necesita existir en el catálogo).
+model RequestAlternative {
+  id               String               @id @default(cuid())
+  requestId        String
+  request          ProductRequest       @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  /// Número de propuesta en la que se envió (permite nuevas revisiones sin perder historial).
+  round            Int                  @default(1)
+  position         Int                  @default(0)
+  name             String
+  brand            String?
+  model            String?
+  imageUrl         String?
+  description      String?
+  features         String[]             @default([])
+  referenceUrl     String?
+  priceKind        AlternativePriceKind @default(ESTIMADO)
+  priceCOP         Int?
+  extraCostsCOP    Int?
+  shippingCOP      Int?
+  availability     String?
+  deliveryEstimate String?
+  warranty         String?
+  validUntil       DateTime?
+  /// Observaciones visibles para el cliente.
+  notes            String?
+  /// Proveedor, costos y notas confidenciales: SOLO para el equipo.
+  internalNotes    String?
+  recommended      Boolean              @default(false)
+  status           AlternativeStatus    @default(BORRADOR)
+  sentAt           DateTime?
+  respondedAt      DateTime?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  offers           CustomOffer[]
+
+  @@index([requestId, round])
+}
+
+/// Enlace seguro para que un cliente SIN cuenta vea su solicitud y propuesta (solo se guarda el hash; vence y se puede revocar).
+model RequestAccessToken {
+  id        String         @id @default(cuid())
+  requestId String
+  request   ProductRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  tokenHash String         @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime       @default(now())
+
+  @@index([requestId])
+}
+
+/// Oferta personalizada temporal: un producto privado (no sale en el catálogo) que solo puede comprar ese cliente
+/// por el checkout normal. La venta se considera concretada solo cuando el pedido queda pagado.
+model CustomOffer {
+  id            String             @id @default(cuid())
+  requestId     String
+  request       ProductRequest     @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  alternativeId String
+  alternative   RequestAlternative @relation(fields: [alternativeId], references: [id], onDelete: Cascade)
+  productId     String             @unique
+  product       Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customerEmail String
+  priceCOP      Int
+  expiresAt     DateTime
+  status        CustomOfferStatus  @default(ACTIVA)
+  orderId       String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@index([requestId])
+  @@index([customerEmail])
 }
 
 enum InquiryTopic {

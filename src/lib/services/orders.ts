@@ -3,6 +3,7 @@ import { quoteShipping, totalWeight, type ShippingQuote, type ShippingZoneRule }
 import type { CheckoutInput } from "@/lib/schemas/checkout";
 import { mergeLines, reserveStock, type StockLine } from "@/lib/stock";
 import { randomInt } from "node:crypto";
+import { assertCustomOfferPurchase } from "@/lib/services/special-requests";
 
 /** Alfabeto sin caracteres confusos (sin 0/O, 1/I/L, U/V). */
 export const ORDER_CODE_ALPHABET = "23456789ABCDEFGHJKMNPQRSTWXYZ";
@@ -48,6 +49,12 @@ export async function createOrder(input: CheckoutInput, db: PrismaClient = prism
       return { product, size, stockLine };
     });
 
+    // Ofertas personalizadas (AURA): solo su dueño, vigentes, 1 unidad. El precio es el del producto en la base de datos.
+    const offerIds: string[] = [];
+    for (const { product, stockLine } of resolved) {
+      if ((product as { customOnly?: boolean }).customOnly) offerIds.push(await assertCustomOfferPurchase(tx, product.id, input.customer.email, stockLine.quantity));
+    }
+
     // El servidor cotiza con los pesos REALES de la base de datos (no confía en el navegador).
     const weightGrams = totalWeight(resolved.map(({ product, stockLine }) => ({ weightGrams: (product as { weightGrams?: number | null }).weightGrams, quantity: stockLine.quantity })));
     // `shippingOverride`: cotización ya hecha en el servidor con la tarifa real de la transportadora (Envia).
@@ -59,7 +66,7 @@ export async function createOrder(input: CheckoutInput, db: PrismaClient = prism
     // Reserva atómica ANTES de crear el pedido: si falta stock se revierte todo.
     for (const { stockLine } of resolved) await reserveStock(tx, stockLine);
 
-    return tx.order.create({
+    const order = await tx.order.create({
       data: {
         publicCode,
         status: "PENDING_PAYMENT",
@@ -91,6 +98,9 @@ export async function createOrder(input: CheckoutInput, db: PrismaClient = prism
         },
       },
     });
+    // La oferta queda asociada al pedido; se marca como usada solo cuando el pago se confirme.
+    if (offerIds.length) await tx.customOffer.updateMany({ where: { id: { in: offerIds } }, data: { orderId: order.id } });
+    return order;
   }, { maxWait: 10_000, timeout: 15_000 }); // margen para bases de datos lejanas (Supabase en otra región)
 }
 

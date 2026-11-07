@@ -47,7 +47,8 @@ const select = {
 } satisfies Prisma.ProductSelect;
 
 /** Visible en la tienda: producto activo dentro de una categoría activa. */
-const visible = { active: true, category: { active: true } } satisfies Prisma.ProductWhereInput;
+/** Visible en la tienda: activo, en categoría activa y que NO sea el producto privado de una oferta personalizada. */
+const visible = { active: true, customOnly: false, category: { active: true } } satisfies Prisma.ProductWhereInput;
 
 const cacheOpts = (...tags: string[]) => ({ tags, revalidate: CATALOG_TTL_SECONDS });
 
