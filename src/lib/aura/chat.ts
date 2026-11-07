@@ -48,7 +48,7 @@ export const pacificDay = (now = new Date()) => new Intl.DateTimeFormat("en-CA",
 
 const COOLDOWN_KEY = "aura:quota-cooldown";
 
-export interface ChatDeps { db?: PrismaClient; config?: AuraConfig; provider?: AiProvider | null; now?: Date }
+export interface ChatDeps { db?: PrismaClient; config?: AuraConfig; provider?: AiProvider | null; fallbackProvider?: AiProvider | null; now?: Date }
 
 export async function handleChat(input: ChatInput, viewer: { ip: string; customerId: string | null }, deps: ChatDeps = {}): Promise<ChatReply> {
   const db = deps.db ?? prisma;
@@ -85,6 +85,8 @@ export async function handleChat(input: ChatInput, viewer: { ip: string; custome
 
   // 4) ¿Hay IA disponible?
   const provider = deps.provider !== undefined ? deps.provider : cfg.enabled && cfg.key && cfg.model ? geminiProvider(cfg.key, cfg.model, cfg.timeoutMs) : null;
+  // Respaldo GRATUITO (otro modelo Flash del nivel gratuito, misma clave): solo si el principal está saturado.
+  const backup = deps.fallbackProvider !== undefined ? deps.fallbackProvider : provider && cfg.key && cfg.fallbackModel ? geminiProvider(cfg.key, cfg.fallbackModel, cfg.timeoutMs) : null;
   if (!provider) {
     await saveUser({ errorKind: "unconfigured" });
     return sys("unconfigured", "La asistencia inteligente de AURA no está activa en este momento. Puedes registrar tu búsqueda con el asistente guiado o escribirnos por WhatsApp.", cid);
@@ -105,11 +107,21 @@ export async function handleChat(input: ChatInput, viewer: { ip: string; custome
   const timer = setTimeout(() => ctrl.abort(), cfg.timeoutMs);
   const dayKey = `aura:day:${pacificDay(deps.now)}`;
   try {
-    const r = await provider.run({
+    const runOpts = {
       system: systemPrompt({ signedIn: !!viewer.customerId, catalogIsDemo: cfg.catalogIsDemo }),
       history, tools: TOOL_SPECS, execute: tools.execute, maxCalls: 3, signal: ctrl.signal,
       beforeCall: async () => (await consume(dayKey, cfg.dailyCalls, 26 * 60 * MIN)).allowed,
-    });
+    };
+    let r;
+    try {
+      r = await provider.run(runOpts);
+    } catch (e) {
+      // Solo ante "saturado / no disponible" (503, 500, 502) se intenta UNA vez el modelo de respaldo, también gratuito.
+      // Ante cuota agotada, límite diario o tiempo agotado no se insiste.
+      if (!(e instanceof AiError && e.kind === "unavailable" && e.status !== 504) || !backup || ctrl.signal.aborted) throw e;
+      console.warn("[aura] modelo principal saturado; usando el respaldo gratuito:", backup.id, e.detail ?? "");
+      r = await backup.run(runOpts);
+    }
     // Salida también revisada (defensa en profundidad) y acotada.
     const out = scanPrivate(r.text || "").text.slice(0, 2000) || "No tengo una respuesta clara para eso. ¿Me cuentas un poco más?";
     await saveUser({ tools: r.toolsUsed, tokensIn: r.tokensIn });

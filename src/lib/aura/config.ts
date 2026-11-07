@@ -17,9 +17,13 @@ export function auraConfig(env: NodeJS.ProcessEnv = process.env) {
   const key = env.GEMINI_API_KEY?.trim() || null;
   const requested = env.GEMINI_MODEL?.trim() || AURA_FREE_MODELS[0];
   const model = (AURA_FREE_MODELS as readonly string[]).includes(requested) ? requested : null;
+  // Respaldo automático cuando el principal está saturado (también con nivel gratuito). "0" lo desactiva.
+  const fb = env.AURA_FALLBACK_MODEL?.trim() || "gemini-3.6-flash";
+  const fallbackModel = fb !== "0" && fb !== model && (AURA_FREE_MODELS as readonly string[]).includes(fb) ? fb : null;
   return {
     key,
     model,
+    fallbackModel,
     /** "0" la apaga sin borrar la clave (interruptor de emergencia). */
     enabled: env.AURA_ENABLED !== "0" && !!key && !!model,
     modelRejected: !model,

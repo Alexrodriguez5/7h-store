@@ -272,3 +272,29 @@ describe("confirmación de la solicitud (identidad solo en el servidor)", () => 
     expect(created.calls).toHaveLength(0);
   });
 });
+
+describe("respaldo gratuito cuando el modelo principal está saturado", () => {
+  const ok = { text: "Hola, soy AURA.", tokensIn: 5, tokensOut: 5, calls: 1, toolsUsed: [] };
+  it("ante 503 responde con el modelo de respaldo (una sola vez)", async () => {
+    const { db } = fakeDb();
+    const main = provider(async () => { throw new AiError("unavailable", "x", 503, "high demand"); });
+    const backup = provider(async () => ok);
+    const r = await handleChat({ message: "hola", attachments: 0 }, viewer, { db, config: cfg, provider: main, fallbackProvider: backup });
+    expect(r).toMatchObject({ source: "ia", state: "ok", text: "Hola, soy AURA." });
+    expect(backup.seen).toHaveLength(1);
+  });
+  it("no se usa ante cuota agotada ni tiempo agotado", async () => {
+    for (const err of [new AiError("quota", "x", 429), new AiError("unavailable", "x", 504), new AiError("timeout", "x")]) {
+      const { db } = fakeDb();
+      setRateStore(new MemoryRateStore());
+      const backup = provider(async () => ok);
+      await handleChat({ message: "hola", attachments: 0 }, viewer, { db, config: cfg, provider: provider(async () => { throw err; }), fallbackProvider: backup });
+      expect(backup.seen).toHaveLength(0);
+    }
+  });
+  it("el respaldo solo puede ser un modelo gratuito; '0' lo desactiva", () => {
+    expect(auraConfig({ GEMINI_API_KEY: "k" } as any).fallbackModel).toBe("gemini-3.6-flash");
+    expect(auraConfig({ GEMINI_API_KEY: "k", AURA_FALLBACK_MODEL: "gemini-4-argon" } as any).fallbackModel).toBeNull();
+    expect(auraConfig({ GEMINI_API_KEY: "k", AURA_FALLBACK_MODEL: "0" } as any).fallbackModel).toBeNull();
+  });
+});
