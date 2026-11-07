@@ -58,8 +58,8 @@ export function ProductRequestForm({ defaults }: { defaults?: { name?: string; e
       </div>
       <label className="block text-xs font-semibold">Comentarios<textarea rows={3} value={v.comments} onChange={set("comments")} maxLength={1000} placeholder="Talla, color, para cuándo lo necesitas…" className={field} /></label>
       <div>
-        <p className="mb-2 text-xs font-semibold">Foto de referencia (opcional)</p>
-        <PhotoPicker files={files} onChange={setFiles} max={1} label="Agregar foto" />
+        <p className="mb-2 text-xs font-semibold">Fotos de referencia (opcional, hasta 4)</p>
+        <PhotoPicker files={files} onChange={setFiles} max={4} label="Agregar foto" />
       </div>
       <input type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" value={v.website} onChange={set("website")} className="absolute -left-[9999px] h-0 w-0 opacity-0" name="website" />
       <label className="flex items-start gap-3 text-xs leading-5 text-ink-soft">

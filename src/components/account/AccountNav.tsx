@@ -7,7 +7,8 @@ import { callApi } from "./api";
 
 const LINKS = [
   { href: "/cuenta/pedidos", label: "Mis pedidos" },
-  { href: "/cuenta/solicitudes", label: "Solicitudes y garantías" },
+  { href: "/cuenta/busquedas", label: "Mis solicitudes" },
+  { href: "/cuenta/solicitudes", label: "Garantías y PQR" },
   { href: "/cuenta/perfil", label: "Mi perfil" },
   { href: "/cuenta/direcciones", label: "Direcciones" },
 ];

@@ -1,18 +1,20 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { PageBody, PageHero } from "@/components/aura/PageHero";
-import { ProductRequestForm } from "@/components/requests/ProductRequestForm";
+import { AuraAssistant } from "@/components/requests/AuraAssistant";
 import { getCurrentCustomer } from "@/lib/customer/auth";
 
 export const metadata: Metadata = {
-  title: "Tú lo buscas. Nosotros lo exploramos",
-  description: "¿No encuentras un producto en 7H STORE? Cuéntanos qué buscas y exploraremos la posibilidad de conseguirlo.",
+  title: "AURA · Búsqueda personalizada",
+  description: "¿No encuentras un producto en 7H STORE? Cuéntanos qué necesitas, con fotos o enlaces, y te prepararemos alternativas con precio y tiempos confirmados.",
   alternates: { canonical: "/tu-lo-buscas" },
 };
 
 const STEPS = [
-  ["Nos cuentas", "Qué producto buscas, la marca, el modelo y, si quieres, una foto o un enlace."],
-  ["Exploramos", "Revisamos disponibilidad, precio final en pesos y tiempos de llegada."],
-  ["Te respondemos", "Por correo, con una respuesta clara: si se puede o no, y en qué condiciones."],
+  ["Nos cuentas", "Lo que necesitas, con tus palabras. Una foto o un enlace ayudan, pero no son obligatorios."],
+  ["Buscamos", "Revisamos proveedores, disponibilidad, precio final en pesos y tiempos de llegada."],
+  ["Te proponemos", "Una o varias alternativas. Tú eliges, preguntas o nos dices que ninguna te sirve."],
+  ["Compras seguro", "Si aceptas, te preparamos una oferta privada para pagar en el checkout de siempre."],
 ];
 
 export default async function ProductRequestPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
@@ -20,14 +22,14 @@ export default async function ProductRequestPage({ searchParams }: { searchParam
   return (
     <main id="contenido">
       <PageHero
-        eyebrow="Tú lo buscas"
-        title="Tú lo buscas."
-        accent="Nosotros lo exploramos."
-        lead="Cuéntanos qué producto estás buscando. En 7H STORE queremos acercarte lo que necesitas: déjanos tu solicitud y exploraremos las posibilidades de conseguirlo."
+        eyebrow="AURA · Búsqueda personalizada"
+        title="Tú lo necesitas."
+        accent="Nosotros buscamos cómo conseguirlo."
+        lead="¿No está en la tienda? Cuéntanos qué buscas y nuestro equipo explorará las posibilidades de conseguirlo para ti."
       />
       <PageBody className="max-w-6xl">
         <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
-          <ProductRequestForm defaults={{ name: customer?.name, email: customer?.email, productName: q?.slice(0, 120) }} />
+          <AuraAssistant defaults={{ name: customer?.name, email: customer?.email, productName: q?.slice(0, 160) }} />
           <aside className="space-y-4">
             <ol className="surface space-y-5 rounded-[28px] p-6 sm:p-8">
               {STEPS.map(([t, d], i) => (
@@ -37,7 +39,8 @@ export default async function ProductRequestPage({ searchParams }: { searchParam
                 </li>
               ))}
             </ol>
-            <p className="px-2 text-xs leading-5 text-ink-soft">No todos los productos se pueden conseguir: depende de la marca, la disponibilidad y las condiciones de importación. Te responderemos siempre con honestidad.</p>
+            <p className="px-2 text-xs leading-5 text-ink-soft">No todos los productos se pueden conseguir: depende de la marca, la disponibilidad y las condiciones de importación. No confirmamos precio, disponibilidad ni fecha de entrega hasta verificarlos con el proveedor.</p>
+            {customer && <p className="px-2 text-xs text-ink-soft">Sigue tus búsquedas en <Link href="/cuenta/busquedas" className="underline">Mis solicitudes</Link>.</p>}
           </aside>
         </div>
       </PageBody>

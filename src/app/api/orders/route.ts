@@ -54,6 +54,10 @@ export async function POST(req: Request) {
     if (message.startsWith("OUT_OF_STOCK:")) return NextResponse.json({ error: `Sin stock suficiente: ${message.replace("OUT_OF_STOCK:", "")}` }, { status: 409 });
     if (message.startsWith("INVALID_SIZE:")) return NextResponse.json({ error: "La talla seleccionada ya no está disponible." }, { status: 409 });
     if (message.startsWith("PRODUCT_NOT_FOUND:")) return NextResponse.json({ error: "Uno de los productos ya no está disponible." }, { status: 409 });
+    if (message === "CUSTOM_OFFER_OWNER") return NextResponse.json({ error: "Esta oferta personalizada es para otra persona. Usa el mismo correo de tu solicitud." }, { status: 403 });
+    if (message === "CUSTOM_OFFER_UNAVAILABLE") return NextResponse.json({ error: "Tu oferta personalizada venció o ya no está disponible. Escríbenos y la actualizamos." }, { status: 409 });
+    if (message === "CUSTOM_OFFER_QUANTITY") return NextResponse.json({ error: "La oferta personalizada es por 1 unidad." }, { status: 400 });
+    if (message === "CUSTOM_OFFER_IN_USE") return NextResponse.json({ error: "Ya hay un pedido en curso con esta oferta. Revísalo en Mi cuenta." }, { status: 409 });
     console.error("[orders] error al crear pedido:", message);
     return NextResponse.json({ error: "No pudimos crear el pedido. Inténtalo de nuevo." }, { status: 500 });
   }

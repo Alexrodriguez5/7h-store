@@ -29,7 +29,7 @@ export function Catalog({ products, categories }: { products: Product[]; categor
           description={filters.search ? "No lo tenemos todavía, pero podemos buscarlo por ti: cuéntanos qué necesitas." : "Prueba otra categoría, cambia los filtros o limpia la búsqueda."}
           action={
             <div className="flex flex-wrap justify-center gap-3">
-              {filters.search && <Button href={`/tu-lo-buscas?q=${encodeURIComponent(filters.search)}`} variant="gold">Tú lo buscas, nosotros lo exploramos</Button>}
+              {filters.search && <Button href={`/tu-lo-buscas?q=${encodeURIComponent(filters.search)}`} variant="gold">¿No lo encuentras? AURA lo busca por ti</Button>}
               <Button onClick={reset} variant={filters.search ? "secondary" : "primary"}>Limpiar filtros</Button>
             </div>
           }
