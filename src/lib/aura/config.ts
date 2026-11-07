@@ -5,7 +5,8 @@
  * (aistudio.google.com/docs/pricing, revisado el 7 de noviembre de 2026). Cualquier otro valor de
  * GEMINI_MODEL deja AURA apagada en vez de usar un modelo que pueda cobrar.
  */
-export const AURA_FREE_MODELS = ["gemini-3.8-flash"] as const;
+/** El primero es el predeterminado. Los otros dos también tienen nivel gratuito y sirven de respaldo manual (GEMINI_MODEL). */
+export const AURA_FREE_MODELS = ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"] as const;
 
 const int = (v: string | undefined, fallback: number, min: number, max: number) => {
   const n = Number.parseInt(v ?? "", 10);

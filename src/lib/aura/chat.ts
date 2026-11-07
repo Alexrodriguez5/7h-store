@@ -122,7 +122,7 @@ export async function handleChat(input: ChatInput, viewer: { ip: string; custome
   } catch (e) {
     const err = e instanceof AiError ? e : new AiError("error", "Error inesperado");
     // Se registra la categoría, nunca el contenido ni la clave.
-    console.error("[aura] fallo del proveedor:", err.kind, err.status ?? "");
+    console.error("[aura] fallo del proveedor:", err.kind, err.status ?? "", err.detail ?? "");
     await saveUser({ errorKind: err.kind });
     if (err.kind === "quota") {
       await registerHit(COOLDOWN_KEY, 15 * MIN);

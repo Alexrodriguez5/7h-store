@@ -72,8 +72,10 @@ export function classify(e: unknown, signal?: AbortSignal): AiError {
   if (signal?.aborted || (e instanceof Error && (e.name === "AbortError" || /timed? ?out|aborted/i.test(e.message)))) return new AiError("timeout", "Tiempo de espera agotado");
   const status = e instanceof ApiError ? e.status : typeof (e as { status?: unknown })?.status === "number" ? (e as { status: number }).status : undefined;
   const msg = e instanceof Error ? e.message : "";
-  if (status === 429 || /RESOURCE_EXHAUSTED|quota|rate limit/i.test(msg)) return new AiError("quota", "Cuota gratuita agotada", 429);
-  if (status === 500 || status === 502 || status === 503 || status === 504 || /UNAVAILABLE|overloaded/i.test(msg)) return new AiError("unavailable", "Servicio de IA no disponible", status);
-  if (status === 401 || status === 403) return new AiError("error", "Clave de Gemini no válida o sin permiso", status);
-  return new AiError("error", "Error del proveedor de IA", status);
+  // Solo el motivo del proveedor (sin contenido enviado); se borra cualquier cosa parecida a una clave.
+  const detail = (msg.match(/"message":\s*"([^"]{0,200})/)?.[1] ?? msg.slice(0, 160)).replace(/AIza[0-9A-Za-z_-]{20,}|key=[^&\s]+/g, "[oculto]");
+  if (status === 429 || /RESOURCE_EXHAUSTED|quota|rate limit/i.test(msg)) return new AiError("quota", "Cuota gratuita agotada", 429, detail);
+  if (status === 500 || status === 502 || status === 503 || status === 504 || /UNAVAILABLE|overloaded/i.test(msg)) return new AiError("unavailable", "Servicio de IA no disponible", status, detail);
+  if (status === 401 || status === 403) return new AiError("error", "Clave de Gemini no válida o sin permiso", status, detail);
+  return new AiError("error", "Error del proveedor de IA", status, detail);
 }

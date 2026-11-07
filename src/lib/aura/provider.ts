@@ -34,5 +34,6 @@ export type AiErrorKind = "quota" | "unavailable" | "timeout" | "error" | "budge
 
 /** Error del proveedor ya clasificado. El mensaje nunca incluye la clave ni el contenido enviado. */
 export class AiError extends Error {
-  constructor(public kind: AiErrorKind, message: string, public status?: number) { super(message); }
+  /** `detail`: motivo que da el proveedor (p. ej. "The model is overloaded"), ya limpio de claves. */
+  constructor(public kind: AiErrorKind, message: string, public status?: number, public detail?: string) { super(message); }
 }
