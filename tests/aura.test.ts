@@ -320,3 +320,48 @@ describe("pausa ante 429 según lo que indica Google", () => {
     expect(e).toMatchObject({ kind: "quota", retryAfterSec: 37 });
   });
 });
+
+describe("nivel 1 · biblioteca antes que la IA", () => {
+  const answer = (decision: "respuesta" | "contexto" | "ninguna", text: string | null = null) => async () => ({ decision, entryId: "e1", title: "¿Cuánto cuesta el envío?", text, score: 0.9, context: decision === "ninguna" ? [] : ["¿Cuánto cuesta el envío?: Gratis desde $ 500.000."], understood: "" });
+  it("si hay respuesta aprobada, responde sin llamar a la IA y lo marca como biblioteca", async () => {
+    const { db } = fakeDb();
+    const p = provider(async () => { throw new Error("no debería llamarse"); });
+    const r = await handleChat({ message: "cuanto vale el envio", attachments: 0 }, viewer, { db, config: cfg, provider: p, library: answer("respuesta", "Gratis desde $ 500.000.") });
+    expect(r).toMatchObject({ source: "biblioteca", state: "ok", entryId: "e1", text: "Gratis desde $ 500.000." });
+    expect(p.seen).toHaveLength(0);
+  });
+  it("funciona aunque la IA no esté configurada (sin gastar cuota)", async () => {
+    const { db } = fakeDb();
+    const r = await handleChat({ message: "cuanto vale el envio", attachments: 0 }, viewer, { db, config: auraConfig({} as any), provider: null, library: answer("respuesta", "Gratis.") });
+    expect(r.source).toBe("biblioteca");
+  });
+  it("con coincidencia parcial pasa al modelo con SOLO la información aprobada relacionada (RAG)", async () => {
+    const { db } = fakeDb();
+    const p = provider(async () => ({ text: "ok", tokensIn: 1, tokensOut: 1, calls: 1, toolsUsed: [] }));
+    await handleChat({ message: "el envio a leticia cuanto es", attachments: 0 }, viewer, { db, config: cfg, provider: p, library: answer("contexto") });
+    expect(p.seen[0].history.at(-1)!.text).toContain("Información aprobada de 7H STORE");
+    expect(p.seen[0].history.at(-1)!.text).toContain("Gratis desde");
+  });
+  it("con adjuntos no consulta la biblioteca (es una búsqueda personalizada)", async () => {
+    const { db } = fakeDb();
+    let called = false;
+    const p = provider(async () => ({ text: "ok", tokensIn: 1, tokensOut: 1, calls: 1, toolsUsed: [] }));
+    await handleChat({ message: "te mando la foto", attachments: 1 }, viewer, { db, config: cfg, provider: p, library: async () => { called = true; return answer("respuesta", "x")(); } });
+    expect(called).toBe(false);
+  });
+  it("si la biblioteca falla (p. ej. tablas sin crear), sigue al modelo", async () => {
+    const { db } = fakeDb();
+    const p = provider(async () => ({ text: "respuesta del modelo", tokensIn: 1, tokensOut: 1, calls: 1, toolsUsed: [] }));
+    const r = await handleChat({ message: "hola", attachments: 0 }, viewer, { db, config: cfg, provider: p, library: async () => { throw new Error("sin tablas"); } });
+    expect(r).toMatchObject({ source: "ia", text: "respuesta del modelo" });
+  });
+});
+
+describe("privacidad · sin falsos positivos con palabras como «contraseña»", () => {
+  it.each(["olvidé mi contraseña, cómo la recupero", "¿cómo cambio mi clave?", "puedo entrar con contraseña?"])("no bloquea: %s", (t) => {
+    expect(scanPrivate(t).block).toBe(false);
+  });
+  it.each(["mi clave es Hola2026", "pin: 4321", "el cvv 123"])("sí bloquea: %s", (t) => {
+    expect(scanPrivate(t).block).toBe(true);
+  });
+});
