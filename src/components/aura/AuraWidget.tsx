@@ -12,7 +12,7 @@ import { AuraOrb, MOOD_ENERGY, type AuraMood } from "./AuraOrb";
 
 type Msg =
   | { id: string; role: "user"; text: string; files: number }
-  | { id: string; role: "aura"; source: "ia" | "sistema"; text: string; state: ChatReply["state"]; products: ProductCard[]; draft: RequestDraft | null; handoff: Handoff | null; fallback: boolean }
+  | { id: string; role: "aura"; source: ChatReply["source"]; entryId?: string | null; question?: string; feedback?: "si" | "no"; text: string; state: ChatReply["state"]; products: ProductCard[]; draft: RequestDraft | null; handoff: Handoff | null; fallback: boolean }
   | { id: string; role: "done"; code: string; link: string | null };
 
 const NOTICE = "AURA se encuentra en una fase de prueba. Evita compartir datos personales, bancarios o información confidencial en el chat. Las fotografías y archivos que adjuntes se almacenan de forma privada para que nuestro equipo pueda revisarlos.";
@@ -107,10 +107,18 @@ export function AuraWidget() {
     }
     setBusy(false);
     if (reply.conversationId) setConv(reply.conversationId);
-    setMsgs((m) => [...m, { id: uid(), role: "aura", source: reply.source, text: reply.text, state: reply.state, products: reply.products, draft: reply.draft, handoff: reply.handoff, fallback: reply.fallback }]);
+    setMsgs((m) => [...m, { id: uid(), role: "aura", source: reply.source, entryId: reply.entryId ?? null, question: check.text, text: reply.text, state: reply.state, products: reply.products, draft: reply.draft, handoff: reply.handoff, fallback: reply.fallback }]);
     // El mensaje se conserva escrito si no lo atendió la IA (cuota, error, privacidad).
     if (reply.state === "ok") { setText(""); setMood("responding", 1400); }
     else setMood("error", 1600);
+  };
+
+  /** "¿Te sirvió?": un "No" llega al panel (Aprendizaje y calidad) para que el equipo corrija. Nada cambia solo. */
+  const rateAnswer = (id: string, v: "si" | "no") => {
+    const m = msgs.find((x) => x.id === id);
+    if (!m || m.role !== "aura") return;
+    setMsgs((list) => list.map((x) => (x.id === id && x.role === "aura" ? { ...x, feedback: v } : x)));
+    if (v === "no" && m.entryId) void fetch("/api/aura/feedback", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ entryId: m.entryId, question: m.question ?? "" }) }).catch(() => undefined);
   };
 
   const lastDraft = [...msgs].reverse().find((m) => m.role === "aura" && m.draft) as Extract<Msg, { role: "aura" }> | undefined;
@@ -191,10 +199,23 @@ export function AuraWidget() {
               );
               return (
                 <div key={m.id} className="max-w-[92%] space-y-2">
-                  <div className={`rounded-2xl rounded-bl-md px-3.5 py-2.5 text-sm leading-6 ${m.source === "ia" ? "bg-white/[.06] text-ivory/90" : "border border-white/15 text-ivory/80"}`}>
+                  <div className={`rounded-2xl rounded-bl-md px-3.5 py-2.5 text-sm leading-6 ${m.source === "ia" || m.source === "biblioteca" ? "bg-white/[.06] text-ivory/90" : "border border-white/15 text-ivory/80"}`}>
                     {m.source === "sistema" && <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[.14em] text-ivory/45">Mensaje automático</span>}
+                    {m.source === "biblioteca" && <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[.14em] text-gold-light/80">Respuesta verificada de 7H STORE</span>}
                     {rich(m.text)}
                   </div>
+                  {m.source === "biblioteca" && m.entryId && (
+                    m.feedback ? (
+                      <p className="text-[11px] text-ivory/50">{m.feedback === "si" ? "¡Gracias!" : "Gracias. El equipo revisará esta respuesta; puedes seguir preguntándome."}</p>
+                    ) : (
+                      <div className="flex items-center gap-2 text-[11px] text-ivory/55">
+                        <span>¿Te sirvió?</span>
+                        {(["si", "no"] as const).map((v) => (
+                          <button key={v} type="button" onClick={() => rateAnswer(m.id, v)} className="min-h-8 rounded-full border border-white/15 px-3 hover:border-gold">{v === "si" ? "Sí" : "No"}</button>
+                        ))}
+                      </div>
+                    )
+                  )}
                   {m.products.length > 0 && (
                     <div className="-mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-1">
                       {m.products.map((p) => (

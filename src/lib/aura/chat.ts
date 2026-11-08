@@ -8,6 +8,7 @@ import { geminiProvider } from "./gemini";
 import { describeKinds, scanPrivate, type PrivateKind } from "./privacy";
 import { systemPrompt } from "./prompt";
 import { AiError, type AiProvider, type AuraTurn } from "./provider";
+import { answerFromLibrary, looksLikeStoreQuestion, recordGap, type LibraryAnswer } from "./library/service";
 import { createToolRunner, TOOL_SPECS, type Handoff, type ProductCard, type RequestDraft } from "./tools";
 
 export const chatInput = z.object({
@@ -22,12 +23,15 @@ export type ChatInput = z.infer<typeof chatInput>;
 
 /**
  * Respuesta para la interfaz. `source` dice la verdad sobre quién respondió:
- * "ia" = Gemini; "sistema" = texto fijo de la aplicación (límites, privacidad, errores). Nunca se presenta
- * un texto fijo como si fuera de la IA.
+ * "ia" = modelo de lenguaje; "biblioteca" = respuesta aprobada por el equipo (nivel 1, sin IA generativa);
+ * "sistema" = texto fijo de la aplicación (límites, privacidad, errores). Nunca se presenta un texto fijo
+ * ni una respuesta de la biblioteca como si fuera de la IA.
  */
 export interface ChatReply {
   conversationId: string | null;
-  source: "ia" | "sistema";
+  source: "ia" | "biblioteca" | "sistema";
+  /** Entrada de la biblioteca que respondió (para "¿Te sirvió?"). */
+  entryId?: string | null;
   text: string;
   state: "ok" | "privacy" | "quota" | "limit" | "unavailable" | "unconfigured" | "error";
   products: ProductCard[];
@@ -50,7 +54,7 @@ const COOLDOWN_KEY = "aura:quota-cooldown";
 /** Mientras exista, el modelo principal se considera saturado y se va directo al respaldo gratuito. */
 const PRIMARY_BUSY_KEY = "aura:primary-busy";
 
-export interface ChatDeps { db?: PrismaClient; config?: AuraConfig; provider?: AiProvider | null; fallbackProvider?: AiProvider | null; now?: Date }
+export interface ChatDeps { db?: PrismaClient; config?: AuraConfig; provider?: AiProvider | null; fallbackProvider?: AiProvider | null; now?: Date; library?: (q: string) => Promise<LibraryAnswer> }
 
 export async function handleChat(input: ChatInput, viewer: { ip: string; customerId: string | null }, deps: ChatDeps = {}): Promise<ChatReply> {
   const db = deps.db ?? prisma;
@@ -85,7 +89,25 @@ export async function handleChat(input: ChatInput, viewer: { ip: string; custome
     return sys("privacy", `Por tu seguridad no envié ese mensaje: incluye ${describeKinds(scan.kinds)}. No hace falta compartir esos datos en el chat. Edita el mensaje y vuelve a enviarlo.`, cid, { privacy: scan.kinds });
   }
 
-  // 4) ¿Hay IA disponible?
+  // 4) NIVEL 1 · Biblioteca aprobada: si la pregunta ya tiene respuesta aprobada, se responde sin IA y sin gastar cuota.
+  //    Con adjuntos no se usa (casi siempre es una búsqueda personalizada). Si la biblioteca falla, se sigue al nivel 2.
+  const lib: LibraryAnswer = input.attachments
+    ? { decision: "ninguna", entryId: null, title: null, text: null, score: 0, context: [], understood: "" }
+    : await (deps.library ?? ((q: string) => answerFromLibrary(q, db)))(scan.text).catch(() => ({ decision: "ninguna" as const, entryId: null, title: null, text: null, score: 0, context: [], understood: "" }));
+  if (lib.decision === "respuesta" && lib.text) {
+    await saveUser({ tools: [`biblioteca:${lib.entryId}`] });
+    await db.auraMessage.create({ data: { conversationId: cid, role: "model", text: lib.text, tools: [`biblioteca:${lib.entryId}`] } });
+    await db.auraConversation.update({ where: { id: cid }, data: { messageCount: { increment: 1 } } });
+    return { conversationId: cid, source: "biblioteca", entryId: lib.entryId, text: lib.text, state: "ok", products: [], draft: null, handoff: null, privacy: scan.kinds, fallback: false };
+  }
+  if (lib.decision !== "respuesta" && looksLikeStoreQuestion(scan.text)) {
+    await recordGap(scan.text, lib.decision === "contexto" ? "baja_confianza" : "sin_respuesta", { entryId: lib.entryId, score: lib.score }, db).catch(() => undefined);
+  }
+  // Recuperación (RAG) para el nivel 2: solo las respuestas aprobadas relacionadas, nunca toda la biblioteca.
+  const modelText = lib.context.length ? `${userText}
+[Información aprobada de 7H STORE que puede servir (úsala solo si responde la pregunta): ${lib.context.join(" | ").slice(0, 1500)}]` : userText;
+
+  // 5) NIVEL 2 · ¿Hay modelo disponible?
   const provider = deps.provider !== undefined ? deps.provider : cfg.enabled && cfg.key && cfg.model ? geminiProvider(cfg.key, cfg.model, cfg.timeoutMs) : null;
   // Respaldo GRATUITO (otro modelo Flash del nivel gratuito, misma clave): solo si el principal está saturado.
   const backup = deps.fallbackProvider !== undefined ? deps.fallbackProvider : provider && cfg.key && cfg.fallbackModel ? geminiProvider(cfg.key, cfg.fallbackModel, cfg.timeoutMs) : null;
@@ -100,7 +122,7 @@ export async function handleChat(input: ChatInput, viewer: { ip: string; custome
 
   // 5) Historial (solo texto filtrado, sin datos de cliente) y llamada al modelo con herramientas.
   const past = await db.auraMessage.findMany({ where: { conversationId: cid, role: { in: ["user", "model"] }, errorKind: null }, orderBy: { createdAt: "desc" }, take: 12, select: { role: true, text: true } });
-  const history: AuraTurn[] = [...past.reverse().map((m) => ({ role: m.role as AuraTurn["role"], text: m.text })), { role: "user", text: userText }];
+  const history: AuraTurn[] = [...past.reverse().map((m) => ({ role: m.role as AuraTurn["role"], text: m.text })), { role: "user", text: modelText }];
   // Gemini exige que el historial empiece con el usuario.
   while (history.length && history[0].role !== "user") history.shift();
 

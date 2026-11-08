@@ -68,8 +68,9 @@ export function scanPrivate(input: string): PrivacyResult {
   // Correos, incluso escritos "a mano".
   sub(/[a-z0-9._%+-]+\s*(@|\(at\)|\[at\]|\barroba\b)\s*[a-z0-9-]+(\s*(\.|\bpunto\b)\s*[a-z]{2,})+/gi, "correo");
 
-  // Contraseñas, claves y códigos: la palabra y lo que sigue.
-  sub(/\b(contrase(ñ|n)a|password|clave|pin|c(ó|o)digo de (verificaci(ó|o)n|seguridad)|otp|cvv|cvc|token)\b\s*(es|:|=|de)?\s*\S+/gi, "clave", "[clave omitida]");
+  // Contraseñas, claves y códigos, SOLO cuando se escribe el valor: "mi clave es X", "pin: 1234", "cvv 123",
+  // "clave de api es X". Frases como "olvidé mi contraseña" o "¿cómo cambio mi clave?" no se bloquean.
+  sub(/\b(contrase(ñ|n)a|password|clave|pin|c(ó|o)digo de (verificaci(ó|o)n|seguridad)|otp|cvv|cvc|token)\b(?:\s+de\s+\w+)?\s*(?:(?:\bes\b|\bera\b|:|=)\s*\S+|\s+[^\s,.;?]*\d[^\s,.;?]*)/gi, "clave", "[clave omitida]");
 
   // Datos bancarios: banco o billetera + número.
   sub(/\b(cuenta( de)? (ahorros|corriente)?|n(ú|u)mero de cuenta|bancolombia|davivienda|nequi|daviplata|banco de bogot(á|a)|bbva|llave|iban)\b[^\d\n]{0,25}[\d\s.-]{6,}/gi, "cuenta_bancaria");

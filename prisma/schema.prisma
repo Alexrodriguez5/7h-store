@@ -972,3 +972,96 @@ model CommunityReport {
 
   @@index([resolvedAt])
 }
+
+// ── Cerebro de AURA · biblioteca de conocimiento (nivel 1, sin IA generativa) ──
+
+/// Una respuesta o documento de conocimiento. Solo se usa en el chat cuando está "aprobada".
+model KnowledgeEntry {
+  id             String              @id @default(cuid())
+  /// "qa" (pregunta y respuesta) | "documento" (fragmento de un documento cargado)
+  kind           String              @default("qa")
+  title          String
+  /// Respuesta aprobada (qa) o texto del fragmento (documento).
+  body           String
+  /// tienda | compras | productos | marcas | tallas | pagos | envios | garantias | devoluciones | pedidos | seguimiento | solicitudes | atencion | recomendaciones | comparaciones | objeciones
+  category       String
+  /// "borrador" | "pendiente" | "aprobada" | "desactivada"
+  status         String              @default("pendiente")
+  /// De dónde salió: página publicada, documento cargado, administrador, corrección…
+  source         String
+  sourceUrl      String?
+  version        Int                 @default(1)
+  /// true si el texto lo generó una herramienta (debe revisarse con más cuidado).
+  synthetic      Boolean             @default(false)
+  /// Huella del contenido normalizado (detección de duplicados exactos).
+  contentHash    String
+  /// Texto normalizado (minúsculas, sin tildes) usado por la búsqueda de PostgreSQL.
+  searchText     String
+  /// Fecha a partir de la cual se considera desactualizada y pide revisión.
+  reviewAt       DateTime?
+  /// Posible duplicado o contradicción detectados al importar o editar.
+  duplicateOfId  String?
+  conflictWithId String?
+  approvedById   String?
+  approvedAt     DateTime?
+  /// Lote de importación (para revisar o deshacer un lote completo).
+  batch          String?
+  hits           Int                 @default(0)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  questions      KnowledgeQuestion[]
+  revisions      KnowledgeRevision[]
+
+  @@index([status, category])
+  @@index([contentHash])
+  @@index([batch])
+}
+
+/// Formas de preguntar lo mismo. Las sintéticas quedan pendientes hasta que se aprueban.
+model KnowledgeQuestion {
+  id         String         @id @default(cuid())
+  entryId    String
+  entry      KnowledgeEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  text       String
+  searchText String
+  synthetic  Boolean        @default(false)
+  status     String         @default("pendiente")
+  createdAt  DateTime       @default(now())
+
+  @@index([entryId])
+}
+
+/// Historial de cambios (quién cambió qué y cuándo).
+model KnowledgeRevision {
+  id        String         @id @default(cuid())
+  entryId   String
+  entry     KnowledgeEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  version   Int
+  action    String
+  snapshot  Json
+  adminId   String?
+  createdAt DateTime       @default(now())
+
+  @@index([entryId, createdAt])
+}
+
+/// "Aprendizaje y calidad": preguntas que la biblioteca no supo responder o que el cliente marcó como incorrectas.
+/// El texto ya pasó por el filtro de privacidad. Nada se aprende solo: el administrador decide.
+model AuraKnowledgeGap {
+  id           String   @id @default(cuid())
+  question     String
+  normalized   String
+  /// "sin_respuesta" | "baja_confianza" | "incorrecta"
+  kind         String
+  entryId      String?
+  score        Float?
+  count        Int      @default(1)
+  /// "pendiente" | "resuelta" | "descartada"
+  status       String   @default("pendiente")
+  resolvedById String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status, kind])
+  @@index([normalized])
+}
