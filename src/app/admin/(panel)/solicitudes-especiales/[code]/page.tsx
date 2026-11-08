@@ -23,6 +23,7 @@ export default async function RequestFile({ params }: { params: Promise<{ code: 
       alternatives: { orderBy: [{ round: "asc" }, { position: "asc" }] },
       offers: { orderBy: { createdAt: "desc" }, include: { product: { select: { slug: true, name: true } } } },
       accessTokens: { where: { revokedAt: null, expiresAt: { gt: new Date() } }, select: { id: true } },
+      auraConversation: { select: { id: true, createdAt: true, messageCount: true, messages: { orderBy: { createdAt: "asc" }, take: 80, select: { id: true, role: true, text: true, tools: true, redacted: true, attachments: true, errorKind: true, createdAt: true } } } },
     },
   });
   if (!r) notFound();
@@ -47,6 +48,7 @@ export default async function RequestFile({ params }: { params: Promise<{ code: 
         <Badge tone={r.status === "CONVERTIDA" ? "success" : r.status === "ACEPTADA" ? "gold" : "warning"}>{REQUEST_STATUS[r.status].label}</Badge>
         <Badge>{r.source ?? "formulario"}</Badge>
         {r.assignedAdminId && <Badge tone="gold">Responsable: {adminName.get(r.assignedAdminId) ?? "—"}</Badge>}
+        {r.auraPriority && <Badge tone={r.auraPriority === "alta" ? "warning" : "neutral"}>Prioridad sugerida: {r.auraPriority}</Badge>}
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_1.15fr]">
@@ -59,6 +61,21 @@ export default async function RequestFile({ params }: { params: Promise<{ code: 
               <dt className="text-ink-soft">Cuenta</dt><dd>{r.customerId ? "Sí (con sesión)" : "Invitado · enlace seguro"}</dd>
             </dl>
           </Card>
+
+          {r.auraSummary && (
+            <Card title="Resumen de AURA">
+              <p className="text-sm leading-6">{r.auraSummary}</p>
+              <dl className="mt-3 grid grid-cols-[110px_1fr] gap-y-1.5 text-sm">
+                <dt className="text-ink-soft">Producto</dt><dd>{r.productName}</dd>
+                <dt className="text-ink-soft">Marca / modelo</dt><dd>{[r.brand, r.model].filter(Boolean).join(" · ") || "Pendiente"}</dd>
+                <dt className="text-ink-soft">Talla / color</dt><dd>{[r.size, r.color].filter(Boolean).join(" · ") || "Pendiente"}</dd>
+                <dt className="text-ink-soft">Presupuesto</dt><dd>{r.budgetCOP != null ? formatCOP(r.budgetCOP) : "Pendiente"}</dd>
+                <dt className="text-ink-soft">Pendiente</dt><dd>{r.auraPending.length ? r.auraPending.join(", ") : "Nada"}</dd>
+                <dt className="text-ink-soft">Adjuntos</dt><dd>{r.images.length} foto(s) · {r.links.length} enlace(s)</dd>
+              </dl>
+              <p className="mt-3 text-[11px] text-ink-soft">Lo preparó AURA con lo que escribió el cliente (sin datos personales) y el cliente lo confirmó. Las fotos no se enviaron a la IA. Verifica antes de cotizar.</p>
+            </Card>
+          )}
 
           <Card title="Descripción original del cliente (no se edita)">
             <pre className="whitespace-pre-wrap font-sans text-sm leading-6">{r.originalText ?? [r.productName, r.brand, r.model, r.comments].filter(Boolean).join("\n")}</pre>
@@ -89,6 +106,28 @@ export default async function RequestFile({ params }: { params: Promise<{ code: 
               <ul className="space-y-1.5 text-sm">
                 {r.links.map((l) => <li key={l} className="break-all"><a href={l} target="_blank" rel="noopener noreferrer nofollow" referrerPolicy="no-referrer" className="underline">{l}</a></li>)}
               </ul>
+            </Card>
+          )}
+
+          {r.auraConversation && (
+            <Card title={`Conversación con AURA (${r.auraConversation.messages.length} mensajes)`}>
+              <details>
+                <summary className="cursor-pointer text-sm font-semibold">Ver la conversación completa</summary>
+                <ol className="mt-3 max-h-[420px] space-y-2 overflow-y-auto text-sm">
+                  {r.auraConversation.messages.map((m) => (
+                    <li key={m.id} className={`rounded-xl px-3 py-2 ${m.role === "user" ? "bg-gold/10" : m.role === "model" ? "bg-ink/[.04]" : "border border-ink/10 text-ink-soft"}`}>
+                      <span className="block text-[11px] text-ink-soft">
+                        {m.role === "user" ? "Cliente" : m.role === "model" ? "AURA (IA)" : "Sistema"} · {fmtDate(m.createdAt)}
+                        {m.tools.length > 0 && ` · herramientas: ${m.tools.join(", ")}`}
+                        {m.redacted && " · datos privados ocultados"}
+                        {m.attachments > 0 && ` · ${m.attachments} adjunto(s)`}
+                        {m.errorKind && ` · sin respuesta de IA (${m.errorKind})`}
+                      </span>
+                      <span className="whitespace-pre-wrap">{m.text}</span>
+                    </li>
+                  ))}
+                </ol>
+              </details>
             </Card>
           )}
 
