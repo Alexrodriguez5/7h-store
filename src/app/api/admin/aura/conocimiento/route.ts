@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { audit } from "@/lib/admin/audit";
 import { requireAdmin } from "@/lib/admin/guard";
-import { approveBatch, createEntry, entryInput, importSeed, invalidateLibrary, KnowledgeError } from "@/lib/aura/library/service";
+import { approveBatch, approvePendingSynthetic, createEntry, entryInput, importSeed, invalidateLibrary, KnowledgeError } from "@/lib/aura/library/service";
 import { readJson } from "@/lib/request";
 
 /** Crea una entrada (queda pendiente) o carga el conocimiento inicial de la tienda ({ "semilla": true }). */
@@ -14,6 +14,11 @@ export async function POST(req: Request) {
       const r = await importSeed(g.ctx.admin.id);
       await audit({ action: "aura.knowledge.seed", adminId: g.ctx.admin.id, actorEmail: g.ctx.admin.email, entityType: "knowledge", entityId: "semilla", ip: g.ctx.ip, details: r });
       return NextResponse.json(r, { status: 201 });
+    }
+    if (body?.aprobarSinteticas === true) {
+      const r = await approvePendingSynthetic();
+      await audit({ action: "aura.knowledge.synthetic_approved", adminId: g.ctx.admin.id, actorEmail: g.ctx.admin.email, entityType: "knowledge", entityId: "sinteticas", ip: g.ctx.ip, details: r });
+      return NextResponse.json(r);
     }
     if (typeof body?.aprobarLote === "string" && body.aprobarLote.length <= 120) {
       const r = await approveBatch(body.aprobarLote, g.ctx.admin.id, body.incluirSinteticas === true);
