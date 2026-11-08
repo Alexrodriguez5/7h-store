@@ -204,6 +204,16 @@ export async function setEntryStatus(id: string, status: "aprobada" | "desactiva
   invalidateLibrary();
 }
 
+/**
+ * Aprueba de una vez todas las entradas PENDIENTES de un lote (p. ej. la carga inicial), menos las marcadas como
+ * posible duplicado o contradicción: esas se revisan una por una.
+ */
+export async function approveBatch(batch: string, adminId: string, includeSynthetic: boolean, db: PrismaClient = prisma) {
+  const ids = (await db.knowledgeEntry.findMany({ where: { batch, status: "pendiente", duplicateOfId: null, conflictWithId: null }, select: { id: true } })).map((e) => e.id);
+  for (const id of ids) await setEntryStatus(id, "aprobada", adminId, { includeSynthetic }, db);
+  return { approved: ids.length };
+}
+
 export async function setQuestionStatus(questionId: string, status: "aprobada" | "desactivada", db: PrismaClient = prisma) {
   await db.knowledgeQuestion.update({ where: { id: questionId }, data: { status } });
   invalidateLibrary();

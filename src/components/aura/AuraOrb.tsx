@@ -14,14 +14,17 @@ const HeroOrb3D = dynamic(() => import("./HeroOrb3D"), { ssr: false, loading: Sm
 export type AuraMood = "idle" | "welcome" | "listening" | "thinking" | "responding" | "error";
 
 /** Energía del shader por estado (1 = la esfera del inicio tal cual). */
-export const MOOD_ENERGY: Record<AuraMood, number> = { idle: 0.85, welcome: 2.2, listening: 1.25, thinking: 2, responding: 1.45, error: 0.35 };
+export const MOOD_ENERGY: Record<AuraMood, number> = { idle: 1.1, welcome: 2.2, listening: 1.25, thinking: 2, responding: 1.45, error: 0.35 };
 
 export function AuraOrb({ energy, className = "", fps = 24 }: { energy: RefObject<number>; className?: string; fps?: number }) {
   return (
     <span aria-hidden="true" className={`relative block ${className}`}>
       {/* Debajo siempre la versión CSS: se ve mientras la esfera WebGL espera a que la página termine de cargar. */}
       <SmallFallback />
-      <HeroOrb3D className="absolute inset-[-14%]" energy={energy} maxFps={fps} interactive={false} fallback={<SmallFallback />} />
+      {/* HeroOrb3D pone "relative" en su contenedor: el tamaño se da con este envoltorio absoluto (si no, el canvas medía 1 px de alto). */}
+      <span className="absolute inset-[-14%]">
+        <HeroOrb3D className="size-full" energy={energy} maxFps={fps} interactive={false} fallback={<SmallFallback />} />
+      </span>
     </span>
   );
 }

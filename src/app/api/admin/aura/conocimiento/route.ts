@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { audit } from "@/lib/admin/audit";
 import { requireAdmin } from "@/lib/admin/guard";
-import { createEntry, entryInput, importSeed, invalidateLibrary, KnowledgeError } from "@/lib/aura/library/service";
+import { approveBatch, createEntry, entryInput, importSeed, invalidateLibrary, KnowledgeError } from "@/lib/aura/library/service";
 import { readJson } from "@/lib/request";
 
 /** Crea una entrada (queda pendiente) o carga el conocimiento inicial de la tienda ({ "semilla": true }). */
@@ -14,6 +14,11 @@ export async function POST(req: Request) {
       const r = await importSeed(g.ctx.admin.id);
       await audit({ action: "aura.knowledge.seed", adminId: g.ctx.admin.id, actorEmail: g.ctx.admin.email, entityType: "knowledge", entityId: "semilla", ip: g.ctx.ip, details: r });
       return NextResponse.json(r, { status: 201 });
+    }
+    if (typeof body?.aprobarLote === "string" && body.aprobarLote.length <= 120) {
+      const r = await approveBatch(body.aprobarLote, g.ctx.admin.id, body.incluirSinteticas === true);
+      await audit({ action: "aura.knowledge.batch_approved", adminId: g.ctx.admin.id, actorEmail: g.ctx.admin.email, entityType: "knowledge", entityId: body.aprobarLote, ip: g.ctx.ip, details: { ...r, incluirSinteticas: body.incluirSinteticas === true } });
+      return NextResponse.json(r);
     }
     const p = entryInput.safeParse(body);
     if (!p.success) return NextResponse.json({ error: p.error.issues[0]?.message ?? "Datos no válidos" }, { status: 400 });

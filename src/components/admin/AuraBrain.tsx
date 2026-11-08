@@ -45,7 +45,7 @@ function EntryForm({ initial, categories, onDone }: { initial?: Entry; categorie
   );
 }
 
-export function BrainActions({ categories }: { categories: string[] }) {
+export function BrainActions({ categories, seedBatch }: { categories: string[]; seedBatch?: { name: string; pending: number } }) {
   const router = useRouter();
   const [open, setOpen] = useState<"nueva" | "importar" | null>(null);
   const [msg, setMsg] = useState<string>();
@@ -55,6 +55,14 @@ export function BrainActions({ categories }: { categories: string[] }) {
     const r = await adminFetch<{ created: number; skipped: number }>("/api/admin/aura/conocimiento", "POST", { semilla: true });
     setBusy(false);
     setMsg(r.ok ? `Listo: ${r.data.created} entradas nuevas (pendientes de tu aprobación), ${r.data.skipped} ya existían.` : r.error);
+    router.refresh();
+  };
+  const approveAll = async (incluirSinteticas: boolean) => {
+    if (!seedBatch || !window.confirm(`Vas a aprobar ${seedBatch.pending} respuestas de la carga inicial${incluirSinteticas ? " con sus preguntas sintéticas" : ""}. AURA empezará a usarlas en el chat. ¿Las revisaste?`)) return;
+    setBusy(true);
+    const r = await adminFetch<{ approved: number }>("/api/admin/aura/conocimiento", "POST", { aprobarLote: seedBatch.name, incluirSinteticas });
+    setBusy(false);
+    setMsg(r.ok ? `Aprobadas ${r.data.approved}. Las marcadas como posible duplicado o contradicción se revisan una por una.` : r.error);
     router.refresh();
   };
   const upload = async (form: HTMLFormElement) => {
@@ -69,6 +77,12 @@ export function BrainActions({ categories }: { categories: string[] }) {
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
         <button type="button" disabled={busy} onClick={seed} className={btnPrimary}>Cargar conocimiento verificado de la tienda</button>
+        {seedBatch && seedBatch.pending > 0 && (
+          <>
+            <button type="button" disabled={busy} onClick={() => approveAll(true)} className={btnPrimary}>Aprobar la carga inicial ({seedBatch.pending}) con sus variantes</button>
+            <button type="button" disabled={busy} onClick={() => approveAll(false)} className={btnGhost}>Aprobar solo preguntas reales</button>
+          </>
+        )}
         <button type="button" onClick={() => setOpen(open === "nueva" ? null : "nueva")} className={btnGhost}>Nueva respuesta</button>
         <button type="button" onClick={() => setOpen(open === "importar" ? null : "importar")} className={btnGhost}>Importar archivo</button>
       </div>
