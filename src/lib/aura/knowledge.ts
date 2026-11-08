@@ -41,7 +41,14 @@ export function storeKnowledge(): Record<PolicyTopic, { fuente: string; texto: s
       ],
     },
     envios: { fuente: "/envios", texto: [...envios, `Envío gratis desde ${formatCOP(FREE_SHIPPING_THRESHOLD)}.`, `Plazo estimado: ${BUSINESS.shippingTime ?? DEFAULT_ETA} desde la confirmación del pago.`] },
-    devoluciones: { fuente: "/devoluciones", texto: devol.filter((t) => /retract|devol/i.test(t)) },
+    devoluciones: {
+      fuente: "/devoluciones",
+      texto: [
+        ...devol.filter((t) => /retract|devol/i.test(t)),
+        // Mismas condiciones que publica /devoluciones (si cambian allí, cambiarlas aquí).
+        "Condiciones del retracto: el producto se devuelve en las mismas condiciones en que se recibió, sin uso y con su empaque. Los costos de transporte de la devolución los asume el cliente. El reembolso se hace al medio de pago que prefiera el cliente.",
+      ],
+    },
     garantia: { fuente: "/devoluciones", texto: devol.filter((t) => /garant|queja|reclamo|PQR|petici/i.test(t)) },
     cuenta: {
       fuente: "/cuenta",
