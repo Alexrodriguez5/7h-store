@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireAdminPage } from "@/lib/admin/guard";
 import { CATEGORIES } from "@/lib/aura/library/service";
+import { SEED_VERSION } from "@/lib/aura/library/seed";
 import { prisma } from "@/lib/prisma";
 import { Badge, Card, PageHeader, Stat, fmtDate, tdCls, thCls } from "@/components/admin/ui";
 import { BrainActions, EntryRowActions, GapActions, TestBox } from "@/components/admin/AuraBrain";
@@ -46,7 +47,8 @@ async function Knowledge({ sp }: { sp: { estado?: string; categoria?: string; q?
     ...(sp.categoria ? { category: sp.categoria } : {}),
     ...(sp.q ? { searchText: { contains: sp.q.toLowerCase().normalize("NFD").replace(/\p{M}/gu, "") } } : {}),
   };
-  const [counts, rows, total, flagged, synthetic] = await Promise.all([
+  const seedName = `semilla-${SEED_VERSION}`;
+  const [counts, rows, total, flagged, synthetic, seedPending] = await Promise.all([
     prisma.knowledgeEntry.groupBy({ by: ["status"], _count: true }),
     prisma.knowledgeEntry.findMany({
       where, orderBy: [{ status: "asc" }, { updatedAt: "desc" }], skip: (page - 1) * 30, take: 30,
@@ -55,6 +57,7 @@ async function Knowledge({ sp }: { sp: { estado?: string; categoria?: string; q?
     prisma.knowledgeEntry.count({ where }),
     prisma.knowledgeEntry.count({ where: { status: { not: "desactivada" }, OR: [{ duplicateOfId: { not: null } }, { conflictWithId: { not: null } }] } }),
     prisma.knowledgeQuestion.count({ where: { synthetic: true, status: "pendiente" } }),
+    prisma.knowledgeEntry.count({ where: { batch: seedName, status: "pendiente", duplicateOfId: null, conflictWithId: null } }),
   ]);
   const c = (s: string) => counts.find((x) => x.status === s)?._count ?? 0;
   const qs = (patch: Record<string, string | undefined>) => `/admin/aura?${new URLSearchParams(Object.entries({ estado: sp.estado, categoria: sp.categoria, q: sp.q, ...patch }).filter(([, v]) => v) as [string, string][]).toString()}`;
@@ -68,7 +71,7 @@ async function Knowledge({ sp }: { sp: { estado?: string; categoria?: string; q?
         <Stat label="Posibles duplicados o contradicciones" value={flagged} tone={flagged ? "warn" : undefined} />
         <Stat label="Preguntas sintéticas por aprobar" value={synthetic} />
       </div>
-      <BrainActions categories={[...CATEGORIES]} />
+      <BrainActions categories={[...CATEGORIES]} seedBatch={{ name: seedName, pending: seedPending }} />
       <form className="flex flex-wrap gap-2" action="/admin/aura">
         <input name="q" defaultValue={sp.q} placeholder="Buscar en la biblioteca" className="rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm" />
         <select name="estado" defaultValue={sp.estado ?? ""} className="rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm">
