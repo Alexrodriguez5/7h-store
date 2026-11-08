@@ -12,6 +12,7 @@ const NAV: { href: string; label: string; exact?: boolean; owner?: boolean }[] =
   { href: "/admin/consultas", label: "Consultas" },
   { href: "/admin/resenas", label: "Reseñas" },
   { href: "/admin/solicitudes-especiales", label: "Solicitudes especiales" },
+  { href: "/admin/aura", label: "Cerebro de AURA" },
   { href: "/admin/galeria", label: "Galería" },
   { href: "/admin/comunidad", label: "Comunidad" },
   { href: "/admin/clientes", label: "Clientes" },
