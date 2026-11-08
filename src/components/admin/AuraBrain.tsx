@@ -45,7 +45,7 @@ function EntryForm({ initial, categories, onDone }: { initial?: Entry; categorie
   );
 }
 
-export function BrainActions({ categories, seedBatch }: { categories: string[]; seedBatch?: { name: string; pending: number } }) {
+export function BrainActions({ categories, seedBatch, syntheticPending = 0 }: { categories: string[]; seedBatch?: { name: string; pending: number }; syntheticPending?: number }) {
   const router = useRouter();
   const [open, setOpen] = useState<"nueva" | "importar" | null>(null);
   const [msg, setMsg] = useState<string>();
@@ -63,6 +63,14 @@ export function BrainActions({ categories, seedBatch }: { categories: string[]; 
     const r = await adminFetch<{ approved: number }>("/api/admin/aura/conocimiento", "POST", { aprobarLote: seedBatch.name, incluirSinteticas });
     setBusy(false);
     setMsg(r.ok ? `Aprobadas ${r.data.approved}. Las marcadas como posible duplicado o contradicción se revisan una por una.` : r.error);
+    router.refresh();
+  };
+  const approveSynthetic = async () => {
+    if (!window.confirm(`Vas a aprobar ${syntheticPending} formas de preguntar (sintéticas) de respuestas ya aprobadas. No cambian ninguna respuesta: solo ayudan a AURA a reconocer más formas de preguntar lo mismo. ¿Continuar?`)) return;
+    setBusy(true);
+    const r = await adminFetch<{ approved: number }>("/api/admin/aura/conocimiento", "POST", { aprobarSinteticas: true });
+    setBusy(false);
+    setMsg(r.ok ? `Aprobadas ${r.data.approved} formas de preguntar.` : r.error);
     router.refresh();
   };
   const upload = async (form: HTMLFormElement) => {
@@ -83,6 +91,7 @@ export function BrainActions({ categories, seedBatch }: { categories: string[]; 
             <button type="button" disabled={busy} onClick={() => approveAll(false)} className={btnGhost}>Aprobar solo preguntas reales</button>
           </>
         )}
+        {syntheticPending > 0 && <button type="button" disabled={busy} onClick={approveSynthetic} className={btnPrimary}>Aprobar formas de preguntar pendientes ({syntheticPending})</button>}
         <button type="button" onClick={() => setOpen(open === "nueva" ? null : "nueva")} className={btnGhost}>Nueva respuesta</button>
         <button type="button" onClick={() => setOpen(open === "importar" ? null : "importar")} className={btnGhost}>Importar archivo</button>
       </div>

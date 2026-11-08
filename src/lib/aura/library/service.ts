@@ -214,6 +214,13 @@ export async function approveBatch(batch: string, adminId: string, includeSynthe
   return { approved: ids.length };
 }
 
+/** Aprueba las preguntas sintéticas pendientes de las respuestas YA aprobadas (las de respuestas pendientes esperan a su respuesta). */
+export async function approvePendingSynthetic(db: PrismaClient = prisma) {
+  const r = await db.knowledgeQuestion.updateMany({ where: { synthetic: true, status: "pendiente", entry: { status: "aprobada" } }, data: { status: "aprobada" } });
+  invalidateLibrary();
+  return { approved: r.count };
+}
+
 export async function setQuestionStatus(questionId: string, status: "aprobada" | "desactivada", db: PrismaClient = prisma) {
   await db.knowledgeQuestion.update({ where: { id: questionId }, data: { status } });
   invalidateLibrary();

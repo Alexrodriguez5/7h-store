@@ -59,6 +59,7 @@ async function Knowledge({ sp }: { sp: { estado?: string; categoria?: string; q?
     prisma.knowledgeQuestion.count({ where: { synthetic: true, status: "pendiente" } }),
     prisma.knowledgeEntry.count({ where: { batch: seedName, status: "pendiente", duplicateOfId: null, conflictWithId: null } }),
   ]);
+  const syntheticOfApproved = await prisma.knowledgeQuestion.count({ where: { synthetic: true, status: "pendiente", entry: { status: "aprobada" } } });
   const c = (s: string) => counts.find((x) => x.status === s)?._count ?? 0;
   const qs = (patch: Record<string, string | undefined>) => `/admin/aura?${new URLSearchParams(Object.entries({ estado: sp.estado, categoria: sp.categoria, q: sp.q, ...patch }).filter(([, v]) => v) as [string, string][]).toString()}`;
 
@@ -71,7 +72,7 @@ async function Knowledge({ sp }: { sp: { estado?: string; categoria?: string; q?
         <Stat label="Posibles duplicados o contradicciones" value={flagged} tone={flagged ? "warn" : undefined} />
         <Stat label="Preguntas sintéticas por aprobar" value={synthetic} />
       </div>
-      <BrainActions categories={[...CATEGORIES]} seedBatch={{ name: seedName, pending: seedPending }} />
+      <BrainActions categories={[...CATEGORIES]} seedBatch={{ name: seedName, pending: seedPending }} syntheticPending={syntheticOfApproved} />
       <form className="flex flex-wrap gap-2" action="/admin/aura">
         <input name="q" defaultValue={sp.q} placeholder="Buscar en la biblioteca" className="rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm" />
         <select name="estado" defaultValue={sp.estado ?? ""} className="rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm">
