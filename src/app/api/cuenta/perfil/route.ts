@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
+import { optionalMobile, personName } from "@/lib/validation/fields";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireCustomer } from "@/lib/customer/auth";
 import { body, fail } from "@/lib/customer/http";
 
 const schema = z.object({
-  name: z.string().trim().min(3, "Escribe tu nombre completo").max(120),
-  phone: z.string().trim().regex(/^3\d{9}$/, "Celular colombiano de 10 dígitos").or(z.literal("")).optional(),
+  name: personName(3, 120, "Escribe tu nombre completo"),
+  phone: optionalMobile,
 });
 
 /** Datos del perfil. El correo no se cambia aquí (es la llave de tus pedidos); cambiarlo requiere atención al cliente. Los pedidos conservan sus datos históricos. */

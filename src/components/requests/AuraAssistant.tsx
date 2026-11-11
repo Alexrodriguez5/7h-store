@@ -4,6 +4,13 @@ import Link from "next/link";
 import { useState } from "react";
 import { PhotoPicker, postMultipart } from "@/components/ugc/PhotoPicker";
 import { formatCOP } from "@/lib/format";
+import { z } from "zod";
+import { useFieldGuard } from "@/components/ui/useFieldGuard";
+import { emailField, moneyCOP, optionalIntlPhone, personName } from "@/lib/validation/fields";
+
+const NAME = personName(2, 80);
+/** Presupuesto: solo pesos enteros (el filtro ya quitó puntos de miles y símbolos). */
+const budgetSchema = z.string().transform((t) => Number(t.replace(/\D/g, ""))).pipe(moneyCOP(200_000_000));
 
 const field = "mt-1 w-full rounded-xl border border-ink/15 bg-white px-3.5 py-3 text-base font-normal outline-none transition-shadow focus:border-gold focus:shadow-[0_0_0_4px_rgb(201_164_76_/_.15)] sm:text-sm";
 
@@ -26,6 +33,7 @@ export function AuraAssistant({ defaults, source = "asistente" }: { defaults?: {
   const [error, setError] = useState<string>();
   const [done, setDone] = useState<{ code: string; link: string | null; duplicate: boolean }>();
   const set = (k: keyof Draft) => (e: { target: { value: string } }) => setD((p) => ({ ...p, [k]: e.target.value }));
+  const g = useFieldGuard();
 
   const addLink = () => {
     const v = link.trim();
@@ -102,7 +110,7 @@ export function AuraAssistant({ defaults, source = "asistente" }: { defaults?: {
       ok: true,
       body: (
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block text-xs font-semibold">Presupuesto en COP<input inputMode="numeric" value={d.budget} onChange={set("budget")} maxLength={12} placeholder="Ej.: 3500000" className={field} /></label>
+          <label className="block text-xs font-semibold">Presupuesto en COP<input value={d.budget} {...g.field("budget", "money", set("budget"), { schema: budgetSchema })} maxLength={12} placeholder="Ej.: 3500000" className={field} /><g.Msg name="budget" /></label>
           <label className="block text-xs font-semibold">País o tienda de referencia<input value={d.referenceStore} onChange={set("referenceStore")} maxLength={120} placeholder="Ej.: Amazon EE.UU." className={field} /></label>
         </div>
       ),
@@ -110,14 +118,15 @@ export function AuraAssistant({ defaults, source = "asistente" }: { defaults?: {
     {
       q: "¿Cómo te respondemos?",
       help: "Te escribiremos al correo. El teléfono es opcional y solo para atenderte.",
-      ok: d.name.trim().length >= 2 && /\S+@\S+\.\S+/.test(d.email) && consent,
+      // Mismas reglas que el servidor: el botón "Continuar" solo se activa con datos válidos.
+      ok: NAME.safeParse(d.name).success && emailField.safeParse(d.email).success && optionalIntlPhone.safeParse(d.phone).success && consent,
       body: (
         <>
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block text-xs font-semibold">Tu nombre *<input value={d.name} onChange={set("name")} maxLength={80} autoComplete="name" className={field} /></label>
-            <label className="block text-xs font-semibold">Correo electrónico *<input type="email" value={d.email} onChange={set("email")} maxLength={254} autoComplete="email" className={field} /></label>
+            <label className="block text-xs font-semibold">Tu nombre *<input value={d.name} maxLength={80} className={field} {...g.field("name", "name", set("name"), { schema: NAME, required: true, requiredMessage: "Escribe tu nombre." })} /><g.Msg name="name" /></label>
+            <label className="block text-xs font-semibold">Correo electrónico *<input type="email" value={d.email} maxLength={254} className={field} {...g.field("email", "email", set("email"), { schema: emailField, required: true, requiredMessage: "Escribe tu correo." })} /><g.Msg name="email" /></label>
           </div>
-          <label className="block text-xs font-semibold">Teléfono (opcional)<input type="tel" value={d.phone} onChange={set("phone")} maxLength={20} autoComplete="tel" className={field} /></label>
+          <label className="block text-xs font-semibold">Teléfono (opcional)<input type="tel" value={d.phone} placeholder="3001234567 o +1 305 555 0100" className={field} {...g.field("phone", "phone", set("phone"), { schema: optionalIntlPhone })} maxLength={16} /><g.Msg name="phone" /></label>
           <input type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" value={d.website} onChange={set("website")} className="absolute -left-[9999px] h-0 w-0 opacity-0" name="website" />
           <label className="flex items-start gap-3 text-xs leading-5 text-ink-soft">
             <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 size-4 accent-[#0a0a0a]" />

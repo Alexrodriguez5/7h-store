@@ -3,6 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { COLOMBIA } from "@/data/colombia";
+import type { ZodType } from "zod";
+import { useFieldGuard } from "@/components/ui/useFieldGuard";
+import { addressText, cityName, coMobile, freeText, personName, type FieldKind } from "@/lib/validation/fields";
 import { callApi } from "./api";
 import { Notice, Panel, Pill, btnDark, btnGold, btnLine, fieldCls, labelCls } from "./ui";
 
@@ -13,6 +16,17 @@ export interface Address {
 type Draft = Omit<Address, "id" | "neighborhood" | "notes"> & { neighborhood: string; notes: string };
 
 const DEPARTMENTS = Object.keys(COLOMBIA).sort((a, b) => a.localeCompare(b, "es"));
+
+/** Tipo de cada campo (filtro al escribir) y regla compartida con el servidor (al salir del campo y al guardar). */
+const RULES: Partial<Record<keyof Draft, { kind: FieldKind | null; opts: { schema?: ZodType; required?: boolean; requiredMessage?: string } }>> = {
+  label: { kind: null, opts: { required: true, requiredMessage: "Ponle un nombre (Casa, Oficina…)." } },
+  fullName: { kind: "name", opts: { schema: personName(3, 120, "Nombre de quien recibe"), required: true, requiredMessage: "Escribe el nombre de quien recibe." } },
+  phone: { kind: "phone", opts: { schema: coMobile, required: true, requiredMessage: "Escribe el celular de quien recibe." } },
+  city: { kind: "city", opts: { schema: cityName, required: true, requiredMessage: "Escribe la ciudad o municipio." } },
+  address: { kind: "address", opts: { schema: addressText(6, 200), required: true, requiredMessage: "Escribe la dirección." } },
+  neighborhood: { kind: null, opts: { schema: freeText(100) } },
+  notes: { kind: null, opts: { schema: freeText(300) } },
+};
 
 /** Libreta de direcciones: crear, editar, marcar principal y eliminar (solo las del cliente; el servidor lo verifica). */
 export function AddressBook({ initial, max, defaultName, defaultPhone }: { initial: Address[]; max: number; defaultName: string; defaultPhone: string }) {
@@ -81,11 +95,15 @@ function AddressForm({ initial, id, onDone, onCancel }: { initial: Draft; id?: s
   const [err, setErr] = useState<string>();
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((x) => ({ ...x, [k]: v }));
 
+  const g = useFieldGuard();
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    setErrors({});
+    // Las mismas reglas que valida la API (lib/customer/addresses): si algo no cumple, no se envía.
+    if (!g.check({ label: d.label, fullName: d.fullName, phone: d.phone, city: d.city, address: d.address, neighborhood: d.neighborhood, notes: d.notes })) return;
+    if (!d.department) return setErrors({ department: "Elige el departamento" });
     setBusy(true);
     setErr(undefined);
-    setErrors({});
     const r = await callApi<{ fields?: Record<string, string> }>(id ? `/api/cuenta/direcciones/${id}` : "/api/cuenta/direcciones", id ? "PATCH" : "POST", d);
     setBusy(false);
     if (!r.ok) {
@@ -95,13 +113,17 @@ function AddressForm({ initial, id, onDone, onCancel }: { initial: Draft; id?: s
     onDone();
   };
 
-  const field = (k: keyof Draft, label: string, props: React.InputHTMLAttributes<HTMLInputElement> = {}) => (
-    <div>
-      <label htmlFor={`a-${k}`} className={labelCls}>{label}</label>
-      <input id={`a-${k}`} value={String(d[k] ?? "")} onChange={(e) => set(k, (k === "phone" ? e.target.value.replace(/\D/g, "").slice(0, 10) : e.target.value) as never)} aria-invalid={Boolean(errors[k])} className={fieldCls} {...props} />
-      {errors[k] && <p className="mt-1 text-xs text-error">{errors[k]}</p>}
-    </div>
-  );
+  const field = (k: keyof Draft, label: string, props: React.InputHTMLAttributes<HTMLInputElement> = {}) => {
+    const rule = RULES[k];
+    const gp = g.field<HTMLInputElement>(k, rule?.kind ?? null, (e) => set(k, e.target.value as never), rule?.opts);
+    return (
+      <div>
+        <label htmlFor={`a-${k}`} className={labelCls}>{label}</label>
+        <input id={`a-${k}`} value={String(d[k] ?? "")} className={fieldCls} {...props} {...gp} aria-invalid={Boolean(errors[k]) || gp["aria-invalid"]} />
+        {errors[k] ? <p className="mt-1 text-xs text-error">{errors[k]}</p> : <g.Msg name={k} />}
+      </div>
+    );
+  };
 
   const cities = COLOMBIA[d.department] ?? [];
   return (
@@ -109,7 +131,7 @@ function AddressForm({ initial, id, onDone, onCancel }: { initial: Draft; id?: s
       <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2" noValidate>
         {field("label", "Nombre de la dirección", { placeholder: "Casa, Oficina…", maxLength: 40 })}
         {field("fullName", "Quién recibe", { autoComplete: "name", maxLength: 120 })}
-        {field("phone", "Celular de quien recibe", { inputMode: "tel", autoComplete: "tel-national", placeholder: "3001234567" })}
+        {field("phone", "Celular de quien recibe", { type: "tel", autoComplete: "tel-national", placeholder: "3001234567" })}
         <div>
           <label htmlFor="a-department" className={labelCls}>Departamento</label>
           <select id="a-department" value={d.department} onChange={(e) => set("department", e.target.value)} aria-invalid={Boolean(errors.department)} className={fieldCls}>

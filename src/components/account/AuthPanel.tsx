@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { callApi } from "./api";
 import { OtpInput } from "./OtpInput";
+import { guardElement } from "@/components/ui/useFieldGuard";
+import { MSG, emailField, personName } from "@/lib/validation/fields";
 
 type Tab = "codigo" | "clave";
 type ClaveMode = "entrar" | "registro" | "olvide";
@@ -67,8 +69,17 @@ export function AuthPanel({ next = "/cuenta/pedidos", aviso, register = false, g
     window.setTimeout(() => { router.replace(next); router.refresh(); }, 750);
   };
 
+  /** El correo no lleva espacios (el autocompletado a veces agrega uno al final): se quitan al escribir o pegar. */
+  const onEmail = (e: React.ChangeEvent<HTMLInputElement>) => { guardElement("email", e.currentTarget); setEmail(e.currentTarget.value); };
+  /** Revisa el correo (y el nombre al registrarse) con las mismas reglas del servidor antes de enviar. */
+  const invalid = (withName = false) => {
+    const m = !emailField.safeParse(email).success ? MSG.email : withName ? personName(3, 120, "Escribe tu nombre completo").safeParse(name).error?.issues[0]?.message : undefined;
+    if (m) setMsg({ tone: "error", text: m });
+    return !!m;
+  };
   const sendCode = (e?: FormEvent) => {
     e?.preventDefault();
+    if (invalid()) return;
     return run(async () => {
       const r = await callApi("/api/cuenta/codigo/solicitar", "POST", { email });
       if (!r.ok) return setMsg({ tone: "error", text: r.data.error ?? "No pudimos enviar el código." });
@@ -87,6 +98,7 @@ export function AuthPanel({ next = "/cuenta/pedidos", aviso, register = false, g
   };
   const submitClave = (e: FormEvent) => {
     e.preventDefault();
+    if (invalid(mode === "registro")) return;
     if (mode === "registro" && password !== confirm) return setMsg({ tone: "error", text: "Las contraseñas no coinciden." });
     return run(async () => {
       if (mode === "entrar") {
@@ -159,7 +171,7 @@ export function AuthPanel({ next = "/cuenta/pedidos", aviso, register = false, g
               {!codeSent ? (
                 <div>
                   <label htmlFor="otp-email" className={label}>Correo</label>
-                  <input id="otp-email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={field} placeholder="tucorreo@ejemplo.com" />
+                  <input id="otp-email" type="email" inputMode="email" autoComplete="email" spellCheck={false} maxLength={254} required value={email} onChange={onEmail} className={field} placeholder="tucorreo@ejemplo.com" />
                 </div>
               ) : (
                 <OtpInput key={codeError} value={code} onChange={(v) => { setCode(v); if (msg?.tone === "error") setMsg(null); }} error={codeError > 0 && msg?.tone === "error"} disabled={busy} />
@@ -181,12 +193,12 @@ export function AuthPanel({ next = "/cuenta/pedidos", aviso, register = false, g
               {mode === "registro" && (
                 <div>
                   <label htmlFor="reg-name" className={label}>Nombre completo</label>
-                  <input id="reg-name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} className={field} />
+                  <input id="reg-name" autoComplete="name" maxLength={120} value={name} onChange={(e) => { const r = guardElement("name", e.currentTarget); if (r) setMsg({ tone: "error", text: r }); setName(e.currentTarget.value); }} className={field} />
                 </div>
               )}
               <div>
                 <label htmlFor="pw-email" className={label}>Correo</label>
-                <input id="pw-email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={field} placeholder="tucorreo@ejemplo.com" />
+                <input id="pw-email" type="email" inputMode="email" autoComplete="email" spellCheck={false} maxLength={254} value={email} onChange={onEmail} className={field} placeholder="tucorreo@ejemplo.com" />
               </div>
               {mode !== "olvide" && (
                 <div>

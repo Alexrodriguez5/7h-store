@@ -6,6 +6,7 @@ import { adminFetch } from "./api";
 import { uploadImage } from "./ImagePicker";
 import { Badge, btnDanger, btnGhost, btnPrimary, inputCls, labelCls } from "./ui";
 import { formatCOP } from "@/lib/format";
+import { onlyDigits } from "@/components/ui/useFieldGuard";
 
 type Alt = {
   id: string; round: number; name: string; brand: string | null; model: string | null; imageUrl: string | null; description: string | null; features: string[];
@@ -202,10 +203,10 @@ export function RequestWorkspace({ data, priceKinds }: { data: WorkspaceData; pr
         <Panel title="Oferta de compra" hint="Confirma de nuevo precio, disponibilidad y vigencia con el proveedor. Se crea un producto privado (1 unidad) que solo este cliente puede comprar por el checkout normal. La venta se confirma cuando el pedido queda pagado.">
           <p className="text-sm">Alternativa aceptada: <strong>{accepted.name}</strong></p>
           <div className="grid gap-3 sm:grid-cols-2">
-            <div><label className={labelCls} htmlFor="of-price">Precio final de venta (COP) *</label><input id="of-price" inputMode="numeric" value={offer.price} onChange={(e) => setOffer((p) => ({ ...p, price: e.target.value }))} className={inputCls} placeholder={accepted.priceCOP ? String(accepted.priceCOP) : ""} /></div>
+            <div><label className={labelCls} htmlFor="of-price">Precio final de venta (COP) *</label><input maxLength={11} id="of-price" inputMode="numeric" value={offer.price} onChange={onlyDigits((e) => setOffer((p) => ({ ...p, price: e.target.value })), "money")} className={inputCls} placeholder={accepted.priceCOP ? String(accepted.priceCOP) : ""} /></div>
             <div><label className={labelCls} htmlFor="of-cat">Categoría</label><select id="of-cat" value={offer.category} onChange={(e) => setOffer((p) => ({ ...p, category: e.target.value }))} className={inputCls}>{data.categories.map((c) => <option key={c.slug} value={c.slug}>{c.label}</option>)}</select></div>
-            <div><label className={labelCls} htmlFor="of-h">Vigencia de la oferta (horas)</label><input id="of-h" inputMode="numeric" value={offer.hours} onChange={(e) => setOffer((p) => ({ ...p, hours: e.target.value }))} className={inputCls} /></div>
-            <div><label className={labelCls} htmlFor="of-w">Peso empacado (g, para el envío)</label><input id="of-w" inputMode="numeric" value={offer.weight} onChange={(e) => setOffer((p) => ({ ...p, weight: e.target.value }))} className={inputCls} /></div>
+            <div><label className={labelCls} htmlFor="of-h">Vigencia de la oferta (horas)</label><input maxLength={7} id="of-h" inputMode="numeric" value={offer.hours} onChange={onlyDigits((e) => setOffer((p) => ({ ...p, hours: e.target.value })))} className={inputCls} /></div>
+            <div><label className={labelCls} htmlFor="of-w">Peso empacado (g, para el envío)</label><input maxLength={7} id="of-w" inputMode="numeric" value={offer.weight} onChange={onlyDigits((e) => setOffer((p) => ({ ...p, weight: e.target.value })))} className={inputCls} /></div>
           </div>
           <button type="button" disabled={busy || !num(offer.price)} className={btnPrimary} onClick={() => window.confirm(`¿Confirmas ${formatCOP(num(offer.price) ?? 0)} como precio FINAL de venta?`) && act({ action: "offer", data: { alternativeId: accepted.id, priceCOP: num(offer.price), category: offer.category, hours: num(offer.hours) ?? 72, weightGrams: num(offer.weight) } }, "Oferta creada y enviada al cliente.")}>Preparar y enviar oferta</button>
         </Panel>

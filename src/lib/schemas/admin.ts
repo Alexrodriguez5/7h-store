@@ -1,4 +1,5 @@
 import { MANUAL_BADGE_KEYS, type ManualBadge } from "@/lib/badges";
+import { personName } from "@/lib/validation/fields";
 import { z } from "zod";
 import { isAllowedImageUrl } from "@/lib/images";
 import { isValidSize } from "@/lib/sizes";
@@ -142,7 +143,7 @@ const adminEmail = z.string().trim().toLowerCase().email("Correo no válido").ma
 const newPassword = z.string().min(12, "La contraseña debe tener al menos 12 caracteres").max(200);
 
 export const adminUserInput = z.object({
-  name: z.string().trim().min(2, "Escribe el nombre").max(80),
+  name: personName(2, 80, "Escribe el nombre"),
   email: adminEmail,
   role: z.enum(["OWNER", "ADMIN"]).default("ADMIN"),
   password: newPassword,

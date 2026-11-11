@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState, type FormEvent } from "react";
+import { guardElement, useFieldGuard } from "@/components/ui/useFieldGuard";
+import { optionalMobile } from "@/lib/validation/fields";
 import { callApi } from "./api";
 import { Notice, Panel, btnGold, fieldCls, labelCls } from "./ui";
 
@@ -22,6 +24,7 @@ export function NewSupportForm({ orders, initialOrder, types, phone }: { orders:
   const [files, setFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string>();
+  const g = useFieldGuard();
 
   const order = orders.find((o) => o.code === orderCode)!;
   const info = types.find((t) => t.key === type)!;
@@ -33,6 +36,7 @@ export function NewSupportForm({ orders, initialOrder, types, phone }: { orders:
     const items = order.items.map((i) => ({ orderItemId: i.id, quantity: qty[i.id] ?? 0 })).filter((i) => i.quantity > 0);
     if (info.needsItems && items.length === 0) return setErr("Elige al menos un producto y su cantidad.");
     if (total > MAX_TOTAL) return setErr("Los archivos superan 4 MB en total.");
+    if (!g.check({ "s-phone": contactPhone })) return;
     setBusy(true);
     setErr(undefined);
     const fd = new FormData();
@@ -72,12 +76,13 @@ export function NewSupportForm({ orders, initialOrder, types, phone }: { orders:
       <Panel title={`2. Productos${info.needsItems ? "" : " (opcional)"}`}>
         <ul className="divide-y divide-ink/10">
           {order.items.map((i) => (
-            <li key={i.id} className="flex items-center justify-between gap-4 py-3 text-sm">
+            <li key={i.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-3 text-sm">
               <span>{i.name}{i.size ? ` · Talla ${i.size}` : ""} <span className="text-ink-soft">(compraste {i.quantity})</span></span>
               <label className="flex items-center gap-2 text-xs">
                 <span className="sr-only">Cantidad de {i.name}</span>
-                <input type="number" min={0} max={i.quantity} value={qty[i.id] ?? 0} onChange={(e) => setQty((q) => ({ ...q, [i.id]: Math.max(0, Math.min(i.quantity, Number(e.target.value) || 0)) }))} className="w-20 rounded-lg border border-ink/15 bg-white px-3 py-2 text-center" />
+                <input type="text" inputMode="numeric" pattern="[0-9]*" maxLength={3} value={qty[i.id] ?? 0} onFocus={(e) => e.currentTarget.select()} onChange={(e) => { const rejected = guardElement("digits", e.currentTarget); if (rejected) g.flash(`q-${i.id}`, rejected); const n = Number(e.currentTarget.value) || 0; if (n > i.quantity) g.flash(`q-${i.id}`, `Compraste ${i.quantity}: no puedes pedir más.`); setQty((q) => ({ ...q, [i.id]: Math.min(i.quantity, n) })); }} className="w-20 rounded-lg border border-ink/15 bg-white px-3 py-2 text-center" />
               </label>
+              {g.hints[`q-${i.id}`] && <p role="status" className="basis-full text-right text-xs text-ink-soft">{g.hints[`q-${i.id}`]}</p>}
             </li>
           ))}
         </ul>
@@ -87,7 +92,7 @@ export function NewSupportForm({ orders, initialOrder, types, phone }: { orders:
         <div className="space-y-4">
           <div><label htmlFor="s-reason" className={labelCls}>Motivo (corto)</label><input id="s-reason" maxLength={160} value={reason} onChange={(e) => setReason(e.target.value)} className={fieldCls} placeholder="Ej.: La suela llegó despegada" /></div>
           <div><label htmlFor="s-desc" className={labelCls}>Descripción</label><textarea id="s-desc" rows={5} maxLength={4000} value={description} onChange={(e) => setDescription(e.target.value)} className={fieldCls} placeholder="Describe el problema con el mayor detalle posible." /></div>
-          <div><label htmlFor="s-phone" className={labelCls}>Celular de contacto (opcional)</label><input id="s-phone" inputMode="tel" value={contactPhone} onChange={(e) => setContactPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} className={fieldCls} placeholder="3001234567" /></div>
+          <div><label htmlFor="s-phone" className={labelCls}>Celular de contacto (opcional)</label><input id="s-phone" type="tel" value={contactPhone} {...g.field("s-phone", "phone", (e) => setContactPhone(e.target.value), { schema: optionalMobile })} autoComplete="tel-national" className={fieldCls} placeholder="3001234567" /><g.Msg name="s-phone" /></div>
           <div>
             <label htmlFor="s-files" className={labelCls}>Fotos o video (opcional, máximo 4 archivos y 4 MB en total)</label>
             <input id="s-files" type="file" multiple accept="image/jpeg,image/png,image/webp,image/heic,video/mp4,video/quicktime,video/webm" onChange={(e) => setFiles(Array.from(e.target.files ?? []).slice(0, 4))} className="block w-full text-sm file:mr-4 file:rounded-full file:border-0 file:bg-ink file:px-4 file:py-2 file:text-xs file:font-semibold file:text-ivory" />

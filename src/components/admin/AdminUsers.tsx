@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { adminFetch } from "./api";
 import { Badge, btnDanger, btnGhost, btnPrimary, fmtDate, inputCls, labelCls, tdCls, thCls } from "./ui";
+import { guardElement } from "@/components/ui/useFieldGuard";
 
 export interface AdminRow { id: string; name: string; email: string; role: "OWNER" | "ADMIN"; active: boolean; lastLoginAt: string | null; activeSessions: number }
 
@@ -43,8 +44,8 @@ function NewAdminForm({ onCreated }: { onCreated: () => void }) {
   return (
     <form onSubmit={submit} className="grid gap-4 rounded-2xl border border-ink/[.07] bg-white p-5 shadow-soft md:grid-cols-2 xl:grid-cols-[1fr_1fr_160px_1fr_auto] xl:items-end" noValidate>
       <h2 className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft md:col-span-2 xl:col-span-5">Invitar administrador</h2>
-      <div><label htmlFor="au-name" className={labelCls}>Nombre</label><input id="au-name" required value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} className={inputCls} /></div>
-      <div><label htmlFor="au-email" className={labelCls}>Correo</label><input id="au-email" type="email" required value={v.email} onChange={(e) => setV({ ...v, email: e.target.value })} className={inputCls} /></div>
+      <div><label htmlFor="au-name" className={labelCls}>Nombre</label><input id="au-name" required maxLength={80} autoComplete="off" value={v.name} onChange={(e) => { guardElement("name", e.currentTarget); setV({ ...v, name: e.currentTarget.value }); }} className={inputCls} /></div>
+      <div><label htmlFor="au-email" className={labelCls}>Correo</label><input id="au-email" type="email" inputMode="email" spellCheck={false} maxLength={200} required value={v.email} onChange={(e) => { guardElement("email", e.currentTarget); setV({ ...v, email: e.currentTarget.value }); }} className={inputCls} /></div>
       <div><label htmlFor="au-role" className={labelCls}>Rol</label><select id="au-role" value={v.role} onChange={(e) => setV({ ...v, role: e.target.value })} className={inputCls}><option value="ADMIN">Administrador</option><option value="OWNER">Dueño</option></select></div>
       <div><label htmlFor="au-pw" className={labelCls}>Contraseña temporal (12+)</label><input id="au-pw" type="text" autoComplete="off" required minLength={12} value={v.password} onChange={(e) => setV({ ...v, password: e.target.value })} className={`${inputCls} font-mono`} /></div>
       <button type="submit" disabled={busy || !v.name || !v.email || v.password.length < 12} aria-busy={busy} className={btnPrimary}>{busy ? "Creando…" : "Crear cuenta"}</button>

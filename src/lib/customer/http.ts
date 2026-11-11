@@ -4,7 +4,8 @@ import { CustomerAuthError } from "./auth";
 import { consume, hashedKey, MIN, tooMany } from "@/lib/rate-limit";
 import { getClientIp, readJson } from "@/lib/request";
 
-export const emailField = z.string().trim().toLowerCase().max(254).pipe(z.email("Correo no válido"));
+/** Regla única de correo (ver lib/validation/fields). */
+export { emailField } from "@/lib/validation/fields";
 export const passwordField = z.string().min(1).max(200);
 
 export async function body<T>(req: Request, schema: z.ZodType<T>) {

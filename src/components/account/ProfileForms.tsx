@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { useFieldGuard } from "@/components/ui/useFieldGuard";
+import { optionalMobile, personName } from "@/lib/validation/fields";
 import { callApi } from "./api";
 import { Notice, btnDark, btnLine, fieldCls, labelCls } from "./ui";
 
@@ -13,8 +15,11 @@ export function ProfileForm({ name: n0, phone: p0 }: { name: string; phone: stri
   const [phone, setPhone] = useState(p0);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<Msg>();
+  const g = useFieldGuard();
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    // Mismas reglas que la API: no se envía nada inválido.
+    if (!g.check({ "p-name": name, "p-phone": phone })) return;
     setBusy(true);
     setMsg(undefined);
     const r = await callApi("/api/cuenta/perfil", "PATCH", { name, phone });
@@ -25,8 +30,8 @@ export function ProfileForm({ name: n0, phone: p0 }: { name: string; phone: stri
   };
   return (
     <form onSubmit={submit} className="space-y-4" noValidate>
-      <div><label htmlFor="p-name" className={labelCls}>Nombre completo</label><input id="p-name" autoComplete="name" maxLength={120} value={name} onChange={(e) => setName(e.target.value)} className={fieldCls} /></div>
-      <div><label htmlFor="p-phone" className={labelCls}>Celular</label><input id="p-phone" inputMode="tel" autoComplete="tel-national" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} className={fieldCls} placeholder="3001234567" /></div>
+      <div><label htmlFor="p-name" className={labelCls}>Nombre completo</label><input id="p-name" maxLength={120} value={name} {...g.field("p-name", "name", (e) => setName(e.target.value), { schema: personName(3, 120, "Escribe tu nombre completo"), required: true, requiredMessage: "Escribe tu nombre completo." })} className={fieldCls} /><g.Msg name="p-name" /></div>
+      <div><label htmlFor="p-phone" className={labelCls}>Celular</label><input id="p-phone" type="tel" value={phone} {...g.field("p-phone", "phone", (e) => setPhone(e.target.value), { schema: optionalMobile })} autoComplete="tel-national" className={fieldCls} placeholder="3001234567" /><g.Msg name="p-phone" /></div>
       <button type="submit" disabled={busy} className={btnDark}>{busy ? "Guardando…" : "Guardar cambios"}</button>
       {msg && <Notice tone={msg.tone}>{msg.text}</Notice>}
     </form>

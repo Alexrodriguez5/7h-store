@@ -6,6 +6,7 @@ import { formatCOP } from "@/lib/format";
 import { etaText } from "@/lib/shipping";
 import { adminFetch } from "./api";
 import { Badge, btnDanger, btnGhost, btnPrimary, inputCls, labelCls } from "./ui";
+import { onlyDigits } from "@/components/ui/useFieldGuard";
 
 export interface ZoneRow {
   id: string;
@@ -132,24 +133,24 @@ export function ShippingZoneManager({ initial }: { initial: ZoneRow[] }) {
             </div>
             <div>
               <label className={labelCls} htmlFor="z-price">Tarifa (COP)</label>
-              <input id="z-price" type="number" min={0} step={500} className={inputCls} value={editing.priceCOP} onChange={(e) => set("priceCOP", num(e.target.value))} />
+              <input maxLength={11} inputMode="numeric" id="z-price" type="text" className={inputCls} value={editing.priceCOP} onChange={onlyDigits((e) => set("priceCOP", num(e.target.value)), "money")} />
             </div>
             <div>
               <label className={labelCls} htmlFor="z-base">Incluye hasta (gramos)</label>
-              <input id="z-base" type="number" min={100} step={100} className={inputCls} value={editing.baseWeightGrams} onChange={(e) => set("baseWeightGrams", num(e.target.value))} />
+              <input maxLength={7} inputMode="numeric" id="z-base" type="text" className={inputCls} value={editing.baseWeightGrams} onChange={onlyDigits((e) => set("baseWeightGrams", num(e.target.value)))} />
             </div>
             <div>
               <label className={labelCls} htmlFor="z-extra">Valor por kg adicional (COP)</label>
-              <input id="z-extra" type="number" min={0} step={500} className={inputCls} value={editing.extraPerKgCOP} onChange={(e) => set("extraPerKgCOP", num(e.target.value))} />
+              <input maxLength={11} inputMode="numeric" id="z-extra" type="text" className={inputCls} value={editing.extraPerKgCOP} onChange={onlyDigits((e) => set("extraPerKgCOP", num(e.target.value)), "money")} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={labelCls} htmlFor="z-min">Días mín.</label>
-                <input id="z-min" type="number" min={0} className={inputCls} value={editing.minDays} onChange={(e) => set("minDays", num(e.target.value))} />
+                <input maxLength={7} inputMode="numeric" id="z-min" type="text" className={inputCls} value={editing.minDays} onChange={onlyDigits((e) => set("minDays", num(e.target.value)))} />
               </div>
               <div>
                 <label className={labelCls} htmlFor="z-max">Días máx.</label>
-                <input id="z-max" type="number" min={0} className={inputCls} value={editing.maxDays} onChange={(e) => set("maxDays", num(e.target.value))} />
+                <input maxLength={7} inputMode="numeric" id="z-max" type="text" className={inputCls} value={editing.maxDays} onChange={onlyDigits((e) => set("maxDays", num(e.target.value)))} />
               </div>
             </div>
             <div className="flex items-end gap-4">
@@ -158,7 +159,7 @@ export function ShippingZoneManager({ initial }: { initial: ZoneRow[] }) {
               </label>
               <div className="flex-1">
                 <label className={labelCls} htmlFor="z-order">Orden</label>
-                <input id="z-order" type="number" min={0} className={inputCls} value={editing.sortOrder} onChange={(e) => set("sortOrder", num(e.target.value))} />
+                <input maxLength={7} inputMode="numeric" id="z-order" type="text" className={inputCls} value={editing.sortOrder} onChange={onlyDigits((e) => set("sortOrder", num(e.target.value)))} />
               </div>
             </div>
           </div>

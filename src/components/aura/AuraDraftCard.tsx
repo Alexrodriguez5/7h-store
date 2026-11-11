@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { formatCOP } from "@/lib/format";
 import type { RequestDraft } from "@/lib/aura/tools";
+import { guardElement } from "@/components/ui/useFieldGuard";
+import { emailField } from "@/lib/validation/fields";
 
 const PENDING_LABEL: Record<string, string> = {
   marca: "Marca", modelo: "Modelo o referencia", talla: "Talla", color: "Color", caracteristicas: "Características",
@@ -31,6 +33,7 @@ export function AuraDraftCard({ draft, conversationId, files, links, signedIn, o
   const [consent, setConsent] = useState(false);
   const [step, setStep] = useState<"review" | "email" | "code">("review");
   const [email, setEmail] = useState("");
+  const [budgetHint, setBudgetHint] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
@@ -84,7 +87,7 @@ export function AuraDraftCard({ draft, conversationId, files, links, signedIn, o
                 <label className="text-xs text-ivory/70">Talla<input className={input} value={d.talla ?? ""} onChange={set("talla")} maxLength={40} /></label>
                 <label className="text-xs text-ivory/70">Color<input className={input} value={d.color ?? ""} onChange={set("color")} maxLength={60} /></label>
               </div>
-              <label className="text-xs text-ivory/70">Presupuesto (COP)<input className={input} inputMode="numeric" value={d.presupuesto_cop ?? ""} onChange={set("presupuesto_cop")} /></label>
+              <label className="text-xs text-ivory/70">Presupuesto (COP)<input className={input} inputMode="numeric" maxLength={12} value={d.presupuesto_cop ?? ""} onChange={(e) => { const r = guardElement("money", e.currentTarget); setBudgetHint(r); set("presupuesto_cop")(e); }} />{budgetHint && <span role="status" className="mt-1 block text-[11px] text-ivory/60">{budgetHint}</span>}</label>
             </div>
           ) : (
             <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
@@ -112,8 +115,8 @@ export function AuraDraftCard({ draft, conversationId, files, links, signedIn, o
       {step === "email" && (
         <div className="mt-3 space-y-2">
           <p className="text-xs leading-5 text-ivory/75">{signedIn ? "Verifica tu correo para registrar la solicitud." : "Para registrarla y avisarte, escribe tu correo. Te enviaremos un código de 6 dígitos (así también creas o abres tu cuenta)."} Este correo no pasa por el chat.</p>
-          <input className={input} type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@correo.com" aria-label="Correo electrónico" />
-          <button type="button" disabled={busy || !/\S+@\S+\.\S+/.test(email)} onClick={sendCode} className="min-h-11 rounded-full bg-gold px-5 text-sm font-semibold text-ink disabled:opacity-40">{busy ? "Enviando…" : "Enviarme el código"}</button>
+          <input className={input} type="email" inputMode="email" autoComplete="email" spellCheck={false} maxLength={254} value={email} onChange={(e) => { guardElement("email", e.currentTarget); setEmail(e.currentTarget.value); }} placeholder="tu@correo.com" aria-label="Correo electrónico" />
+          <button type="button" disabled={busy || !emailField.safeParse(email).success} onClick={sendCode} className="min-h-11 rounded-full bg-gold px-5 text-sm font-semibold text-ink disabled:opacity-40">{busy ? "Enviando…" : "Enviarme el código"}</button>
         </div>
       )}
       {step === "code" && (

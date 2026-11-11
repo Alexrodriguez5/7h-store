@@ -8,6 +8,7 @@ import { btnGhost, btnPrimary, inputCls, labelCls } from "./ui";
 import { slugify } from "@/lib/schemas/admin";
 import { sortSizes } from "@/lib/sizes";
 import { MANUAL_BADGES, MANUAL_BADGE_KEYS } from "@/lib/badges";
+import { onlyDigits } from "@/components/ui/useFieldGuard";
 
 export interface ProductFormValues {
   name: string; slug: string; brand: string; description: string; priceCOP: string; compareAtPriceCOP: string;
@@ -118,8 +119,8 @@ export function ProductForm({ initial = EMPTY_PRODUCT, productId, categories, fr
           </div>
           <div><label htmlFor="description" className={labelCls}>Descripción *</label><textarea id="description" required rows={5} value={v.description} onChange={(e) => set("description", e.target.value)} className={inputCls} /></div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div><label htmlFor="price" className={labelCls}>Precio (COP) *</label><input id="price" type="number" inputMode="numeric" min={1} step={1} required value={v.priceCOP} onChange={(e) => set("priceCOP", e.target.value)} className={inputCls} /></div>
-            <div><label htmlFor="compare" className={labelCls}>Precio anterior (opcional)</label><input id="compare" type="number" inputMode="numeric" min={1} step={1} value={v.compareAtPriceCOP} onChange={(e) => set("compareAtPriceCOP", e.target.value)} className={inputCls} /></div>
+            <div><label htmlFor="price" className={labelCls}>Precio (COP) *</label><input maxLength={11} id="price" type="text" inputMode="numeric" required value={v.priceCOP} onChange={onlyDigits((e) => set("priceCOP", e.target.value), "money")} className={inputCls} /></div>
+            <div><label htmlFor="compare" className={labelCls}>Precio anterior (opcional)</label><input maxLength={11} id="compare" type="text" inputMode="numeric" value={v.compareAtPriceCOP} onChange={onlyDigits((e) => set("compareAtPriceCOP", e.target.value), "money")} className={inputCls} /></div>
           </div>
           <div><label htmlFor="tags" className={labelCls}>Etiquetas de búsqueda (separadas por coma)</label><input id="tags" value={v.tags} onChange={(e) => set("tags", e.target.value)} className={inputCls} placeholder="running, nike, deportivo" /></div>
         </section>
@@ -130,7 +131,7 @@ export function ProductForm({ initial = EMPTY_PRODUCT, productId, categories, fr
             <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={v.hasSizes} onChange={(e) => set("hasSizes", e.target.checked)} /> Este producto maneja tallas</label>
           </div>
           {!v.hasSizes ? (
-            <div className="max-w-xs"><label htmlFor="stock" className={labelCls}>Stock disponible *</label><input id="stock" type="number" min={0} step={1} required value={v.stock} onChange={(e) => set("stock", e.target.value)} className={inputCls} />
+            <div className="max-w-xs"><label htmlFor="stock" className={labelCls}>Stock disponible *</label><input maxLength={7} inputMode="numeric" id="stock" type="text" required value={v.stock} onChange={onlyDigits((e) => set("stock", e.target.value))} className={inputCls} />
               <p className="mt-1 text-[11px] text-ink-soft">Sin tallas: el cliente lo agrega directo al carrito.</p></div>
           ) : (
             <div className="space-y-3">
@@ -138,7 +139,7 @@ export function ProductForm({ initial = EMPTY_PRODUCT, productId, categories, fr
               {v.variants.map((row, i) => (
                 <div key={i} className="grid grid-cols-[1fr_1fr_auto] items-end gap-3">
                   <div><label className="sr-only" htmlFor={`size-${i}`}>Talla</label><input id={`size-${i}`} placeholder="Talla" value={row.size} readOnly={row.expectedStock !== undefined} title={row.expectedStock !== undefined ? "Talla existente: para cambiarla quítala y agrega otra" : undefined} onChange={(e) => set("variants", v.variants.map((x, j) => (j === i ? { ...x, size: e.target.value } : x)))} className={`${inputCls} read-only:bg-ivory-200/40`} /></div>
-                  <div><label className="sr-only" htmlFor={`vstock-${i}`}>Stock talla {row.size}</label><input id={`vstock-${i}`} type="number" min={0} step={1} placeholder="Stock" value={row.stock} onChange={(e) => set("variants", v.variants.map((x, j) => (j === i ? { ...x, stock: e.target.value } : x)))} className={`${inputCls} ${row.stock.trim() === "0" ? "border-error/50" : ""}`} /></div>
+                  <div><label className="sr-only" htmlFor={`vstock-${i}`}>Stock talla {row.size}</label><input maxLength={7} inputMode="numeric" id={`vstock-${i}`} type="text" placeholder="Stock" value={row.stock} onChange={onlyDigits((e) => set("variants", v.variants.map((x, j) => (j === i ? { ...x, stock: e.target.value } : x))))} className={`${inputCls} ${row.stock.trim() === "0" ? "border-error/50" : ""}`} /></div>
                   <button type="button" className={btnGhost} aria-label={`Quitar talla ${row.size}`} onClick={() => set("variants", v.variants.filter((_, j) => j !== i))}>✕</button>
                 </div>
               ))}
@@ -200,13 +201,13 @@ export function ProductForm({ initial = EMPTY_PRODUCT, productId, categories, fr
           <h2 className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft">Envío</h2>
           <div>
             <label htmlFor="weightGrams" className={labelCls}>Peso empacado (gramos)</label>
-            <input id="weightGrams" type="number" min={1} step={50} inputMode="numeric" value={v.weightGrams ?? ""} onChange={(e) => set("weightGrams", e.target.value)} className={inputCls} placeholder="Ej.: 1200 (vacío = 1 kg)" />
+            <input maxLength={7} id="weightGrams" type="text" inputMode="numeric" value={v.weightGrams ?? ""} onChange={onlyDigits((e) => set("weightGrams", e.target.value))} className={inputCls} placeholder="Ej.: 1200 (vacío = 1 kg)" />
           </div>
           <div className="grid grid-cols-3 gap-2">
             {(["lengthCm", "widthCm", "heightCm"] as const).map((k, i) => (
               <div key={k}>
                 <label htmlFor={k} className={labelCls}>{["Largo", "Ancho", "Alto"][i]} (cm)</label>
-                <input id={k} type="number" min={1} inputMode="numeric" value={v[k] ?? ""} onChange={(e) => set(k, e.target.value)} className={inputCls} />
+                <input maxLength={7} id={k} type="text" inputMode="numeric" value={v[k] ?? ""} onChange={onlyDigits((e) => set(k, e.target.value))} className={inputCls} />
               </div>
             ))}
           </div>
