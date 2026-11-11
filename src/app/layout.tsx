@@ -31,13 +31,14 @@ const sans = localFont({ src: "./fonts/manrope-normal-300-800.woff2", weight: "3
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: { default: "7H STORE — Calidad. Estilo. Confianza.", template: "%s | 7H STORE" },
+  // Descripción que Google muestra en el resultado (≈150 caracteres): qué es la tienda, en una frase.
   description:
-    "Productos originales de EE.UU. con precios en COP, pagos locales y envíos a toda Colombia.",
+    "Moda, calzado, accesorios y tecnología originales de Estados Unidos. Precios finales en pesos, pagos seguros y envío con guía a toda Colombia.",
   applicationName: "7H STORE",
   keywords: ["productos importados", "productos originales de EE.UU.", "tienda online Colombia", "7H STORE", "tenis originales", "relojes", "tecnología"],
   openGraph: {
     title: "7H STORE — Calidad. Estilo. Confianza.",
-    description: "Productos originales de EE.UU. con precios en COP, pagos locales y envíos a toda Colombia.",
+    description: "Moda, calzado, accesorios y tecnología originales de Estados Unidos. Precios finales en pesos, pagos seguros y envío con guía a toda Colombia.",
     type: "website",
     locale: "es_CO",
     siteName: "7H STORE",
@@ -71,7 +72,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: jsonLdScript([
-              { "@context": "https://schema.org", "@type": "Organization", name: "7H STORE", url: siteUrl(), logo: `${siteUrl()}/icon.svg`, slogan: BUSINESS.slogan, sameAs: [BUSINESS.instagram.url] },
+              { "@context": "https://schema.org", "@type": "Organization", name: "7H STORE", url: siteUrl(), // Google exige un logo en PNG/JPG (no SVG) de al menos 112 px.
+              logo: `${siteUrl()}/logo-512.png`, slogan: BUSINESS.slogan, sameAs: [BUSINESS.instagram.url] },
               {
                 "@context": "https://schema.org",
                 "@type": "WebSite",
