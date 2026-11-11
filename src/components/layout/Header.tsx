@@ -74,7 +74,7 @@ export function Header({ categories }: { categories: Category[] }) {
         )}
       </div>
 
-      <header className="sticky top-0 z-40 border-b border-white/[.07] bg-ink/95 text-ivory shadow-[inset_0_-1px_0_rgb(216_184_102_/_.12)] backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-ink/90">
+      <header data-nosnippet className="sticky top-0 z-40 border-b border-white/[.07] bg-ink/95 text-ivory shadow-[inset_0_-1px_0_rgb(216_184_102_/_.12)] backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-ink/90">
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-5 py-3.5 lg:gap-6 lg:px-8">
           <button
             className="-ml-2 grid size-10 place-items-center rounded-full transition-colors hover:bg-white/10 lg:hidden"

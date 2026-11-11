@@ -81,7 +81,7 @@ export default async function HomePage() {
             <p className="rise mt-6 max-w-[34ch] text-[15px] leading-7 text-ivory/70 [animation-delay:200ms] sm:text-base">
               Moda, accesorios y tecnología originales de Estados Unidos. Precios finales en pesos, impuestos incluidos y seguimiento de cada pedido.
             </p>
-            <div className="rise mt-8 grid grid-cols-[1.4fr_1fr] gap-2.5 [animation-delay:260ms] sm:flex sm:flex-wrap sm:gap-3">
+            <div data-nosnippet className="rise mt-8 grid grid-cols-[1.4fr_1fr] gap-2.5 [animation-delay:260ms] sm:flex sm:flex-wrap sm:gap-3">
               <Button href="/catalogo" variant="gold" className="!px-4 sm:!px-6">
                 Explorar la tienda <ArrowRightIcon width={16} height={16} />
               </Button>
