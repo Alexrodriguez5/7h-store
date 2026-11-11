@@ -1,10 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { z } from "zod";
 import { useState, type FormEvent } from "react";
 import { PhotoPicker, postMultipart } from "@/components/ugc/PhotoPicker";
+import { useFieldGuard } from "@/components/ui/useFieldGuard";
+import { emailField, freeText, moneyCOP, personName } from "@/lib/validation/fields";
 
 const field = "mt-1 w-full rounded-xl border border-ink/15 bg-white px-3.5 py-3 text-sm font-normal outline-none transition-shadow focus:border-gold focus:shadow-[0_0_0_4px_rgb(201_164_76_/_.15)]";
+
+/** Presupuesto: solo pesos enteros (el filtro ya quitó puntos de miles y símbolos). */
+const budgetSchema = z.string().transform((t) => Number(t.replace(/\D/g, ""))).pipe(moneyCOP(200_000_000));
 
 /** Formulario "Tú lo buscas": sin cuenta, una foto opcional, consentimiento explícito y radicado al final. */
 export function ProductRequestForm({ defaults }: { defaults?: { name?: string; email?: string; productName?: string } }) {
@@ -16,8 +22,11 @@ export function ProductRequestForm({ defaults }: { defaults?: { name?: string; e
   const [code, setCode] = useState<string>();
   const set = (k: keyof typeof v) => (e: { target: { value: string } }) => setV((p) => ({ ...p, [k]: e.target.value }));
 
+  const g = useFieldGuard();
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    // Mismas reglas que /api/tu-lo-buscas: si algo no cumple, se marca el campo y no se envía.
+    if (!g.check({ name: v.name, email: v.email, productName: v.productName, budget: v.budget })) return;
     setSending(true);
     setError(undefined);
     const budget = v.budget.replace(/\D/g, "");
@@ -44,17 +53,17 @@ export function ProductRequestForm({ defaults }: { defaults?: { name?: string; e
   return (
     <form onSubmit={submit} className="surface relative space-y-5 rounded-[28px] p-6 sm:p-9" noValidate>
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block text-xs font-semibold">Tu nombre *<input required value={v.name} onChange={set("name")} maxLength={80} autoComplete="name" className={field} /></label>
-        <label className="block text-xs font-semibold">Correo electrónico *<input required type="email" value={v.email} onChange={set("email")} maxLength={254} autoComplete="email" className={field} /></label>
+        <label className="block text-xs font-semibold">Tu nombre *<input required value={v.name} maxLength={80} className={field} {...g.field("name", "name", set("name"), { schema: personName(2, 80), required: true, requiredMessage: "Escribe tu nombre." })} /><g.Msg name="name" /></label>
+        <label className="block text-xs font-semibold">Correo electrónico *<input required type="email" value={v.email} maxLength={254} className={field} {...g.field("email", "email", set("email"), { schema: emailField, required: true, requiredMessage: "Escribe tu correo." })} /><g.Msg name="email" /></label>
       </div>
-      <label className="block text-xs font-semibold">¿Qué producto buscas? *<input required value={v.productName} onChange={set("productName")} maxLength={120} placeholder="Ej.: Tenis New Balance 9060" className={field} /></label>
+      <label className="block text-xs font-semibold">¿Qué producto buscas? *<input required value={v.productName} {...g.field("productName", null, set("productName"), { schema: freeText(160, 2, "Cuéntanos qué producto buscas."), required: true, requiredMessage: "Cuéntanos qué producto buscas." })} maxLength={120} placeholder="Ej.: Tenis New Balance 9060" className={field} /><g.Msg name="productName" /></label>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block text-xs font-semibold">Marca<input value={v.brand} onChange={set("brand")} maxLength={60} className={field} /></label>
         <label className="block text-xs font-semibold">Modelo o referencia<input value={v.model} onChange={set("model")} maxLength={80} className={field} /></label>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block text-xs font-semibold">Enlace del producto (opcional)<input type="url" inputMode="url" value={v.url} onChange={set("url")} maxLength={500} placeholder="https://" className={field} /></label>
-        <label className="block text-xs font-semibold">Presupuesto aproximado en COP (opcional)<input inputMode="numeric" value={v.budget} onChange={set("budget")} maxLength={12} placeholder="Ej.: 600000" className={field} /></label>
+        <label className="block text-xs font-semibold">Presupuesto aproximado en COP (opcional)<input inputMode="numeric" value={v.budget} {...g.field("budget", "money", set("budget"), { schema: budgetSchema })} maxLength={12} placeholder="Ej.: 600000" className={field} /><g.Msg name="budget" /></label>
       </div>
       <label className="block text-xs font-semibold">Comentarios<textarea rows={3} value={v.comments} onChange={set("comments")} maxLength={1000} placeholder="Talla, color, para cuándo lo necesitas…" className={field} /></label>
       <div>

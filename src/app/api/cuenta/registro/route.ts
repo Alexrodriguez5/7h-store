@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { personName } from "@/lib/validation/fields";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { hashPassword, passwordPolicyError } from "@/lib/admin/password";
@@ -7,7 +8,7 @@ import { alreadyRegisteredEmail, verifyEmail } from "@/lib/customer/emails";
 import { body, emailField, fail, limit } from "@/lib/customer/http";
 import { isSameOrigin } from "@/lib/request";
 
-const schema = z.object({ name: z.string().trim().min(3, "Escribe tu nombre completo").max(120), email: emailField, password: z.string().max(200) });
+const schema = z.object({ name: personName(3, 120, "Escribe tu nombre completo"), email: emailField, password: z.string().max(200) });
 const DONE = "Si el correo es válido, te enviamos un enlace para confirmarlo. Revisa tu bandeja (y la de spam).";
 
 /** Registro con correo y contraseña. La cuenta queda sin verificar hasta abrir el enlace del correo. Respuesta genérica (no revela si el correo existe). */

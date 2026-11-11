@@ -1,4 +1,5 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { emailField, personName } from "@/lib/validation/fields";
 import type { InquiryStatus, InquiryTopic, PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
@@ -25,8 +26,8 @@ export const INQUIRY_STATUS: Record<InquiryStatus, string> = { ABIERTA: "Esperan
 const body = z.string().trim().min(5, "Escribe un poco más").max(2000, "Máximo 2.000 caracteres");
 
 export const inquiryInput = z.object({
-  name: z.string().trim().min(2, "Escribe tu nombre").max(80),
-  email: z.string().trim().toLowerCase().max(254).pipe(z.email("Correo no válido")),
+  name: personName(2, 80),
+  email: emailField,
   topic: z.enum(Object.keys(TOPICS) as [InquiryTopic, ...InquiryTopic[]]),
   subject: z.string().trim().min(3, "Escribe el asunto").max(120),
   message: body,

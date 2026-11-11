@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { optionalMobile } from "@/lib/validation/fields";
 import { z } from "zod";
 import { requireCustomer } from "@/lib/customer/auth";
 import { readMultipart } from "@/lib/customer/multipart";
@@ -12,7 +13,7 @@ const schema = z.object({
   type: z.enum(Object.keys(SUPPORT_TYPES) as [SupportType, ...SupportType[]]),
   reason: z.string().trim().min(3, "Escribe el motivo").max(160),
   description: z.string().trim().min(15, "Describe el problema con un poco más de detalle").max(4000),
-  contactPhone: z.string().trim().regex(/^3\d{9}$/, "Celular colombiano de 10 dígitos").or(z.literal("")).optional(),
+  contactPhone: optionalMobile,
   items: z.array(z.object({ orderItemId: z.string().min(1).max(64), quantity: z.number().int().min(0).max(100) })).max(50).default([]),
 });
 

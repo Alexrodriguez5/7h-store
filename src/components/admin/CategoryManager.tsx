@@ -4,6 +4,7 @@ import { adminFetch } from "./api";
 import { ImagePicker } from "./ImagePicker";
 import { Badge, btnDanger, btnGhost, btnPrimary, inputCls, labelCls, tdCls, thCls } from "./ui";
 import { slugify } from "@/lib/schemas/admin";
+import { onlyDigits } from "@/components/ui/useFieldGuard";
 
 export interface AdminCategory {
   id: string; slug: string; label: string; active: boolean; sortOrder: number; imageUrl: string | null; productCount: number; activeProductCount: number;
@@ -115,7 +116,7 @@ function CategoryRow({ cat, onSaved, onDeleted }: { cat: AdminCategory; onSaved:
 
   return (
     <tr className={cat.active ? "" : "bg-ivory-200/40"}>
-      <td className={tdCls}>{editing ? <input aria-label="Orden" inputMode="numeric" value={order} onChange={(e) => setOrder(e.target.value)} className={`${inputCls} w-20`} /> : cat.sortOrder}</td>
+      <td className={tdCls}>{editing ? <input maxLength={7} aria-label="Orden" inputMode="numeric" value={order} onChange={onlyDigits((e) => setOrder(e.target.value))} className={`${inputCls} w-20`} /> : cat.sortOrder}</td>
       <td className={tdCls}>
         {editing ? (
           <div className="space-y-3">

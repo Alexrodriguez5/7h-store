@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { useFieldGuard } from "@/components/ui/useFieldGuard";
+import { emailField, freeText, personName } from "@/lib/validation/fields";
 
 const field = "mt-1 w-full rounded-xl border border-ink/15 bg-white px-3.5 py-3 text-sm font-normal outline-none transition-shadow focus:border-gold focus:shadow-[0_0_0_4px_rgb(201_164_76_/_.15)]";
 
@@ -24,8 +26,11 @@ export function NewInquiryForm({ topics, defaults }: { topics: { value: string; 
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string>();
   const set = (k: keyof typeof v) => (e: { target: { value: string } }) => setV((p) => ({ ...p, [k]: e.target.value }));
+  const g = useFieldGuard();
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    // Mismas reglas que /api/consultas: si algo no cumple, se marca el campo y no se envía.
+    if (!g.check({ name: v.name, email: v.email, subject: v.subject, message: v.message })) return;
     setSending(true);
     setError(undefined);
     const r = await postJson("/api/consultas", { ...v, productSlug: defaults.productSlug ?? "", consent });
@@ -49,11 +54,11 @@ export function NewInquiryForm({ topics, defaults }: { topics: { value: string; 
         </div>
       </fieldset>
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block text-xs font-semibold">Tu nombre *<input required value={v.name} onChange={set("name")} maxLength={80} autoComplete="name" className={field} /></label>
-        <label className="block text-xs font-semibold">Correo electrónico *<input required type="email" value={v.email} onChange={set("email")} maxLength={254} autoComplete="email" className={field} /></label>
+        <label className="block text-xs font-semibold">Tu nombre *<input required value={v.name} maxLength={80} className={field} {...g.field("name", "name", set("name"), { schema: personName(2, 80), required: true, requiredMessage: "Escribe tu nombre." })} /><g.Msg name="name" /></label>
+        <label className="block text-xs font-semibold">Correo electrónico *<input required type="email" value={v.email} maxLength={254} className={field} {...g.field("email", "email", set("email"), { schema: emailField, required: true, requiredMessage: "Escribe tu correo." })} /><g.Msg name="email" /></label>
       </div>
-      <label className="block text-xs font-semibold">Asunto *<input required value={v.subject} onChange={set("subject")} maxLength={120} className={field} /></label>
-      <label className="block text-xs font-semibold">Tu mensaje *<textarea required rows={5} value={v.message} onChange={set("message")} maxLength={2000} placeholder="Cuéntanos con detalle. Si es sobre un pedido, incluye su número (por ejemplo, 7H-K4M9QX)." className={field} /></label>
+      <label className="block text-xs font-semibold">Asunto *<input required value={v.subject} maxLength={120} className={field} {...g.field("subject", null, set("subject"), { schema: freeText(120, 3, "Escribe el asunto (mínimo 3 caracteres)."), required: true, requiredMessage: "Escribe el asunto." })} /><g.Msg name="subject" /></label>
+      <label className="block text-xs font-semibold">Tu mensaje *<textarea required rows={5} value={v.message} {...g.field("message", null, set("message"), { schema: freeText(2000, 5, "Escribe un poco más (mínimo 5 caracteres)."), required: true, requiredMessage: "Escribe tu mensaje." })} maxLength={2000} placeholder="Cuéntanos con detalle. Si es sobre un pedido, incluye su número (por ejemplo, 7H-K4M9QX)." className={field} /><g.Msg name="message" /></label>
       <input type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" value={v.website} onChange={set("website")} className="absolute -left-[9999px] h-0 w-0 opacity-0" name="website" />
       <label className="flex items-start gap-3 text-xs leading-5 text-ink-soft">
         <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 size-4 accent-[#0a0a0a]" />

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { adminFetch } from "./api";
 import { Badge, btnPrimary, tdCls } from "./ui";
+import { onlyDigits } from "@/components/ui/useFieldGuard";
 
 interface Variant { id: string; size: string; stock: number }
 interface Props {
@@ -48,7 +49,7 @@ export function InventoryRow({ productId, name, brand, active, variants: initial
   const cell = (id: string, label: string, value: string, onChange: (s: string) => void) => (
     <label key={id} className="flex flex-col items-center gap-1 text-[10px] font-semibold text-ink-soft">
       {label}
-      <input inputMode="numeric" value={value} onChange={(e) => { onChange(e.target.value); setMsg(undefined); }} aria-label={`Stock ${label}`} aria-invalid={!valid(value)}
+      <input maxLength={7} inputMode="numeric" value={value} onChange={onlyDigits((e) => { onChange(e.target.value); setMsg(undefined); })} aria-label={`Stock ${label}`} aria-invalid={!valid(value)}
         className={`w-16 border bg-white px-2 py-1.5 text-center text-sm text-ink outline-none focus:border-gold ${!valid(value) ? "border-error" : value.trim() === "0" ? "border-error/50" : "border-ink/20"}`} />
     </label>
   );

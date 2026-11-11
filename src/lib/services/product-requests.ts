@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { emailField, optionalIntlPhone, personName } from "@/lib/validation/fields";
 import type { PrismaClient, ProductRequestStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
@@ -39,9 +40,9 @@ const httpsUrl = z.string().trim().max(500).refine((v) => /^https?:\/\/[^\s<>"']
 
 /** Todo es opcional salvo cómo responderte y qué buscas (aunque sea en palabras propias). */
 export const productRequestInput = z.object({
-  name: z.string().trim().min(2, "Escribe tu nombre").max(80),
-  email: z.string().trim().toLowerCase().max(254).pipe(z.email("Correo no válido")),
-  phone: z.string().trim().regex(/^\+?\d[\d\s-]{6,18}$/, "Teléfono no válido").optional().or(z.literal("")).transform((v) => v || null),
+  name: personName(2, 80),
+  email: emailField,
+  phone: optionalIntlPhone,
   productName: z.string().trim().min(2, "Cuéntanos qué producto buscas").max(160),
   brand: optional(60),
   model: optional(80),

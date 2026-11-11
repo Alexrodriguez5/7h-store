@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { adminFetch } from "./api";
 import { btnPrimary, inputCls, labelCls } from "./ui";
+import { guardElement } from "@/components/ui/useFieldGuard";
 
 export function SetupForm() {
   const router = useRouter();
@@ -32,8 +33,8 @@ export function SetupForm() {
         <input id="setupKey" type="password" autoComplete="off" required value={v.setupKey} onChange={set("setupKey")} className={inputCls} aria-describedby="setupKey-help" />
         <p id="setupKey-help" className="mt-1 text-[11px] text-ink-soft">Es el valor de <code>ADMIN_PASSWORD</code> en tu archivo <code>.env.local</code>.</p>
       </div>
-      <div><label htmlFor="name" className={labelCls}>Tu nombre</label><input id="name" autoComplete="name" required value={v.name} onChange={set("name")} className={inputCls} /></div>
-      <div><label htmlFor="email" className={labelCls}>Correo</label><input id="email" type="email" autoComplete="username" required value={v.email} onChange={set("email")} className={inputCls} /></div>
+      <div><label htmlFor="name" className={labelCls}>Tu nombre</label><input id="name" autoComplete="name" required maxLength={80} value={v.name} onChange={(e) => { guardElement("name", e.currentTarget); set("name")(e); }} className={inputCls} /></div>
+      <div><label htmlFor="email" className={labelCls}>Correo</label><input id="email" type="email" inputMode="email" spellCheck={false} maxLength={200} autoComplete="username" required value={v.email} onChange={(e) => { guardElement("email", e.currentTarget); set("email")(e); }} className={inputCls} /></div>
       <div>
         <label htmlFor="password" className={labelCls}>Nueva contraseña</label>
         <input id="password" type="password" autoComplete="new-password" required minLength={12} value={v.password} onChange={set("password")} className={inputCls} aria-describedby="pw-help" />

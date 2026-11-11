@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { quoteShipping, totalWeight, type ShippingQuote, type ShippingZoneRule } from "@/lib/shipping";
-import type { CheckoutInput } from "@/lib/schemas/checkout";
+import type { CheckoutData as CheckoutInput } from "@/lib/schemas/checkout";
 import { mergeLines, reserveStock, type StockLine } from "@/lib/stock";
 import { randomInt } from "node:crypto";
 import { assertCustomOfferPurchase } from "@/lib/services/special-requests";
