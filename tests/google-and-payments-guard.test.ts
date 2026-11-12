@@ -62,7 +62,7 @@ describe("conexión a la base de datos en Vercel", () => {
     const u = new URL(runtimeDatabaseUrl(session, { VERCEL: "1" })!);
     expect(u.port).toBe("6543");
     expect(u.searchParams.get("pgbouncer")).toBe("true");
-    expect(u.searchParams.get("connection_limit")).toBe("1");
+    expect(u.searchParams.get("connection_limit")).toBe("3");
   });
   it("en local deja el puerto y limita el grupo de conexiones", () => {
     const u = new URL(runtimeDatabaseUrl(session, {})!);

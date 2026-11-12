@@ -149,6 +149,10 @@ model Order {
   shippingEta      String?
   expiresAt        DateTime
   createdAt        DateTime         @default(now())
+  /// Clave del intento de compra que genera el navegador. Única: un reintento recupera este pedido en vez de crear otro.
+  idempotencyKey   String?          @unique
+  /// Huella del contenido del intento (correo, productos, pago): la misma clave con otro contenido se rechaza.
+  idempotencyHash  String?
   items            OrderItem[]
   payments         Payment[]
   supportRequests  SupportRequest[]
