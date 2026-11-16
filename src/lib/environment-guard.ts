@@ -36,5 +36,9 @@ export class EnvironmentIsolationError extends Error {
 
 /** Lanza si un despliegue que no es de producción usa un recurso de producción. */
 export function assertIsolated(what: string, raw: string | undefined, env: Record<string, string | undefined> = process.env) {
+  // Excepción explícita y temporal (decisión del dueño, 16-11-2026): validar en un Preview con la base real.
+  // Se activa SOLO con ALLOW_PRODUCTION_DATA_IN_PREVIEW=1 en una rama concreta de Vercel; las llaves de Wompi
+  // siguen limitadas a Sandbox fuera de producción.
+  if (env.ALLOW_PRODUCTION_DATA_IN_PREVIEW === "1") return;
   if (isNonProductionDeployment(env) && isProductionResource(raw, env)) throw new EnvironmentIsolationError(what);
 }

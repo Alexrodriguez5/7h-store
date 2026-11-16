@@ -30,3 +30,11 @@ describe("aislamiento de entornos", () => {
     expect(() => runtimeDatabaseUrl(dbUrl(PROD), { ...marker })).not.toThrow();
   });
 });
+
+describe("excepción explícita para validar en Preview", () => {
+  it("solo con ALLOW_PRODUCTION_DATA_IN_PREVIEW=1", () => {
+    const preview = { VERCEL: "1", VERCEL_ENV: "preview", ...marker };
+    expect(() => runtimeDatabaseUrl(dbUrl(PROD), { ...preview, ALLOW_PRODUCTION_DATA_IN_PREVIEW: "1" })).not.toThrow();
+    expect(() => runtimeDatabaseUrl(dbUrl(PROD), { ...preview, ALLOW_PRODUCTION_DATA_IN_PREVIEW: "true" })).toThrow();
+  });
+});
