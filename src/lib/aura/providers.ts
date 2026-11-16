@@ -1,5 +1,6 @@
 import type { AuraConfig } from "./config";
 import { geminiProvider } from "./gemini";
+import { groundedProvider } from "./grounding";
 import { ollamaProvider } from "./ollama";
 import { AiError, type AiProvider } from "./provider";
 
@@ -14,14 +15,15 @@ export function buildProviders(cfg: AuraConfig): { primary: AiProvider | null; b
   if (!cfg.enabled) return { primary: null, backup: null };
   const gemini = (model: string | null) => (cfg.key && model ? geminiProvider(cfg.key, model, cfg.timeoutMs) : null);
   if (cfg.provider === "ollama" && cfg.ollama.baseUrl) {
-    const primary = ollamaProvider({
+    // Qwen no puede entregar datos comerciales sin fuente oficial: si lo intenta, responde Gemini (grounding.ts).
+    const primary = groundedProvider(ollamaProvider({
       baseUrl: cfg.ollama.baseUrl,
       model: cfg.ollama.model,
       apiKey: cfg.ollama.apiKey,
       timeoutMs: Math.min(cfg.ollama.timeoutMs, cfg.timeoutMs - 3_000),
       keepAlive: cfg.ollama.keepAlive,
       numCtx: cfg.ollama.numCtx,
-    });
+    }), (claims) => console.warn("[aura] respuesta local descartada por datos sin fuente:", claims.length));
     // Primero el Flash alterno: en las pruebas del 16-11-2026 respondió en ~2 s mientras el principal agotaba
     // la espera (504). Si el alterno está desactivado, queda solo el principal.
     return { primary, backup: chain(gemini(cfg.fallbackModel), gemini(cfg.model)) };
