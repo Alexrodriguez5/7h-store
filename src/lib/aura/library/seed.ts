@@ -8,9 +8,11 @@
  * - `body` usa marcadores {{...}} que se llenan al responder con los valores vigentes de la tienda
  *   (umbral de envío gratis, plazo, aviso de pagos): así la respuesta no se queda desactualizada.
  */
+import { EXTRA_VARIANTS } from "./variants-extra";
+
 export interface SeedEntry { slug: string; category: string; title: string; body: string; source: string; sourceUrl: string; questions: string[]; variants: string[] }
 
-export const SEED_VERSION = "2026-11-08";
+export const SEED_VERSION = "2026-11-16";
 
 export const SEED: SeedEntry[] = [
   {
@@ -122,3 +124,10 @@ export const SEED: SeedEntry[] = [
     variants: ["Quiero hablar con una persona", "¿Tienen WhatsApp?", "¿Cómo los contacto?", "pasame con un humano", "¿Tienen número de teléfono?"],
   },
 ];
+
+// Formas adicionales de preguntar (sintéticas, pendientes de aprobación). Ver variants-extra.ts.
+for (const s of SEED) {
+  const extra = EXTRA_VARIANTS[s.slug] ?? [];
+  const seen = new Set([...s.questions, ...s.variants].map((q) => q.toLowerCase()));
+  for (const v of extra) if (!seen.has(v.toLowerCase())) { s.variants.push(v); seen.add(v.toLowerCase()); }
+}

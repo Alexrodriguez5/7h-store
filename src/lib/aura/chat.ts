@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { consume, isBlocked, MIN, registerHit } from "@/lib/rate-limit";
 import { auraConfig, type AuraConfig } from "./config";
 import { buildProviders } from "./providers";
+import { RESTRICTED_REPLY, isRestrictedTopic } from "./restricted-topics";
 import { describeKinds, scanPrivate, type PrivateKind } from "./privacy";
 import { systemPrompt } from "./prompt";
 import { AiError, type AiProvider, type AuraTurn } from "./provider";
@@ -87,6 +88,14 @@ export async function handleChat(input: ChatInput, viewer: { ip: string; custome
   if (scan.block) {
     await saveUser({ errorKind: "privacy", text: "[mensaje bloqueado por contener datos privados]" });
     return sys("privacy", `Por tu seguridad no envié ese mensaje: incluye ${describeKinds(scan.kinds)}. No hace falta compartir esos datos en el chat. Edita el mensaje y vuelve a enviarlo.`, cid, { privacy: scan.kinds });
+  }
+
+  // 3b) Temas restringidos (construcción de la tienda y seguridad informática): respuesta fija, sin biblioteca ni modelo.
+  if (isRestrictedTopic(scan.text)) {
+    await saveUser({ errorKind: "restringido" });
+    await db.auraMessage.create({ data: { conversationId: cid, role: "model", text: RESTRICTED_REPLY, tools: ["restringido"] } });
+    await db.auraConversation.update({ where: { id: cid }, data: { messageCount: { increment: 1 } } });
+    return { conversationId: cid, source: "sistema", text: RESTRICTED_REPLY, state: "ok", products: [], draft: null, handoff: null, privacy: scan.kinds, fallback: false };
   }
 
   // 4) NIVEL 1 · Biblioteca aprobada: si la pregunta ya tiene respuesta aprobada, se responde sin IA y sin gastar cuota.

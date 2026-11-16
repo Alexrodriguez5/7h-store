@@ -52,9 +52,9 @@ export function BrainActions({ categories, seedBatch, syntheticPending = 0 }: { 
   const [busy, setBusy] = useState(false);
   const seed = async () => {
     setBusy(true);
-    const r = await adminFetch<{ created: number; skipped: number }>("/api/admin/aura/conocimiento", "POST", { semilla: true });
+    const r = await adminFetch<{ created: number; skipped: number; addedVariants?: number }>("/api/admin/aura/conocimiento", "POST", { semilla: true });
     setBusy(false);
-    setMsg(r.ok ? `Listo: ${r.data.created} entradas nuevas (pendientes de tu aprobación), ${r.data.skipped} ya existían.` : r.error);
+    setMsg(r.ok ? `Listo: ${r.data.created} entradas nuevas y ${r.data.addedVariants ?? 0} formas nuevas de preguntar (pendientes de tu aprobación); ${r.data.skipped} entradas ya existían.` : r.error);
     router.refresh();
   };
   const approveAll = async (incluirSinteticas: boolean) => {
