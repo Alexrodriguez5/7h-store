@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
+import { rankProducts } from "./product-search";
 import { z } from "zod";
 import { BUSINESS, whatsappUrl } from "@/lib/business";
 import { formatCOP } from "@/lib/format";
@@ -96,16 +97,16 @@ export function createToolRunner(cfg: Pick<AuraConfig, "catalogIsDemo">, db: Pri
       case "buscar_productos": {
         const a = searchArgs.safeParse(call.args);
         if (!a.success) return { error: "Parámetros no válidos." };
-        const words = a.data.texto.toLowerCase().split(/\s+/).filter((w) => w.length > 1).slice(0, 5);
-        const rows = (await db.product.findMany({
+        // Candidatos con los filtros exactos (categoría, precio); la relevancia del texto se calcula en memoria.
+        const candidates = (await db.product.findMany({
           where: {
             ...visible,
             ...(a.data.categoria ? { category: { active: true, slug: a.data.categoria } } : {}),
             ...(a.data.precio_max_cop ? { priceCOP: { lte: a.data.precio_max_cop } } : {}),
-            AND: words.map((w) => ({ OR: [{ name: { contains: w, mode: "insensitive" as const } }, { brand: { contains: w, mode: "insensitive" as const } }, { tags: { has: w } }, { category: { label: { contains: w, mode: "insensitive" as const } } }, { description: { contains: w, mode: "insensitive" as const } }] })),
           },
-          select, take: 6, orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
-        })) as Row[];
+          select: { ...select, description: true, tags: true }, take: 300, orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+        })) as (Row & { description: string; tags: string[] })[];
+        const rows: Row[] = rankProducts(a.data.texto, candidates, 6);
         let cards = rows.map(card);
         if (a.data.talla) cards = cards.filter((c) => c.sizes.includes(a.data.talla!.toUpperCase()) || c.sizes.includes(a.data.talla!));
         outputs.products.push(...cards.filter((c) => !outputs.products.some((x) => x.slug === c.slug)).slice(0, 6 - outputs.products.length));
