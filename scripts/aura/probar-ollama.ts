@@ -74,7 +74,7 @@ async function main() {
       toolsUsed = r.toolsUsed;
       tokensOut = r.tokensOut;
     } catch (e) {
-      error = e instanceof AiError ? `${e.kind}: ${e.message}` : "error inesperado";
+      error = e instanceof AiError ? `${e.kind}: ${e.message}${e.status ? ` (${e.status})` : ""}${e.detail ? ` — ${e.detail.slice(0, 120)}` : ""}` : "error inesperado";
     } finally {
       clearTimeout(timer);
     }

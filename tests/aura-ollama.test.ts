@@ -145,3 +145,18 @@ describe("ollamaProvider", () => {
     expect(err.detail).not.toContain("abc123");
   });
 });
+
+describe("chain (respaldo en cadena)", async () => {
+  const { chain } = await import("@/lib/aura/providers");
+  const ok = { id: "b", run: vi.fn(async () => ({ text: "b", tokensIn: 0, tokensOut: 0, calls: 1, toolsUsed: [] })) };
+  it("pasa al segundo solo si el primero está 'unavailable'", async () => {
+    const busy = { id: "a", run: async () => { throw new AiError("unavailable", "503"); } };
+    expect((await chain(busy, ok)!.run(baseRun())).text).toBe("b");
+    const quota = { id: "a", run: async () => { throw new AiError("quota", "429"); } };
+    await expect(chain(quota, ok)!.run(baseRun())).rejects.toMatchObject({ kind: "quota" });
+  });
+  it("con un solo proveedor devuelve ese", () => {
+    expect(chain(null, ok)?.id).toBe("b");
+    expect(chain(null, null)).toBeNull();
+  });
+});
