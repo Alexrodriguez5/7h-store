@@ -74,7 +74,9 @@ export function groundedProvider(inner: AiProvider, onReject?: (claims: string[]
       // aprobada que el servidor adjunta a su pregunta.
       const approved = opts.history.flatMap((t) => (t.role === "user" ? (t.text.match(/\[Información aprobada de 7H STORE[\s\S]*\]$/)?.[0] ?? []) : []));
       const official = [...approved, ...toolResults];
-      const claims = unsupportedClaims(result.text, [opts.system, ...official]);
+      // Del prompt solo cuenta el contexto de la tienda, no las reglas numeradas ("1.", "2."…), que no son datos.
+      const storeContext = opts.system.split(/\s(?:QUÉ HACES|REGLAS)\s/)[0];
+      const claims = unsupportedClaims(result.text, [storeContext, ...official]);
       // El prompt menciona descuentos solo para prohibirlos: para descuentos cuentan las herramientas y la biblioteca.
       if (inventsDiscount(result.text, official)) claims.push("menciona un descuento que ninguna fuente ofrece");
       if (claims.length) {

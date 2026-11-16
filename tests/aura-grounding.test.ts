@@ -56,3 +56,11 @@ describe("control de información comercial (Qwen)", () => {
     expect(r.text).toContain("5 días");
   });
 });
+
+describe("fuentes del prompt", () => {
+  it("las reglas numeradas del prompt no cuentan como datos", async () => {
+    const p = groundedProvider(fake("La garantía es de 1 año."));
+    const system = "CONTEXTO\nEnvío gratis desde $ 500.000.\nREGLAS\n1. Nunca inventes.";
+    await expect(p.run(run({ system }))).rejects.toMatchObject({ kind: "unavailable" });
+  });
+});
