@@ -16,6 +16,8 @@ const PATTERNS: RegExp[] = [
   /\b(codigo fuente|source code|repositorio|github|gitlab|commit|branch|rama del codigo)\b/,
   /\b(pagina|tienda|web|sitio|app|aplicacion|aura|chat|bot)\b.{0,30}\b(programad[ao]|hech[ao]|construid[ao]|desarrollad[ao])\b/,
   /\b(programad[ao]|construid[ao]|desarrollad[ao])\b.{0,30}\b(pagina|tienda|web|sitio|app|aplicacion|aura|chat|bot)\b/,
+  /\bhech[ao]s? (el|la) (pagina|tienda|web|sitio|app|aplicacion|aura|chat|bot)\b/,
+  /\b(esta|estan|fue|fueron) hech[ao]s? (el|la|en|con)\b.{0,20}\b(pagina|tienda|web|sitio|app|aplicacion|chat|bot|codigo)\b/,
   /\b(que|cual|cuales)\b.{0,25}\b(lenguaje de programacion|framework|stack)\b/,
   /\btecnologias? (usan|usaron|utilizan|utilizaron|tiene la (pagina|tienda|web))\b/,
   /\b(next ?js|react|typescript|javascript|node ?js|prisma|supabase|vercel|postgres(ql)?|sql|tailwind|zustand|zod|wompi api|webhook|endpoint|api key|apikey|backend|frontend|servidor|hosting|base de datos|database|docker|kubernetes)\b/,
