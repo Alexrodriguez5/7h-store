@@ -6,3 +6,7 @@ node_modules
 coverage
 *.log
 *.tsbuildinfo
+
+# Cualquier archivo de entorno (secretos), salvo el ejemplo
+.env*
+!.env.example
