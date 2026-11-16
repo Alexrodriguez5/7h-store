@@ -3,6 +3,7 @@
  *
  *   npx tsx scripts/aura/probar-ollama.ts                 # Ollama (modelo de OLLAMA_MODEL o qwen3.5:4b)
  *   npx tsx scripts/aura/probar-ollama.ts --respaldo      # simula Ollama caído y comprueba que responde Gemini
+ *   --detalle                                             # muestra cada herramienta con sus argumentos
  *
  * - Usa el mismo adaptador, prompt y herramientas que la tienda (src/lib/aura/*).
  * - Las herramientas solo LEEN el catálogo. No se crean conversaciones, mensajes ni solicitudes:
@@ -57,7 +58,7 @@ async function main() {
     const tools = createToolRunner(cfg);
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), cfg.timeoutMs);
-    const opts = { system: systemPrompt({ signedIn: false, catalogIsDemo: cfg.catalogIsDemo }), history: [{ role: "user" as const, text: q }], tools: TOOL_SPECS, execute: tools.execute, maxCalls: 3, signal: ctrl.signal };
+    const opts = { system: systemPrompt({ signedIn: false, catalogIsDemo: cfg.catalogIsDemo }), history: [{ role: "user" as const, text: q }], tools: TOOL_SPECS, execute: async (c: { name: string; args: Record<string, unknown> }) => { const out = await tools.execute(c); if (process.argv.includes("--detalle")) console.log(`  → ${c.name}(${JSON.stringify(c.args)}) = ${JSON.stringify(out).slice(0, 160)}`); return out; }, maxCalls: 3, signal: ctrl.signal };
     const t0 = performance.now();
     let used = primary.id, text = "", toolsUsed: string[] = [], tokensOut = 0, error: string | null = null;
     try {
