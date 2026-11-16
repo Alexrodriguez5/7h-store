@@ -14,6 +14,8 @@
  * connect_timeout 10 s: una base lenta en responder no deja la petición colgada.
  * Los comandos de Prisma (migrate) siguen usando DATABASE_URL tal cual.
  */
+import { assertIsolated } from "./environment-guard";
+
 const clamp = (v: string | undefined, fallback: number, min: number, max: number) => {
   const n = Number.parseInt(v ?? "", 10);
   return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
@@ -21,6 +23,8 @@ const clamp = (v: string | undefined, fallback: number, min: number, max: number
 
 export function runtimeDatabaseUrl(raw: string | undefined, env: Record<string, string | undefined> = process.env): string | undefined {
   if (!raw) return raw;
+  // Preview nunca usa la base de producción: falla al arrancar en vez de escribir datos reales.
+  assertIsolated("DATABASE_URL", raw, env);
   try {
     const u = new URL(raw);
     const serverless = Boolean(env.VERCEL);

@@ -1,4 +1,5 @@
 import { createHash, timingSafeEqual } from "node:crypto";
+import { isNonProductionDeployment } from "@/lib/environment-guard";
 import type { PaymentGateway, GatewayOrder } from "./gateway";
 
 /**
@@ -17,6 +18,8 @@ export function assertSafePaymentEnvironment(publicKey: string, env: Record<stri
 export class WompiGateway implements PaymentGateway {
   async createCheckout(order: GatewayOrder) {
     const publicKey = process.env.WOMPI_PUBLIC_KEY;
+    // Fuera de producción solo se aceptan llaves Sandbox: una Preview nunca cobra dinero real.
+    if (isNonProductionDeployment() && publicKey && !publicKey.startsWith("pub_test_")) throw new Error("Este despliegue no es de producción: usa llaves Sandbox de Wompi (pub_test_).");
     const integritySecret = process.env.WOMPI_INTEGRITY_SECRET;
 
     if (!publicKey) {
