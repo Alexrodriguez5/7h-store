@@ -30,7 +30,15 @@ const VARS: [string, string, boolean][] = [
   ["ENVIA_CARRIERS", "Envia · transportadoras a cotizar (p. ej. servientrega,coordinadora)", false],
   ["ENVIA_CHECKOUT_RATES", "Envia · \"1\" para cobrar en el checkout la tarifa real", false],
   ["ENVIA_MIN_SHIPPING_COP", "Envia · envío mínimo cobrado (por defecto 15000)", false],
+  ["GEMINI_API_KEY", "AURA · clave de Gemini (nivel gratuito; principal o respaldo)", false],
+  ["AURA_PROVIDER", "AURA · proveedor principal: gemini (predeterminado) u ollama", false],
+  ["OLLAMA_BASE_URL", "AURA · dirección de Ollama (HTTPS fuera de localhost)", false],
+  ["OLLAMA_MODEL", "AURA · modelo de Ollama (p. ej. qwen3.5:4b)", false],
+  ["OLLAMA_API_KEY", "AURA · token del proxy de Ollama, si lo exige", false],
 ];
+
+/** Secretos que deben ser largos y aleatorios. Solo se mide la longitud: el valor nunca se lee para mostrarlo. */
+const MIN_SECRET_LENGTH: Record<string, number> = { CRON_SECRET: 32, ADMIN_SESSION_SECRET: 32 };
 
 export default async function SettingsPage() {
   await requireAdminPage();
@@ -45,7 +53,8 @@ export default async function SettingsPage() {
           <ul className="divide-y divide-ink/10">
             {VARS.map(([name, desc, required]) => {
               const ok = !!process.env[name];
-              return <li key={name} className="flex items-center justify-between gap-3 py-2.5 text-sm"><span><span className="font-mono text-xs">{name}</span><span className="block text-[11px] text-ink-soft">{desc}</span></span><Badge tone={ok ? "success" : required ? "error" : "warning"}>{ok ? "Configurada" : required ? "Falta" : "Sin configurar"}</Badge></li>;
+              const weak = ok && (process.env[name]?.length ?? 0) < (MIN_SECRET_LENGTH[name] ?? 0);
+              return <li key={name} className="flex items-center justify-between gap-3 py-2.5 text-sm"><span><span className="font-mono text-xs">{name}</span><span className="block text-[11px] text-ink-soft">{desc}{weak && <span className="block text-error">Es demasiado corta: rótala por una de {MIN_SECRET_LENGTH[name]}+ caracteres aleatorios.</span>}</span></span><Badge tone={weak ? "warning" : ok ? "success" : required ? "error" : "warning"}>{weak ? "Débil" : ok ? "Configurada" : required ? "Falta" : "Sin configurar"}</Badge></li>;
             })}
           </ul>
         </Card>
