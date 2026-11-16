@@ -54,7 +54,7 @@ const COOLDOWN_KEY = "aura:quota-cooldown";
 /** Mientras exista, el modelo principal se considera saturado y se va directo al respaldo gratuito. */
 const PRIMARY_BUSY_KEY = "aura:primary-busy";
 
-export interface ChatDeps { db?: PrismaClient; config?: AuraConfig; provider?: AiProvider | null; fallbackProvider?: AiProvider | null; now?: Date; library?: (q: string) => Promise<LibraryAnswer> }
+export interface ChatDeps { db?: PrismaClient; config?: AuraConfig; provider?: AiProvider | null; fallbackProvider?: AiProvider | null; now?: Date; library?: (q: string) => Promise<LibraryAnswer>; /** Se activa si el cliente cancela (botón Detener o cierre): corta la llamada al modelo. */ signal?: AbortSignal }
 
 export async function handleChat(input: ChatInput, viewer: { ip: string; customerId: string | null }, deps: ChatDeps = {}): Promise<ChatReply> {
   const db = deps.db ?? prisma;
@@ -130,6 +130,9 @@ export async function handleChat(input: ChatInput, viewer: { ip: string; custome
   const tools = createToolRunner(cfg, db);
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), cfg.timeoutMs);
+  const stop = () => ctrl.abort();
+  if (deps.signal?.aborted) ctrl.abort();
+  else deps.signal?.addEventListener("abort", stop, { once: true });
   const dayKey = `aura:day:${pacificDay(deps.now)}`;
   try {
     const runOpts = {
@@ -178,5 +181,6 @@ export async function handleChat(input: ChatInput, viewer: { ip: string; custome
     return sys("unavailable", "AURA no está disponible en este momento. Tu mensaje sigue escrito: inténtalo de nuevo en un momento o usa el asistente guiado.", cid);
   } finally {
     clearTimeout(timer);
+    deps.signal?.removeEventListener("abort", stop);
   }
 }

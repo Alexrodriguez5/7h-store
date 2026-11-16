@@ -46,6 +46,11 @@ export function AuraWidget() {
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
+  const launcherRef = useRef<HTMLButtonElement>(null);
+  /** Petición en curso: el botón Detener, cerrar el panel o desmontarlo la cancela (también en el servidor). */
+  const requestRef = useRef<AbortController | null>(null);
+  const wasOpen = useRef(false);
   const wa = whatsappUrl(BUSINESS.whatsapp);
 
   const setMood = useCallback((m: AuraMood, ms?: number) => {
@@ -67,11 +72,31 @@ export function AuraWidget() {
     if (!open) return;
     setMood("welcome", 900);
     fetch("/api/aura/estado").then((r) => r.json()).then(setStatus).catch(() => setStatus({ enabled: false, signedIn: false, proposals: [] }));
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    // Escape cierra; Tab y Shift+Tab no salen del diálogo (trampa de foco).
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { e.preventDefault(); setOpen(false); return; }
+      if (e.key !== "Tab" || !panelRef.current) return;
+      const items = [...panelRef.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]):not([type="hidden"]), [tabindex]:not([tabindex="-1"])')].filter((el) => el.offsetParent !== null);
+      if (!items.length) return;
+      const first = items[0], last = items[items.length - 1];
+      const inside = panelRef.current.contains(document.activeElement);
+      if (e.shiftKey && (document.activeElement === first || !inside)) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && (document.activeElement === last || !inside)) { e.preventDefault(); first.focus(); }
+    };
     window.addEventListener("keydown", onKey);
     const t = window.setTimeout(() => inputRef.current?.focus(), 250);
     return () => { window.removeEventListener("keydown", onKey); clearTimeout(t); };
   }, [open, setMood]);
+
+  // Al cerrar: se cancela lo pendiente y el foco vuelve al botón que abrió el panel.
+  useEffect(() => {
+    if (open) { wasOpen.current = true; return; }
+    requestRef.current?.abort();
+    if (wasOpen.current) launcherRef.current?.focus();
+  }, [open]);
+  useEffect(() => () => requestRef.current?.abort(), []);
+
+  const stop = () => requestRef.current?.abort();
 
   const check = scanPrivate(text);
 
@@ -97,14 +122,25 @@ export function AuraWidget() {
     setBusy(true);
     setMood("thinking");
     let reply: ChatReply | null = null;
+    const ctrl = new AbortController();
+    requestRef.current = ctrl;
     try {
-      const r = await fetch("/api/aura/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conversationId: conv, message, attachments: files.length }) });
+      const r = await fetch("/api/aura/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conversationId: conv, message, attachments: files.length }), signal: ctrl.signal });
       const data = await r.json().catch(() => null);
       reply = data && "source" in data ? (data as ChatReply) : null;
       if (!reply) throw new Error(String(data?.error ?? "error"));
     } catch {
+      if (ctrl.signal.aborted) {
+        // Detenido por el cliente: el texto sigue escrito y no se muestra como error.
+        requestRef.current = null;
+        setBusy(false);
+        setMsgs((m) => [...m, { id: uid(), role: "aura", source: "sistema", entryId: null, question: check.text, text: "Detuviste la respuesta. Tu mensaje sigue escrito por si quieres enviarlo de nuevo.", state: "error", products: [], draft: null, handoff: null, fallback: true } as Msg]);
+        setMood("idle");
+        return;
+      }
       reply = { conversationId: conv, source: "sistema", text: "No pudimos conectar con AURA. Tu mensaje sigue escrito: inténtalo de nuevo o usa el asistente guiado.", state: "error", products: [], draft: null, handoff: null, privacy: [], fallback: true };
     }
+    requestRef.current = null;
     setBusy(false);
     if (reply.conversationId) setConv(reply.conversationId);
     setMsgs((m) => [...m, { id: uid(), role: "aura", source: reply.source, entryId: reply.entryId ?? null, question: check.text, text: reply.text, state: reply.state, products: reply.products, draft: reply.draft, handoff: reply.handoff, fallback: reply.fallback }]);
@@ -129,7 +165,9 @@ export function AuraWidget() {
       {/* Lanzador: la esfera de AURA ocupa la esquina; WhatsApp vive dentro del panel. */}
       <button
         type="button"
+        ref={launcherRef}
         onClick={() => setOpen((v) => !v)}
+        aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls="aura-panel"
         aria-label={open ? "Cerrar AURA" : "Abrir AURA, asesora de 7H STORE"}
@@ -142,15 +180,18 @@ export function AuraWidget() {
       {open && (
         <section
           id="aura-panel"
+          ref={panelRef}
           role="dialog"
-          aria-label="AURA, asesora de 7H STORE"
+          aria-modal="true"
+          aria-labelledby="aura-title"
+          aria-describedby="aura-subtitle"
           className="aura-panel fixed inset-x-0 bottom-0 z-50 flex h-[88dvh] flex-col overflow-hidden rounded-t-[28px] border border-gold/25 bg-[#111110] text-ivory shadow-[0_-20px_60px_-20px_rgb(0_0_0_/_.7)] sm:inset-x-auto sm:bottom-24 sm:right-5 sm:h-[640px] sm:max-h-[calc(100dvh-8rem)] sm:w-[400px] sm:rounded-[28px]"
         >
           <header className="flex items-center gap-3 border-b border-white/10 px-4 py-3">
             <AuraOrb energy={energy} className="size-10" fps={30} />
             <div className="min-w-0 flex-1">
-              <p className="font-display text-xl leading-none text-gold-light">AURA</p>
-              <p className="mt-1 text-[11px] text-ivory/55">Asesora de 7H STORE · fase de prueba</p>
+              <h2 id="aura-title" className="font-display text-xl leading-none text-gold-light">AURA<span className="sr-only">, asesora de 7H STORE</span></h2>
+              <p id="aura-subtitle" className="mt-1 text-[11px] text-ivory/55">Asesora de 7H STORE · fase de prueba</p>
             </div>
             {wa && <a href={`${wa}?text=${encodeURIComponent("Hola 7H STORE, tengo una pregunta.")}`} target="_blank" rel="noreferrer" className="grid min-h-11 place-items-center rounded-full border border-white/15 px-3 text-xs font-semibold text-ivory hover:border-gold" aria-label="Escribir por WhatsApp">WhatsApp</a>}
             <button type="button" onClick={() => setOpen(false)} aria-label="Cerrar AURA" className="grid size-11 place-items-center rounded-full text-ivory/70 hover:bg-white/10 hover:text-ivory">
@@ -158,7 +199,7 @@ export function AuraWidget() {
             </button>
           </header>
 
-          <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-4" aria-live="polite">
+          <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-4" role="log" aria-live="polite" aria-relevant="additions" aria-busy={busy} aria-label="Conversación con AURA">
             <div className="rounded-2xl border border-gold/20 bg-gold/[.06] p-3 text-xs leading-5 text-ivory/80">
               <p>{NOTICE}</p>
               <p className="mt-1.5"><Link href="/privacidad" className="underline underline-offset-2">Política de tratamiento de datos</Link>. Durante esta fase, la conversación se procesa con el nivel gratuito de Google Gemini, sin garantías de privacidad empresarial.</p>
@@ -271,7 +312,7 @@ export function AuraWidget() {
                 {files.map((f, i) => (
                   <span key={`${f.name}-${i}`} className="relative shrink-0">
                     <img src={URL.createObjectURL(f)} alt={`Adjunto ${i + 1}`} className="size-14 rounded-lg object-cover" />
-                    <button type="button" onClick={() => setFiles((l) => l.filter((_, j) => j !== i))} aria-label={`Quitar adjunto ${i + 1}`} className="absolute -right-1.5 -top-1.5 grid size-6 place-items-center rounded-full bg-ink text-xs ring-1 ring-white/30">×</button>
+                    <button type="button" onClick={() => setFiles((l) => l.filter((_, j) => j !== i))} aria-label={`Quitar adjunto ${i + 1}`} className="absolute -right-1.5 -top-1.5 grid size-6 after:absolute after:-inset-2.5 after:content-[''] place-items-center rounded-full bg-ink text-xs ring-1 ring-white/30">×</button>
                   </span>
                 ))}
               </div>
@@ -299,9 +340,15 @@ export function AuraWidget() {
                 placeholder={accepted ? "Escribe tu mensaje…" : "Acepta el aviso para empezar"}
                 className="max-h-32 min-h-11 flex-1 resize-none overflow-y-auto rounded-2xl [scrollbar-width:none] border border-white/15 bg-white/[.04] px-3.5 py-2.5 text-base text-ivory outline-none placeholder:text-ivory/35 focus:border-gold sm:text-sm"
               />
-              <button type="submit" disabled={!accepted || busy || !text.trim() || check.block} aria-label="Enviar mensaje" className="grid size-11 shrink-0 place-items-center rounded-full bg-gold text-ink transition-colors hover:bg-gold-light disabled:opacity-40">
+              {busy ? (
+                <button type="button" onClick={stop} aria-label="Detener la respuesta de AURA" className="grid size-11 shrink-0 place-items-center rounded-full border border-gold/60 text-gold-light transition-colors hover:bg-gold/15">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>
+                </button>
+              ) : (
+                <button type="submit" disabled={!accepted || busy || !text.trim() || check.block} aria-label="Enviar mensaje" className="grid size-11 shrink-0 place-items-center rounded-full bg-gold text-ink transition-colors hover:bg-gold-light disabled:opacity-40">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
               </button>
+              )}
             </div>
           </form>
         </section>
