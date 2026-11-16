@@ -7,8 +7,15 @@ import { Button } from "@/components/ui/Button";
 import { WompiGateway } from "@/lib/payments/wompi";
 import { ProofUploader } from "@/components/orders/ProofUploader";
 import { ORDER_STATUS_LABEL } from "@/lib/order-status";
+import { headers } from "next/headers";
+import { notFound } from "next/navigation";
+import { getClientIpFromHeaders } from "@/lib/request";
+import { MIN, isBlocked, registerHit } from "@/lib/rate-limit";
 
 export const metadata: Metadata = { title: "Tu pedido", robots: { index: false, follow: false } };
+
+/** Búsquedas fallidas permitidas por IP en 15 minutos. */
+const ORDER_MISS_LIMIT = 20;
 
 const STATUS_MESSAGE: Record<string, string> = {
   PENDING_PAYMENT: "Estamos esperando la confirmación de tu pago.",
@@ -27,15 +34,25 @@ export default async function OrderPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ id?: string }>;
 }) {
-  const [{ id }, sp] = await Promise.all([params, searchParams]);
-  const order = await prisma.order.findFirst({ where: { OR: [{ publicCode: id }, { id }] }, include: { items: true } });
-  if (!order)
+  const [{ id }, sp, h] = await Promise.all([params, searchParams, headers()]);
+  // Límite por IP a las búsquedas FALLIDAS: impide probar códigos al azar sin afectar a quien
+  // recarga su propio pedido. Un código con formato inválido no consulta la base de datos.
+  const missKey = `pedido-miss:ip:${getClientIpFromHeaders(h)}`;
+  if (await isBlocked(missKey, ORDER_MISS_LIMIT))
     return (
       <main id="contenido" className="mx-auto max-w-xl px-5 py-24 text-center">
-        <h1 className="font-display text-4xl">Pedido no encontrado.</h1>
-        <Button href="/catalogo" className="mt-6">Volver al catálogo</Button>
+        <h1 className="font-display text-4xl">Demasiados intentos.</h1>
+        <p className="mt-4 text-ink/70">Espera unos minutos e inténtalo de nuevo, o entra a tu cuenta para ver tus pedidos.</p>
+        <Button href="/cuenta/pedidos" className="mt-6">Ver mis pedidos</Button>
       </main>
     );
+  const order = /^[A-Za-z0-9-]{6,40}$/.test(id)
+    ? await prisma.order.findFirst({ where: { OR: [{ publicCode: id }, { id }] }, include: { items: true } })
+    : null;
+  if (!order) {
+    await registerHit(missKey, 15 * MIN);
+    notFound();
+  }
 
   const manual = order.paymentMethod === "BANK_TRANSFER" || order.paymentMethod === "CASH_DEPOSIT";
   // Solo se puede pagar un pedido pendiente y vigente: evita cobros dobles sobre pedidos pagados, vencidos o cancelados.

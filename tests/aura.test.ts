@@ -365,3 +365,26 @@ describe("privacidad · sin falsos positivos con palabras como «contraseña»",
     expect(scanPrivate(t).block).toBe(true);
   });
 });
+
+describe("AURA: cancelación y respaldo (bloque 2)", () => {
+  it("si el cliente cancela, se corta la llamada al modelo", async () => {
+    const { db } = fakeDb();
+    const client = new AbortController();
+    const p = provider((o) => new Promise((_, rej) => {
+      o.signal.addEventListener("abort", () => rej(new AiError("timeout", "cancelado")));
+      setTimeout(() => client.abort(), 10);
+    }));
+    const r = await handleChat({ message: "busco un reloj garmin", attachments: 0 }, viewer, { db, config: cfg, provider: p, fallbackProvider: null, signal: client.signal });
+    expect(p.seen[0].signal.aborted).toBe(true);
+    expect(r.state).toBe("unavailable");
+  });
+
+  it("si el principal (Ollama) no está disponible, responde el respaldo (Gemini)", async () => {
+    const { db } = fakeDb();
+    const primary = provider(async () => { throw new AiError("unavailable", "Ollama no responde"); });
+    const backup = provider(async () => ({ text: "Respuesta del respaldo.", tokensIn: 1, tokensOut: 1, calls: 1, toolsUsed: [] }));
+    const r = await handleChat({ message: "busco un reloj garmin", attachments: 0 }, viewer, { db, config: cfg, provider: primary, fallbackProvider: backup });
+    expect(r).toMatchObject({ source: "ia", state: "ok", text: "Respuesta del respaldo." });
+    expect(backup.seen).toHaveLength(1);
+  });
+});

@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { assertIsolated } from "@/lib/environment-guard";
 import { MAX_IMAGE_BYTES, detectImageType } from "@/lib/images";
 
 export const PRODUCT_BUCKET = "product-images";
@@ -10,6 +11,7 @@ export class UploadError extends Error {
 /** Sube una imagen a Supabase Storage (REST, con la service-role key SOLO en servidor). */
 export async function uploadProductImage(file: File, fetchImpl: typeof fetch = fetch): Promise<string> {
   const base = process.env.SUPABASE_URL?.replace(/\/$/, "");
+  assertIsolated("SUPABASE_URL", base);
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!base || !key) throw new UploadError(503, "El almacenamiento de imágenes no está configurado (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY).");
   if (file.size === 0 || file.size > MAX_IMAGE_BYTES) throw new UploadError(400, "La imagen debe pesar máximo 5 MB.");
@@ -31,6 +33,7 @@ export async function uploadProductImage(file: File, fetchImpl: typeof fetch = f
 /** Ruta interna de un archivo SUBIDO por esta tienda (año/hex24.ext). Cualquier otra URL se ignora. */
 export function ownStoragePath(url: string): string | null {
   const base = process.env.SUPABASE_URL?.replace(/\/$/, "");
+  assertIsolated("SUPABASE_URL", base);
   if (!base) return null;
   const prefix = `${base}/storage/v1/object/public/${PRODUCT_BUCKET}/`;
   if (!url.startsWith(prefix)) return null;
@@ -48,6 +51,7 @@ export async function deleteUnusedImages(
   fetchImpl: typeof fetch = fetch,
 ): Promise<number> {
   const base = process.env.SUPABASE_URL?.replace(/\/$/, "");
+  assertIsolated("SUPABASE_URL", base);
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!base || !key || urls.length === 0) return 0;
   const paths: string[] = [];

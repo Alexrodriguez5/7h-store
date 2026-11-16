@@ -4,7 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { consume, isBlocked, MIN, registerHit } from "@/lib/rate-limit";
 import { auraConfig, type AuraConfig } from "./config";
-import { geminiProvider } from "./gemini";
+import { buildProviders } from "./providers";
 import { describeKinds, scanPrivate, type PrivateKind } from "./privacy";
 import { systemPrompt } from "./prompt";
 import { AiError, type AiProvider, type AuraTurn } from "./provider";
@@ -54,7 +54,7 @@ const COOLDOWN_KEY = "aura:quota-cooldown";
 /** Mientras exista, el modelo principal se considera saturado y se va directo al respaldo gratuito. */
 const PRIMARY_BUSY_KEY = "aura:primary-busy";
 
-export interface ChatDeps { db?: PrismaClient; config?: AuraConfig; provider?: AiProvider | null; fallbackProvider?: AiProvider | null; now?: Date; library?: (q: string) => Promise<LibraryAnswer> }
+export interface ChatDeps { db?: PrismaClient; config?: AuraConfig; provider?: AiProvider | null; fallbackProvider?: AiProvider | null; now?: Date; library?: (q: string) => Promise<LibraryAnswer>; /** Se activa si el cliente cancela (botón Detener o cierre): corta la llamada al modelo. */ signal?: AbortSignal }
 
 export async function handleChat(input: ChatInput, viewer: { ip: string; customerId: string | null }, deps: ChatDeps = {}): Promise<ChatReply> {
   const db = deps.db ?? prisma;
@@ -108,9 +108,10 @@ export async function handleChat(input: ChatInput, viewer: { ip: string; custome
 [Información aprobada de 7H STORE que puede servir (úsala solo si responde la pregunta): ${lib.context.join(" | ").slice(0, 1500)}]` : userText;
 
   // 5) NIVEL 2 · ¿Hay modelo disponible?
-  const provider = deps.provider !== undefined ? deps.provider : cfg.enabled && cfg.key && cfg.model ? geminiProvider(cfg.key, cfg.model, cfg.timeoutMs) : null;
-  // Respaldo GRATUITO (otro modelo Flash del nivel gratuito, misma clave): solo si el principal está saturado.
-  const backup = deps.fallbackProvider !== undefined ? deps.fallbackProvider : provider && cfg.key && cfg.fallbackModel ? geminiProvider(cfg.key, cfg.fallbackModel, cfg.timeoutMs) : null;
+  // Principal y respaldo según AURA_PROVIDER (providers.ts). El respaldo solo se usa si el principal está saturado o caído.
+  const built = buildProviders(cfg);
+  const provider = deps.provider !== undefined ? deps.provider : built.primary;
+  const backup = deps.fallbackProvider !== undefined ? deps.fallbackProvider : provider ? built.backup : null;
   if (!provider) {
     await saveUser({ errorKind: "unconfigured" });
     return sys("unconfigured", "La asistencia inteligente de AURA no está activa en este momento. Puedes registrar tu búsqueda con el asistente guiado o escribirnos por WhatsApp.", cid);
@@ -129,6 +130,9 @@ export async function handleChat(input: ChatInput, viewer: { ip: string; custome
   const tools = createToolRunner(cfg, db);
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), cfg.timeoutMs);
+  const stop = () => ctrl.abort();
+  if (deps.signal?.aborted) ctrl.abort();
+  else deps.signal?.addEventListener("abort", stop, { once: true });
   const dayKey = `aura:day:${pacificDay(deps.now)}`;
   try {
     const runOpts = {
@@ -149,7 +153,7 @@ export async function handleChat(input: ChatInput, viewer: { ip: string; custome
         if (busy && backup) await registerHit(PRIMARY_BUSY_KEY, 10 * MIN);
         // El respaldo se intenta UNA vez en este mensaje, solo si queda tiempo (un 504 ya agotó la espera).
         if (!busy || !backup || ctrl.signal.aborted || (e as AiError).status === 504) throw e;
-        console.warn("[aura] modelo principal saturado; usando el respaldo gratuito:", backup.id, (e as AiError).detail ?? "");
+        console.warn("[aura] proveedor principal no disponible:", provider.id, "→ respaldo:", backup.id, (e as AiError).detail ?? "");
         r = await backup.run(runOpts);
       }
     }
@@ -177,5 +181,6 @@ export async function handleChat(input: ChatInput, viewer: { ip: string; custome
     return sys("unavailable", "AURA no está disponible en este momento. Tu mensaje sigue escrito: inténtalo de nuevo en un momento o usa el asistente guiado.", cid);
   } finally {
     clearTimeout(timer);
+    deps.signal?.removeEventListener("abort", stop);
   }
 }

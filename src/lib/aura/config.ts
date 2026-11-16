@@ -20,12 +20,18 @@ export function auraConfig(env: NodeJS.ProcessEnv = process.env) {
   // Respaldo automático cuando el principal está saturado (también con nivel gratuito). "0" lo desactiva.
   const fb = env.AURA_FALLBACK_MODEL?.trim() || "gemini-3.6-flash";
   const fallbackModel = fb !== "0" && fb !== model && (AURA_FREE_MODELS as readonly string[]).includes(fb) ? fb : null;
+  const ollama = ollamaConfig(env);
+  // "gemini" (predeterminado: lo que hay hoy en producción) u "ollama" (Ollama principal y Gemini de respaldo).
+  const provider: "gemini" | "ollama" = env.AURA_PROVIDER?.trim().toLowerCase() === "ollama" && ollama.ready ? "ollama" : "gemini";
+  const geminiReady = !!key && !!model;
   return {
     key,
     model,
     fallbackModel,
+    provider,
+    ollama,
     /** "0" la apaga sin borrar la clave (interruptor de emergencia). */
-    enabled: env.AURA_ENABLED !== "0" && !!key && !!model,
+    enabled: env.AURA_ENABLED !== "0" && (geminiReady || provider === "ollama"),
     modelRejected: !model,
     /** Llamadas al modelo por día en toda la tienda (cada mensaje puede usar hasta 3 por las herramientas). */
     dailyCalls: int(env.AURA_DAILY_LIMIT, 150, 1, 5000),
@@ -39,3 +45,45 @@ export function auraConfig(env: NodeJS.ProcessEnv = process.env) {
   };
 }
 export type AuraConfig = ReturnType<typeof auraConfig>;
+
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]", "::1"]);
+
+/**
+ * Ollama (solo servidor). Reglas de seguridad y costo:
+ * - Fuera de localhost exige HTTPS (la clave no viaja en claro y el puerto 11434 nunca se expone directo).
+ * - Ollama Cloud (ollama.com) cobra por token: queda bloqueado salvo OLLAMA_ALLOW_PAID=1, que solo
+ *   debe activarse con autorización expresa del dueño.
+ * - `reason` explica por qué no está listo, sin incluir la dirección ni la clave.
+ */
+export function ollamaConfig(env: NodeJS.ProcessEnv = process.env) {
+  const raw = env.OLLAMA_BASE_URL?.trim() || "";
+  const model = env.OLLAMA_MODEL?.trim() || "";
+  const apiKey = env.OLLAMA_API_KEY?.trim() || null;
+  let baseUrl: string | null = null;
+  let reason: string | null = null;
+  if (!raw) reason = "Falta OLLAMA_BASE_URL";
+  else if (!/^[\w.:-]{1,100}$/.test(model)) reason = "Falta OLLAMA_MODEL o no es válido";
+  else {
+    try {
+      const u = new URL(raw);
+      const local = LOCAL_HOSTS.has(u.hostname);
+      const paid = u.hostname === "ollama.com" || u.hostname.endsWith(".ollama.com");
+      if (u.protocol !== "https:" && !(local && u.protocol === "http:")) reason = "OLLAMA_BASE_URL debe usar HTTPS fuera de localhost";
+      else if (paid && env.OLLAMA_ALLOW_PAID !== "1") reason = "Ollama Cloud es de pago: requiere OLLAMA_ALLOW_PAID=1 con autorización";
+      else baseUrl = `${u.origin}${u.pathname.replace(/\/+$/, "")}`;
+    } catch {
+      reason = "OLLAMA_BASE_URL no es una dirección válida";
+    }
+  }
+  return {
+    ready: !!baseUrl,
+    reason,
+    baseUrl,
+    model,
+    apiKey,
+    /** Tiempo propio de Ollama, menor que el del turno, para dejar margen al respaldo. */
+    timeoutMs: int(env.OLLAMA_TIMEOUT_MS, 12_000, 2_000, 40_000),
+    keepAlive: /^\d{1,4}[smh]$|^-1$/.test(env.OLLAMA_KEEP_ALIVE?.trim() ?? "") ? env.OLLAMA_KEEP_ALIVE!.trim() : "10m",
+    numCtx: int(env.OLLAMA_NUM_CTX, 8192, 2048, 32768),
+  };
+}

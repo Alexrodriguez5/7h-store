@@ -68,21 +68,19 @@ export const getFeaturedProducts = unstable_cache(
   cacheOpts(TAG_PRODUCTS),
 );
 
-export const getProductBySlug = unstable_cache(
-  async (slug: string): Promise<Product | null> => {
-    const p = await prisma.product.findFirst({ where: { slug, ...visible }, select });
-    return p ? mapProduct(p) : null;
-  },
-  ["public:products:by-slug"],
-  cacheOpts(TAG_PRODUCTS),
-);
+/**
+ * Ficha y relacionados salen de la lista completa ya cacheada (una sola clave, una sola consulta).
+ * Antes cada producto y cada categoría tenía su propia clave: al vencer la caché, las precargas de enlaces
+ * lanzaban una consulta por producto a la vez y saturaban el pool de conexiones (BUG-01).
+ * Si el catálogo supera unos cientos de productos, conviene volver a consultas por producto con paginación.
+ */
+export async function getProductBySlug(slug: string): Promise<Product | null> {
+  return (await getProducts()).find((p) => p.slug === slug) ?? null;
+}
 
-export const getProductsByCategory = unstable_cache(
-  async (category: string, excludeId?: string): Promise<Product[]> =>
-    (await prisma.product.findMany({ where: { ...visible, category: { slug: category, active: true }, ...(excludeId ? { id: { not: excludeId } } : {}) }, select, take: 4, orderBy: { createdAt: "desc" } })).map(mapProduct),
-  ["public:products:by-category"],
-  cacheOpts(TAG_PRODUCTS),
-);
+export async function getProductsByCategory(category: string, excludeId?: string): Promise<Product[]> {
+  return (await getProducts()).filter((p) => p.category === category && p.id !== excludeId).slice(0, 4);
+}
 
 /** Categorías visibles en la tienda (menú, pie de página, portada y filtros). */
 export const getActiveCategories = unstable_cache(

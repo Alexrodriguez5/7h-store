@@ -18,7 +18,7 @@ export function Footer({ categories }: { categories: Category[] }) {
           <h2 className="text-xs font-semibold uppercase tracking-widest text-gold-light">
             Tienda
           </h2>
-          <div className="mt-4 flex flex-col gap-3 text-xs text-ivory/70">
+          <div className="mt-4 flex flex-col text-xs text-ivory/70 max-lg:[&_a]:flex max-lg:[&_a]:min-h-11 max-lg:[&_a]:items-center lg:gap-3">
             <Link href="/catalogo" className="transition-colors hover:text-gold-light">
               Todo
             </Link>
@@ -35,7 +35,7 @@ export function Footer({ categories }: { categories: Category[] }) {
         </div>
         <div>
           <h2 className="text-xs font-semibold uppercase tracking-widest text-gold-light">Ayuda</h2>
-          <div className="mt-4 flex flex-col gap-3 text-xs text-ivory/70 [&_a]:transition-colors [&_a:hover]:text-gold-light">
+          <div className="mt-4 flex flex-col text-xs text-ivory/70 max-lg:[&_a]:flex max-lg:[&_a]:min-h-11 max-lg:[&_a]:items-center lg:gap-3 [&_a]:transition-colors [&_a:hover]:text-gold-light">
             <Link href="/envios">Envíos</Link>
             <Link href="/devoluciones">Devoluciones</Link>
             <Link href="/como-comprar">Cómo comprar</Link>

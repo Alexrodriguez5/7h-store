@@ -17,7 +17,7 @@ export async function POST(req: Request) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Mensaje no válido" }, { status: 400 });
   const customer = await getCurrentCustomer().catch(() => null);
   try {
-    const reply = await handleChat(parsed.data, { ip: getClientIp(req), customerId: customer?.id ?? null });
+    const reply = await handleChat(parsed.data, { ip: getClientIp(req), customerId: customer?.id ?? null }, { signal: req.signal });
     return NextResponse.json(reply, { status: reply.state === "limit" ? 429 : 200 });
   } catch (e) {
     console.error("[aura] chat:", e instanceof Error ? e.message : e);

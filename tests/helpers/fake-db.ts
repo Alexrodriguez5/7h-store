@@ -45,7 +45,7 @@ export function createFakeDb() {
   const id = (p: string) => `${p}_${++seq}`;
   /** Registro de operaciones (para medir cuántas consultas hace cada acción). */
   const ops: string[] = [];
-  const unique: Partial<Record<Table, string[]>> = { category: ["slug"], product: ["slug"], adminUser: ["email"], adminSession: ["tokenHash"], adminPasswordReset: ["tokenHash"], customer: ["email"], customerSession: ["tokenHash"], supportRequest: ["code"], counter: ["key"] };
+  const unique: Partial<Record<Table, string[]>> = { category: ["slug"], product: ["slug"], adminUser: ["email"], adminSession: ["tokenHash"], adminPasswordReset: ["tokenHash"], customer: ["email"], customerSession: ["tokenHash"], supportRequest: ["code"], counter: ["key"], order: ["idempotencyKey"] };
   const defaults: Partial<Record<Table, Row>> = {
     category: { active: true, sortOrder: 0, imageUrl: null },
     adminUser: { role: "ADMIN", active: true, lastLoginAt: null, passwordChangedAt: new Date(0) },
@@ -61,7 +61,7 @@ export function createFakeDb() {
     const rows = () => state[name];
     const out = (r: Row, args: Row = {}) => (opts.decorate ? opts.decorate(r, args) : r);
     const checkUnique = (row: Row, self?: Row) => {
-      for (const f of unique[name] ?? []) if (rows().some((x) => x !== self && x[f] === row[f])) { const e: any = new Error(`Unique constraint failed on ${f}`); e.code = "P2002"; throw e; }
+      for (const f of unique[name] ?? []) if (row[f] != null && rows().some((x) => x !== self && x[f] === row[f])) { const e: any = new Error(`Unique constraint failed on ${f}`); e.code = "P2002"; throw e; }
     };
     const api: Record<string, (args?: any) => Promise<any>> = {
       findMany: async (a = {}) => {

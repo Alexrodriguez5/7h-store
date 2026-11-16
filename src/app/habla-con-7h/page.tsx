@@ -48,7 +48,7 @@ export default async function TalkPage({ searchParams }: { searchParams: Promise
             <div className="surface rounded-[24px] p-5 text-sm leading-6 text-ink-soft">
               <p className="type-eyebrow text-gold">Otros canales</p>
               <ul className="mt-3 space-y-2">
-                {wa && <li>WhatsApp: <a href={wa} target="_blank" rel="noreferrer" className="font-semibold text-ink underline-offset-4 hover:underline">+{BUSINESS.whatsapp}</a></li>}
+                {wa && <li>WhatsApp: <a href={wa} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center font-semibold text-ink underline-offset-4 hover:underline">+{BUSINESS.whatsapp}</a></li>}
                 <li>Instagram: <a href={BUSINESS.instagram.url} target="_blank" rel="noreferrer" className="font-semibold text-ink underline-offset-4 hover:underline">{BUSINESS.instagram.handle}</a></li>
                 <li>Garantías y devoluciones con radicado: <Link href="/cuenta/solicitudes" className="font-semibold text-ink underline-offset-4 hover:underline">Mi cuenta</Link></li>
               </ul>

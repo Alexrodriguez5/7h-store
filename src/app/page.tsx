@@ -169,7 +169,7 @@ export default async function HomePage() {
               </Reveal>
             )}
             <Reveal delay={160} className="mt-8">
-              <Link href="/catalogo" className="group inline-flex items-center gap-2 text-sm font-semibold text-gold-light hover:text-ivory">
+              <Link href="/catalogo" className="group inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-gold-light hover:text-ivory">
                 Ver colección <ArrowRightIcon width={16} height={16} className="transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
             </Reveal>
@@ -254,7 +254,7 @@ export default async function HomePage() {
         </ol>
         <Reveal className="mt-12 flex flex-wrap items-center gap-3">
           <Button href="/como-comprar" variant="secondary" className="border-ivory/25 text-ivory hover:border-gold hover:bg-white/[.06]">Cómo comprar</Button>
-          <Link href="/envios" className="group inline-flex items-center gap-2 px-2 text-sm font-medium text-ivory/80 hover:text-gold-light">Condiciones de envío <ArrowRightIcon width={16} height={16} className="transition-transform group-hover:translate-x-1" /></Link>
+          <Link href="/envios" className="group inline-flex min-h-11 items-center gap-2 px-2 text-sm font-medium text-ivory/80 hover:text-gold-light">Condiciones de envío <ArrowRightIcon width={16} height={16} className="transition-transform group-hover:translate-x-1" /></Link>
         </Reveal>
       </Section>
 
@@ -264,7 +264,7 @@ export default async function HomePage() {
           <div className="lg:col-span-5">
             <SectionHeader index="06" eyebrow="Sobre 7H STORE" title={<>Comprar bien, <span className="text-gold-deep">sin complicaciones.</span></>} />
             <Reveal className="mt-8">
-              <Link href="/nosotros" className="group inline-flex items-center gap-2 text-sm font-semibold hover:text-gold-deep">
+              <Link href="/nosotros" className="group inline-flex min-h-11 items-center gap-2 text-sm font-semibold hover:text-gold-deep">
                 Conoce la marca <ArrowRightIcon width={16} height={16} className="transition-transform group-hover:translate-x-1" />
               </Link>
             </Reveal>
@@ -302,7 +302,7 @@ export default async function HomePage() {
             <p className="mt-3 flex-1 text-[15px] leading-7 text-ink-soft">Conversa con otros clientes y con el equipo. Un espacio sencillo y moderado.</p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Button href="/comunidad" variant="secondary">Entrar a la comunidad</Button>
-              <Link href="/habla-con-7h" className="group inline-flex items-center gap-2 px-2 text-sm font-medium hover:text-gold-deep">Habla con 7H <ArrowRightIcon width={16} height={16} className="transition-transform group-hover:translate-x-1" /></Link>
+              <Link href="/habla-con-7h" className="group inline-flex min-h-11 items-center gap-2 px-2 text-sm font-medium hover:text-gold-deep">Habla con 7H <ArrowRightIcon width={16} height={16} className="transition-transform group-hover:translate-x-1" /></Link>
             </div>
           </Reveal>
         </div>

@@ -25,6 +25,8 @@ export const checkoutSchema = z.object({
     notes: freeText(500).optional(),
   }),
   paymentMethod: z.enum(["card", "pse", "bank_transfer", "cash_deposit"]),
+  /** Clave del intento de compra (la genera el navegador). Con ella, un reintento recupera el mismo pedido. */
+  attemptKey: z.string().regex(/^[A-Za-z0-9_-]{16,64}$/, "Clave de intento no válida").optional(),
   terms: z.literal(true, "Debes aceptar los términos y la política de datos"),
   items: z
     .array(z.object({ productId: z.string().min(1).max(64), size: z.string().max(20).optional(), quantity: quantity(20) }))

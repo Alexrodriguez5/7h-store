@@ -4,9 +4,14 @@
  * detrás de un servidor propio, configura el proxy para que sobrescriba X-Forwarded-For.
  */
 export function getClientIp(req: Request): string {
-  const real = req.headers.get("x-real-ip")?.trim();
+  return getClientIpFromHeaders(req.headers);
+}
+
+/** Igual que getClientIp, para Server Components (que reciben `headers()` y no un Request). */
+export function getClientIpFromHeaders(h: Pick<Headers, "get">): string {
+  const real = h.get("x-real-ip")?.trim();
   if (real) return real.slice(0, 64);
-  const fwd = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  const fwd = h.get("x-forwarded-for")?.split(",")[0]?.trim();
   return (fwd || "unknown").slice(0, 64);
 }
 

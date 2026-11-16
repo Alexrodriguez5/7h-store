@@ -19,7 +19,7 @@ const paymentMethodMap = {
 } as const;
 
 /** `zones`: tarifas por zona vigentes. Sin zonas se cobra la tarifa histórica (comportamiento anterior). */
-export async function createOrder(input: CheckoutInput, db: PrismaClient = prisma, zones: readonly ShippingZoneRule[] = [], shippingOverride?: ShippingQuote) {
+export async function createOrder(input: CheckoutInput, db: PrismaClient = prisma, zones: readonly ShippingZoneRule[] = [], shippingOverride?: ShippingQuote, idempotency?: { key: string; hash: string }) {
   return db.$transaction(async (tx) => {
     const lines = mergeLines(input.items);
     const ids = [...new Set(lines.map((item) => item.productId))];
@@ -86,6 +86,9 @@ export async function createOrder(input: CheckoutInput, db: PrismaClient = prism
         shippingEta: quote.eta,
         totalCOP: total,
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        // Índice único en la base: si otra petición con la misma clave llega a la vez, esta transacción falla
+        // completa (P2002) y la reserva de inventario se revierte.
+        ...(idempotency ? { idempotencyKey: idempotency.key, idempotencyHash: idempotency.hash } : {}),
         items: {
           create: resolved.map(({ product, size, stockLine }) => ({
             productId: product.id,

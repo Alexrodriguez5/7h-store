@@ -27,7 +27,7 @@ export default async function AuraBrainPage({ searchParams }: { searchParams: Pr
       </nav>
       {!tablesReady ? (
         <Card title="Falta preparar la base de datos">
-          <p className="text-sm">Ejecuta <code>docs/MIGRACION-AURA-CEREBRO.sql</code> en Supabase (SQL Editor). Solo agrega tablas nuevas.</p>
+          <p className="text-sm">Ejecuta <code>docs/ingenieria/migraciones-referencia/MIGRACION-AURA-CEREBRO.sql</code> en Supabase (SQL Editor). Solo agrega tablas nuevas.</p>
         </Card>
       ) : tab === "calidad" ? (
         <Quality />

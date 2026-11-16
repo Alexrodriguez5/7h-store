@@ -30,11 +30,11 @@ export function PageHero({
     <section className="hero-light relative isolate overflow-hidden rounded-b-[32px] text-ivory">
       <div className={`relative mx-auto max-w-7xl px-5 lg:px-8 ${quiet ? "pb-14 pt-8 lg:pb-16 lg:pt-10" : "pb-16 pt-10 lg:pb-20 lg:pt-14"}`}>
         {crumbs && crumbs.length > 0 && (
-          <nav aria-label="Ruta" className="mb-6 text-[11px] text-ivory/55">
+          <nav aria-label="Ruta" className="mb-4 text-[11px] text-ivory/55">
             <ol className="flex flex-wrap items-center gap-1.5">
               {crumbs.map((c) => (
                 <li key={c.href} className="flex items-center gap-1.5">
-                  <Link href={c.href} className="transition-colors hover:text-gold-light">{c.label}</Link>
+                  <Link href={c.href} className="inline-flex min-h-11 items-center transition-colors hover:text-gold-light">{c.label}</Link>
                   <span aria-hidden="true">/</span>
                 </li>
               ))}

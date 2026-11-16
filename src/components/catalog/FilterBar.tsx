@@ -39,7 +39,7 @@ export function FilterBar({
     filters.sort !== "relevancia";
 
   const chip = (active: boolean) =>
-    `rounded-full border px-4 py-2 text-xs font-medium transition-all duration-200 ${
+    `min-h-11 rounded-full border px-4 py-2 text-xs font-medium transition-all duration-200 ${
       active
         ? "border-ink bg-ink text-gold-light shadow-soft"
         : "border-ink/15 bg-white/40 hover:border-gold hover:bg-white/70 hover:text-ink"
@@ -86,7 +86,7 @@ export function FilterBar({
 
             {/* "Solo accesorios" solo tiene sentido viendo todo el catálogo (dentro de una categoría confunde). */}
             {(filters.category === "todo" || filters.onlyAccessories) && (
-              <label className="flex cursor-pointer items-center gap-2 rounded-full border border-ink/15 bg-white/40 px-4 py-2 text-xs font-medium transition-colors hover:border-gold">
+              <label className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-ink/15 bg-white/40 px-4 py-2 text-xs font-medium transition-colors hover:border-gold">
                 <input
                   type="checkbox"
                   checked={filters.onlyAccessories}
@@ -110,7 +110,7 @@ export function FilterBar({
               onChange("maxPriceCOP", e.target.value ? Number(e.target.value) : null)
             }
             aria-label="Precio máximo"
-            className="min-w-48 cursor-pointer border border-ink/15 bg-white/60 px-3.5 py-2.5 text-xs outline-none transition-colors hover:border-ink/30 focus:border-gold"
+            className="min-h-11 min-w-48 cursor-pointer border border-ink/15 bg-white/60 px-3.5 py-2.5 text-xs outline-none transition-colors hover:border-ink/30 focus:border-gold"
           >
             {PRICES.map(([value, label]) => (
               <option key={String(value)} value={value ?? ""}>
@@ -127,7 +127,7 @@ export function FilterBar({
             value={filters.sort}
             onChange={(e) => onChange("sort", e.target.value as SortOption)}
             aria-label="Ordenar productos"
-            className="min-w-48 cursor-pointer border border-ink/15 bg-white/60 px-3.5 py-2.5 text-xs outline-none transition-colors hover:border-ink/30 focus:border-gold"
+            className="min-h-11 min-w-48 cursor-pointer border border-ink/15 bg-white/60 px-3.5 py-2.5 text-xs outline-none transition-colors hover:border-ink/30 focus:border-gold"
           >
             <option value="relevancia">Ordenar: Relevancia</option>
             <option value="novedades">Ordenar: Novedades</option>

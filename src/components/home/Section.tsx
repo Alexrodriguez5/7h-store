@@ -69,7 +69,7 @@ export function SectionHeader({
         {lead && <p className={`mt-4 max-w-xl text-[15px] leading-7 ${dark ? "text-ivory/65" : "text-ink-soft"}`}>{lead}</p>}
       </div>
       {href && cta && (
-        <Link href={href} className={`group inline-flex shrink-0 items-center gap-2 text-sm font-medium transition-colors ${dark ? "text-ivory hover:text-gold-light" : "hover:text-gold-deep"} ${railArrows ? "sm:mr-28" : ""}`}>
+        <Link href={href} className={`group inline-flex min-h-11 shrink-0 items-center gap-2 text-sm font-medium transition-colors ${dark ? "text-ivory hover:text-gold-light" : "hover:text-gold-deep"} ${railArrows ? "sm:mr-28" : ""}`}>
           {cta}
           <ArrowRightIcon width={16} height={16} className="transition-transform duration-300 group-hover:translate-x-1" />
         </Link>

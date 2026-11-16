@@ -5,6 +5,9 @@
  */
 export const isEmailConfigured = () => !!process.env.RESEND_API_KEY && !!process.env.EMAIL_FROM;
 
+/** Tiempo máximo de espera al proveedor de correo. */
+export const EMAIL_TIMEOUT_MS = 10_000;
+
 export async function sendEmail(msg: { to: string; subject: string; text: string; html: string }, fetchImpl: typeof fetch = fetch): Promise<boolean> {
   if (!isEmailConfigured()) return false;
   try {
@@ -12,11 +15,15 @@ export async function sendEmail(msg: { to: string; subject: string; text: string
       method: "POST",
       headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({ from: process.env.EMAIL_FROM, to: [msg.to], subject: msg.subject, text: msg.text, html: msg.html }),
+      // Sin límite, un proveedor lento dejaba esperando al formulario que envía el correo (BUG-06).
+      signal: AbortSignal.timeout(EMAIL_TIMEOUT_MS),
     });
     if (!res.ok) console.error("[email] el proveedor respondió", res.status);
     return res.ok;
   } catch (e) {
-    console.error("[email] no se pudo enviar:", e instanceof Error ? e.message : e);
+    const name = typeof e === "object" && e !== null ? (e as { name?: unknown }).name : undefined;
+    const timedOut = name === "TimeoutError" || name === "AbortError";
+    console.error("[email] no se pudo enviar:", timedOut ? `sin respuesta del proveedor en ${EMAIL_TIMEOUT_MS / 1000} s` : e instanceof Error ? e.message : e);
     return false;
   }
 }

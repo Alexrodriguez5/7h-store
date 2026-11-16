@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { assertIsolated } from "@/lib/environment-guard";
 import { detectImageType, MAX_IMAGE_BYTES } from "@/lib/images";
 
 /**
@@ -17,6 +18,7 @@ export class UgcError extends Error {
 
 function storageEnv() {
   const base = process.env.SUPABASE_URL?.replace(/\/$/, "");
+  assertIsolated("SUPABASE_URL", base);
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!base || !key) throw new UgcError(503, "El almacenamiento de fotos no está configurado.");
   return { base, key, headers: { Authorization: `Bearer ${key}`, apikey: key } };

@@ -46,7 +46,7 @@ export function NewInquiryForm({ topics, defaults }: { topics: { value: string; 
         <legend className="text-xs font-semibold">¿Sobre qué quieres hablar?</legend>
         <div className="mt-2 flex flex-wrap gap-2">
           {topics.map((t) => (
-            <label key={t.value} className={`cursor-pointer rounded-full border px-3.5 py-2 text-xs transition-colors ${v.topic === t.value ? "border-ink bg-ink font-semibold text-gold-light" : "border-ink/15 bg-white/70 hover:border-gold"}`}>
+            <label key={t.value} className={`inline-flex min-h-11 cursor-pointer items-center rounded-full border px-3.5 py-2 text-xs transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-gold ${v.topic === t.value ? "border-ink bg-ink font-semibold text-gold-light" : "border-ink/15 bg-white/70 hover:border-gold"}`}>
               <input type="radio" name="topic" value={t.value} checked={v.topic === t.value} onChange={set("topic")} className="sr-only" />
               {t.label}
             </label>

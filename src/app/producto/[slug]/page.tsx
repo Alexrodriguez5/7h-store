@@ -94,11 +94,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbLd) }} />
       {/* Sección negra compacta (ruta). El contenido del producto empieza DEBAJO, en la sección marfil: nada cruza el límite. */}
       <section className="hero-light text-ivory">
-        <nav aria-label="Ruta de navegación" className="mx-auto max-w-7xl px-5 py-5 text-xs text-ivory/60 lg:px-8">
+        <nav aria-label="Ruta de navegación" className="mx-auto max-w-7xl px-5 py-2 text-xs text-ivory/60 lg:px-8 lg:py-4">
           <ol className="flex flex-wrap items-center gap-1.5">
-            <li><Link href="/" className="hover:text-gold-light">Inicio</Link></li>
+            <li><Link href="/" className="inline-flex min-h-11 min-w-11 items-center hover:text-gold-light">Inicio</Link></li>
             <li aria-hidden="true">/</li>
-            <li><Link href={`/catalogo?categoria=${encodeURIComponent(p.category)}`} className="hover:text-gold-light">{categoryLabel}</Link></li>
+            <li><Link href={`/catalogo?categoria=${encodeURIComponent(p.category)}`} className="inline-flex min-h-11 items-center hover:text-gold-light">{categoryLabel}</Link></li>
             <li aria-hidden="true">/</li>
             <li aria-current="page" className="truncate text-ivory">{p.name}</li>
           </ol>
@@ -147,7 +147,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <div className="mt-7">
             <AddToCart product={p} />
           </div>
-          <a href={`/habla-con-7h?tema=CARACTERISTICAS&producto=${encodeURIComponent(p.slug)}&asunto=${encodeURIComponent(p.name)}`} className="mt-3 inline-flex text-xs font-semibold underline-offset-4 hover:text-gold hover:underline">
+          <a href={`/habla-con-7h?tema=CARACTERISTICAS&producto=${encodeURIComponent(p.slug)}&asunto=${encodeURIComponent(p.name)}`} className="mt-3 inline-flex min-h-11 items-center text-xs font-semibold underline-offset-4 hover:text-gold hover:underline">
             ¿Tienes una pregunta sobre este producto? Habla con 7H STORE
           </a>
           <ul className="mt-6 grid grid-cols-2 gap-3 text-xs text-ink-soft">
@@ -176,7 +176,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               ],
             ].map(([title, text]) => (
               <details key={title} className="clean group py-4">
-                <summary className="flex cursor-pointer items-center justify-between text-sm font-semibold transition-colors hover:text-gold">
+                <summary className="flex min-h-11 cursor-pointer items-center justify-between text-sm font-semibold transition-colors hover:text-gold">
                   {title}
                   <ChevronDownIcon
                     width={18}
