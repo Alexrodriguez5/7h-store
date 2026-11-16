@@ -20,7 +20,7 @@ export default function TermsPage() {
       <section id="vendedor">
         <h2>1. Información del proveedor</h2>
         <p className="text-xs">Datos de identificación y contacto que la ley exige poner a disposición del consumidor en el comercio electrónico (art. 50 de la Ley 1480 de 2011). Por privacidad solo se publican aquí.</p>
-        <p><strong>7H STORE</strong> es operada por <strong>{orPending(BUSINESS.legalName, "razón social o nombre del titular")}</strong>, identificado con <strong>{orPending(BUSINESS.taxId, "NIT o cédula")}</strong>, con domicilio en <strong>{orPending(BUSINESS.city, "ciudad")}, Colombia</strong>. Contacto: <strong>{orPending(BUSINESS.email, "correo")}</strong> · <strong>{orPending(BUSINESS.whatsapp, "WhatsApp")}</strong> · Instagram <strong>{BUSINESS.instagram.handle}</strong>.</p>
+        <p><strong>{BUSINESS.legalName ?? "7H STORE"}</strong>, identificada con <strong>{orPending(BUSINESS.taxId, "NIT")}</strong>, con domicilio en <strong>{orPending(BUSINESS.city, "ciudad")}, Colombia</strong>. Contacto: <strong>{orPending(BUSINESS.email, "correo")}</strong> · <strong>{orPending(BUSINESS.whatsapp, "WhatsApp")}</strong> · Instagram <strong>{BUSINESS.instagram.handle}</strong>.</p>
       </section>
       <section>
         <h2>2. Productos y precios</h2>
