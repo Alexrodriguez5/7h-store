@@ -58,7 +58,7 @@ export function CartDrawer() {
             type="button"
             onClick={() => setOpen(false)}
             aria-label="Cerrar carrito"
-            className="grid size-10 place-items-center rounded-full transition-colors hover:bg-ink/5"
+            className="grid size-11 place-items-center rounded-full transition-colors hover:bg-ink/5"
           >
             <CloseIcon />
           </button>
@@ -74,7 +74,7 @@ export function CartDrawer() {
               <Link
                 href="/catalogo"
                 onClick={() => setOpen(false)}
-                className="mt-5 inline-block rounded-full bg-ink px-5 py-2.5 text-xs font-semibold text-ivory transition-colors hover:bg-gold hover:text-ink"
+                className="mt-5 inline-flex min-h-11 items-center rounded-full bg-ink px-5 py-2.5 text-xs font-semibold text-ivory transition-colors hover:bg-gold hover:text-ink"
               >
                 Ver catálogo
               </Link>

@@ -26,7 +26,7 @@ const field =
 const label = "mb-1.5 block text-[11px] font-semibold uppercase tracking-[.14em] text-ivory/55";
 const primary =
   "btn-shine relative inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-b from-gold-light to-gold px-6 py-3.5 text-sm font-bold text-ink shadow-[0_10px_30px_-10px_rgb(201_164_76_/_.8)] transition-all hover:-translate-y-0.5 hover:shadow-[0_16px_40px_-12px_rgb(216_184_102_/_.9)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0";
-const linkBtn = "text-xs text-ivory/60 underline-offset-4 transition-colors hover:text-gold-light hover:underline";
+const linkBtn = "inline-flex min-h-11 items-center text-xs text-ivory/60 underline-offset-4 transition-colors hover:text-gold-light hover:underline";
 
 function Spinner() {
   return <span aria-hidden="true" className="size-4 animate-spin rounded-full border-2 border-ink/30 border-t-ink" />;

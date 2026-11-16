@@ -81,8 +81,8 @@ function ProductCardBase({ product, priority = false }: { product: Product; prio
           {product.brand}
         </p>
 
-        <h3 className="mt-1 line-clamp-2 min-h-13 font-display text-[22px] leading-[1.1]">
-          <Link href={href} className="transition-colors hover:text-gold">
+        <h3 className="mt-1 min-h-13 font-display text-[22px] leading-[1.1]">
+          <Link href={href} className="line-clamp-2 min-h-11 transition-colors hover:text-gold">
             {product.name}
           </Link>
         </h3>
@@ -100,7 +100,7 @@ function ProductCardBase({ product, priority = false }: { product: Product; prio
         </p>
 
         {/* TALLAS */}
-        <div className="mt-3 min-h-9">
+        <div className="mt-3 min-h-11">
           {needsSize && (
             <div
               className="no-scrollbar -mx-0.5 flex items-center gap-1.5 overflow-x-auto px-0.5 pb-0.5"
@@ -121,7 +121,7 @@ function ProductCardBase({ product, priority = false }: { product: Product; prio
                     disabled={!available}
                     title={available ? undefined : "Talla agotada"}
                     onClick={() => setSize(s)}
-                    className={`h-9 min-w-9 shrink-0 rounded-full border px-2.5 text-xs transition-all duration-200 ${
+                    className={`h-11 min-w-11 shrink-0 rounded-full border px-3 text-xs transition-all duration-200 ${
                       !available
                         ? "cursor-not-allowed border-ink/10 text-ink/30 line-through"
                         : isSelected
@@ -143,7 +143,7 @@ function ProductCardBase({ product, priority = false }: { product: Product; prio
             type="button"
             disabled={soldOut || (needsSize && !size)}
             onClick={() => { addItem(product, size); setAdded(true); }}
-            className={`w-full rounded-full py-2.5 text-sm font-medium transition-all duration-200 ${
+            className={`min-h-11 w-full rounded-full py-2.5 text-sm font-medium transition-all duration-200 ${
               soldOut || (needsSize && !size)
                 ? "cursor-not-allowed bg-ink/[.06] text-ink/45"
                 : added

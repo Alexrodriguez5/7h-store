@@ -77,7 +77,7 @@ export function Header({ categories }: { categories: Category[] }) {
       <header data-nosnippet className="sticky top-0 z-40 border-b border-white/[.07] bg-ink/95 text-ivory shadow-[inset_0_-1px_0_rgb(216_184_102_/_.12)] backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-ink/90">
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-5 py-3.5 lg:gap-6 lg:px-8">
           <button
-            className="-ml-2 grid size-10 place-items-center rounded-full transition-colors hover:bg-white/10 lg:hidden"
+            className="-ml-2 grid size-11 place-items-center rounded-full transition-colors hover:bg-white/10 lg:hidden"
             onClick={() => setMobile(true)}
             aria-label="Abrir menú"
             aria-expanded={mobile}
@@ -88,7 +88,7 @@ export function Header({ categories }: { categories: Category[] }) {
 
           <Link
             href="/"
-            className="flex shrink-0 items-center transition-opacity hover:opacity-85"
+            className="flex min-h-11 shrink-0 items-center transition-opacity hover:opacity-85"
             aria-label="7H STORE inicio"
           >
             <Logo />
@@ -149,7 +149,7 @@ export function Header({ categories }: { categories: Category[] }) {
 
           <button
             onClick={() => open(true)}
-            className="relative ml-auto flex shrink-0 items-center gap-2 rounded-full border border-white/15 py-2 pl-3 pr-2 text-xs font-medium transition-colors hover:border-gold/70 hover:text-gold-light sm:ml-0"
+            className="relative ml-auto flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-white/15 py-2 pl-3 pr-2 text-xs font-medium transition-colors hover:border-gold/70 hover:text-gold-light sm:ml-0"
             aria-label={`Carrito: ${count} productos`}
             type="button"
           >
@@ -179,7 +179,7 @@ export function Header({ categories }: { categories: Category[] }) {
               onClick={() => setMobile(false)}
               aria-label="Cerrar menú"
               type="button"
-              className="grid size-10 place-items-center rounded-full transition-colors hover:bg-white/10"
+              className="grid size-11 place-items-center rounded-full transition-colors hover:bg-white/10"
             >
               <CloseIcon width={22} height={22} />
             </button>

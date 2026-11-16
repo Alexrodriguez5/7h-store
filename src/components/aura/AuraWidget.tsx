@@ -84,7 +84,8 @@ export function AuraWidget() {
       else if (!e.shiftKey && (document.activeElement === last || !inside)) { e.preventDefault(); first.focus(); }
     };
     window.addEventListener("keydown", onKey);
-    const t = window.setTimeout(() => inputRef.current?.focus(), 250);
+    // El foco entra al diálogo: al campo de mensaje si está habilitado; si no (aviso sin aceptar), al propio panel.
+    const t = window.setTimeout(() => { const ta = inputRef.current; if (ta && !ta.disabled) ta.focus(); else panelRef.current?.focus(); }, 250);
     return () => { window.removeEventListener("keydown", onKey); clearTimeout(t); };
   }, [open, setMood]);
 
@@ -181,11 +182,12 @@ export function AuraWidget() {
         <section
           id="aura-panel"
           ref={panelRef}
+          tabIndex={-1}
           role="dialog"
           aria-modal="true"
           aria-labelledby="aura-title"
           aria-describedby="aura-subtitle"
-          className="aura-panel fixed inset-x-0 bottom-0 z-50 flex h-[88dvh] flex-col overflow-hidden rounded-t-[28px] border border-gold/25 bg-[#111110] text-ivory shadow-[0_-20px_60px_-20px_rgb(0_0_0_/_.7)] sm:inset-x-auto sm:bottom-24 sm:right-5 sm:h-[640px] sm:max-h-[calc(100dvh-8rem)] sm:w-[400px] sm:rounded-[28px]"
+          className="aura-panel outline-none fixed inset-x-0 bottom-0 z-50 flex h-[88dvh] flex-col overflow-hidden rounded-t-[28px] border border-gold/25 bg-[#111110] text-ivory shadow-[0_-20px_60px_-20px_rgb(0_0_0_/_.7)] sm:inset-x-auto sm:bottom-24 sm:right-5 sm:h-[640px] sm:max-h-[calc(100dvh-8rem)] sm:w-[400px] sm:rounded-[28px]"
         >
           <header className="flex items-center gap-3 border-b border-white/10 px-4 py-3">
             <AuraOrb energy={energy} className="size-10" fps={30} />
