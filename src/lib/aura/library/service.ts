@@ -228,14 +228,26 @@ export async function setQuestionStatus(questionId: string, status: "aprobada" |
 
 /** Carga el conocimiento inicial (páginas publicadas de la tienda). Idempotente: no repite lo ya cargado. */
 export async function importSeed(adminId: string, db: PrismaClient = prisma) {
-  let created = 0, skipped = 0;
+  let created = 0, skipped = 0, addedVariants = 0;
   for (const s of SEED) {
-    const exists = await db.knowledgeEntry.findFirst({ where: { contentHash: hash(`${s.title}\n${s.body}`) }, select: { id: true } });
-    if (exists) { skipped++; continue; }
+    const exists = await db.knowledgeEntry.findFirst({ where: { contentHash: hash(`${s.title}\n${s.body}`) }, select: { id: true, questions: { select: { searchText: true } } } });
+    if (exists) {
+      // Entrada ya cargada: solo se agregan las formas de preguntar nuevas (sintéticas y pendientes de aprobación).
+      const known = new Set(exists.questions.map((q) => q.searchText));
+      const fresh = [...new Set(s.variants.map((v) => v.trim()))].filter((v) => v && !known.has(normalize(v)));
+      fresh.forEach(guard);
+      if (fresh.length) {
+        await db.knowledgeQuestion.createMany({ data: fresh.map((t) => ({ entryId: exists.id, text: t, searchText: normalize(t), synthetic: true })) });
+        addedVariants += fresh.length;
+      }
+      skipped++;
+      continue;
+    }
     await createEntry({ title: s.title, body: s.body, category: s.category as EntryInput["category"], source: s.source, sourceUrl: s.sourceUrl, questions: s.questions, synthetic: s.variants, reviewAt: null }, { adminId, batch: `semilla-${SEED_VERSION}` }, db);
     created++;
   }
-  return { created, skipped };
+  if (addedVariants) invalidateLibrary();
+  return { created, skipped, addedVariants };
 }
 
 // ── Importación de archivos (TXT, Markdown, CSV, JSON) ─────────────────
